@@ -1,7 +1,7 @@
 use crate::anemoi::{AnemoiJive, N_ANEMOI_ROUNDS};
+use crate::errors::ZplonkError;
 use crate::shuffle::Remark;
 use crate::turboplonk::constraint_system::{ConstraintSystem, CsIndex, VarIndex};
-use crate::turboplonk::errors::ProofSystemError;
 use crate::utils::prelude::*;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField};
@@ -152,9 +152,9 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
         indices
     }
 
-    fn selector(&self, index: usize) -> Result<&[F], ProofSystemError> {
+    fn selector(&self, index: usize) -> Result<&[F], ZplonkError> {
         if index >= self.selectors.len() {
-            return Err(ProofSystemError::SelectorIndexOutOfBound);
+            return Err(ZplonkError::SelectorIndexOutOfBound);
         }
         Ok(&self.selectors[index])
     }
@@ -180,13 +180,9 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
     ///     q1*w1 + q2*w2 + q3*w3 + q4*w4 + qm1(w1*w2) + qm2(w3*w4) + qc + PI
     ///     - qo * wo = 0
     /// ```
-    fn eval_gate_func(
-        wire_vals: &[&F],
-        sel_vals: &[&F],
-        pub_input: &F,
-    ) -> Result<F, ProofSystemError> {
+    fn eval_gate_func(wire_vals: &[&F], sel_vals: &[&F], pub_input: &F) -> Result<F, ZplonkError> {
         if wire_vals.len() != N_WIRES_PER_GATE || sel_vals.len() != N_SELECTORS {
-            return Err(ProofSystemError::SelectorIndexOutOfBound);
+            return Err(ZplonkError::SelectorIndexOutOfBound);
         }
         let add1 = sel_vals[0].mul(wire_vals[0]);
         let add2 = sel_vals[1].mul(wire_vals[1]);
@@ -209,9 +205,9 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
 
     /// The coefficients are
     /// (w1, w2, w3, w4, w1*w2, w3*w4, 1, -w4)
-    fn eval_selector_multipliers(wire_vals: &[&F]) -> Result<Vec<F>, ProofSystemError> {
+    fn eval_selector_multipliers(wire_vals: &[&F]) -> Result<Vec<F>, ZplonkError> {
         if wire_vals.len() < N_WIRES_PER_GATE {
-            return Err(ProofSystemError::SelectorIndexOutOfBound);
+            return Err(ZplonkError::SelectorIndexOutOfBound);
         }
 
         let mut w0w1w2w3w4 = *wire_vals[0];
@@ -1006,9 +1002,9 @@ impl<F: PrimeField> TurboCS<F> {
     }
 
     /// Verify the given witness and publics.
-    pub fn verify_witness(&self, witness: &[F], online_vars: &[F]) -> Result<(), ProofSystemError> {
+    pub fn verify_witness(&self, witness: &[F], online_vars: &[F]) -> Result<(), ZplonkError> {
         if witness.len() != self.num_vars {
-            return Err(ProofSystemError::Message(format!(
+            return Err(ZplonkError::Message(format!(
                 "witness len = {}, num_vars = {}",
                 witness.len(),
                 self.num_vars
@@ -1017,7 +1013,7 @@ impl<F: PrimeField> TurboCS<F> {
         if online_vars.len() != self.public_vars_witness_indices.len()
             || online_vars.len() != self.public_vars_constraint_indices.len()
         {
-            return Err(ProofSystemError::Message(
+            return Err(ZplonkError::Message(
                 "wrong number of online variables".to_owned(),
             ));
         }
@@ -1040,7 +1036,7 @@ impl<F: PrimeField> TurboCS<F> {
                 let d_i_next = witness[self.get_witness_index(3, cs_index + 1 + r)].clone();
 
                 if o_i != d_i_next {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the output wire {:?} does not equal to the fourth wire {:?} in the next constraint",
                         cs_index,
                         r,
@@ -1068,7 +1064,7 @@ impl<F: PrimeField> TurboCS<F> {
                     + g * (da_i + g * cb_i + prk_i_c).square();
                 let right = d2a_i + g * c2b_i + prk_i_a;
                 if left != right {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the first of anemoi equation does not equal: {:?} != {:?}",
                         cs_index, r, left, right
                     )));
@@ -1079,7 +1075,7 @@ impl<F: PrimeField> TurboCS<F> {
                     + g * (g * da_i + g2 * cb_i + prk_i_d).square();
                 let right = g * d2a_i + g2 * c2b_i + prk_i_b;
                 if left != right {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the second equation of anemoi does not equal: {:?} != {:?}",
                         cs_index, r, left, right
                     )));
@@ -1091,7 +1087,7 @@ impl<F: PrimeField> TurboCS<F> {
                     + &self.anemoi_generator_inv;
                 let right = a_i_next;
                 if left != right {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the third equation of anemoi does not equal: {:?} != {:?}",
                         cs_index, r, left, right
                     )));
@@ -1103,7 +1099,7 @@ impl<F: PrimeField> TurboCS<F> {
                     + &self.anemoi_generator_inv;
                 let right = b_i_next;
                 if left != right {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the fourth equation of anemoi does not equal: {:?} != {:?}",
                         cs_index, r, left, right
                     )));
@@ -1139,21 +1135,21 @@ impl<F: PrimeField> TurboCS<F> {
 
                 // check special binary testing
                 if !s1_i.is_zero() && !s1_i.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the first wire selector {:?} is not one or zero",
                         cs_index, s1_i
                     )));
                 }
 
                 if !s2_i.is_zero() && !s2_i.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the second wire selector {:?} is not one or zero",
                         cs_index, s2_i
                     )));
                 }
 
                 if s3_i != minus_one && !s3_i.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the third wire selector {:?} is not one or minus one",
                         cs_index, s3_i
                     )));
@@ -1207,7 +1203,7 @@ impl<F: PrimeField> TurboCS<F> {
                         * (s3_i * a_i_next - s3_i * a_i * pk_y_1_1 - b_i * pk_x_1_1
                             + a_i * b_i * a_i_next * pk_dxy_1_1);
                 if !result.is_zero() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {} round {}: the first equation of shuffle does not equal: {:?} != {:?}",
                         cs_index, r, result, zero
                     )));
@@ -1235,7 +1231,7 @@ impl<F: PrimeField> TurboCS<F> {
                             - s3_i * b_i * pk_y_1_1
                             - a_i * b_i * b_i_next * pk_dxy_1_1);
                 if !result.is_zero() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                                  "cs index {} round {}: the second equation of shuffle does not equal: {:?} != {:?}",
                                  cs_index, r, result, zero
                              )));
@@ -1259,7 +1255,7 @@ impl<F: PrimeField> TurboCS<F> {
                         * (s3_i * c_i_next - s3_i * c_i * g_y_1_1 - d_i * g_x_1_1
                             + c_i * d_i * c_i_next * g_dxy_1_1);
                 if !result.is_zero() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                                            "cs index {} round {}: the third equation of shuffle does not equal: {:?} != {:?}",
                                            cs_index, r, result, zero
                                        )));
@@ -1287,7 +1283,7 @@ impl<F: PrimeField> TurboCS<F> {
                             - s3_i * d_i * g_y_1_1
                             - c_i * d_i * o_i * g_dxy_1_1);
                 if !result.is_zero() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                                                        "cs index {} round {}: the fourth equation of shuffle does not equal: {:?} != {:?}",
                                                        cs_index, r, result, zero
                                                    )));
@@ -1309,7 +1305,7 @@ impl<F: PrimeField> TurboCS<F> {
                     // found
                     public_online = (*online_var).clone();
                     if witness[*w_i] != public_online {
-                        return Err(ProofSystemError::Message(format!(
+                        return Err(ZplonkError::Message(format!(
                             "cs index {}: online var {:?} does not match witness {:?}",
                             cs_index,
                             public_online,
@@ -1330,7 +1326,7 @@ impl<F: PrimeField> TurboCS<F> {
             let eval_gate = Self::eval_gate_func(&wire_vals, &sel_vals, &public_online)?;
 
             if eval_gate != F::ZERO {
-                return Err(ProofSystemError::Message(format!(
+                return Err(ZplonkError::Message(format!(
                     "cs index {}: wire_vals = ({:?}), sel_vals = ({:?})",
                     cs_index, wire_vals, sel_vals
                 )));
@@ -1338,21 +1334,21 @@ impl<F: PrimeField> TurboCS<F> {
 
             if self.boolean_constraint_indices.contains(&cs_index) {
                 if !w2_value.is_zero() && !w2_value.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the second wire {:?} is not one or zero",
                         cs_index, w2_value
                     )));
                 }
 
                 if !w3_value.is_zero() && !w3_value.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the third wire {:?} is not one or zero",
                         cs_index, w3_value
                     )));
                 }
 
                 if !w4_value.is_zero() && !w4_value.is_one() {
-                    return Err(ProofSystemError::Message(format!(
+                    return Err(ZplonkError::Message(format!(
                         "cs index {}: the fourth wire {:?} is not one or zero",
                         cs_index, w4_value
                     )));

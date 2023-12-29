@@ -2,14 +2,17 @@ use ark_bn254::Fr;
 use ark_ed_on_bn254::EdwardsProjective;
 use ark_std::UniformRand;
 use zplonk::{
+    errors::ZplonkError,
+    params::{
+        load_lagrange_params, load_srs_params, VerifierParamsSplitCommon,
+        VerifierParamsSplitSpecific,
+    },
     poly_commit::field_polynomial::FpPolynomial,
     poly_commit::pcs::PolyComScheme,
     shuffle::BabyJubjubShuffle,
     turboplonk::constraint_system::ConstraintSystem,
-    turboplonk::indexer::{indexer_with_lagrange},
+    turboplonk::indexer::indexer_with_lagrange,
     utils::prelude::*,
-    params::{VerifierParamsSplitSpecific, VerifierParamsSplitCommon, load_lagrange_params, load_srs_params},
-    errors::SetUpError,
 };
 
 use crate::build_cs::build_cs;
@@ -17,10 +20,10 @@ use crate::parameters::{VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS};
 use crate::{MaskedCard, N_CARDS};
 
 // re-export
-pub use zplonk::params::{VerifierParams, ProverParams};
+pub use zplonk::params::{ProverParams, VerifierParams};
 
 /// Obtain the parameters for shuffle.
-pub fn gen_shuffle_prover_params() -> Result<ProverParams, SetUpError> {
+pub fn gen_shuffle_prover_params() -> Result<ProverParams, ZplonkError> {
     let mut rng = ChaChaRng::from_seed([0u8; 32]);
     let apk = EdwardsProjective::rand(&mut rng);
     let cards = [MaskedCard::rand(&mut rng); N_CARDS];
@@ -48,29 +51,32 @@ pub fn gen_shuffle_prover_params() -> Result<ProverParams, SetUpError> {
 }
 
 /// Refresh the public key.
-pub fn refresh_prover_params_public_key(params: &mut ProverParams, public_key: &EdwardsProjective) -> Result<(), SetUpError> {
-    params.cs
+pub fn refresh_prover_params_public_key(
+    params: &mut ProverParams,
+    public_key: &EdwardsProjective,
+) -> Result<(), ZplonkError> {
+    params
+        .cs
         .load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(public_key);
 
     let n = params.cs.size();
     let m = params.cs.quot_eval_dom_size();
     if m % n != 0 {
-        return Err(SetUpError::ParameterError);
+        return Err(ZplonkError::ParameterError);
     }
 
     let pcs = load_srs_params(n)?;
     let lagrange_pcs = load_lagrange_params(n);
     let lagrange_pcs = lagrange_pcs.as_ref();
-    let lagrange_pcs = if lagrange_pcs.is_some() && lagrange_pcs.unwrap().max_degree() + 1 == n
-    {
+    let lagrange_pcs = if lagrange_pcs.is_some() && lagrange_pcs.unwrap().max_degree() + 1 == n {
         lagrange_pcs
     } else {
         None
     };
 
-    let domain = FpPolynomial::evaluation_domain(n).ok_or(SetUpError::ParameterError)?;
+    let domain = FpPolynomial::evaluation_domain(n).ok_or(ZplonkError::ParameterError)?;
     let domain_m =
-        FpPolynomial::quotient_evaluation_domain(m).ok_or(SetUpError::ParameterError)?;
+        FpPolynomial::quotient_evaluation_domain(m).ok_or(ZplonkError::ParameterError)?;
 
     let q_shuffle_public_key_evals = params.cs.compute_shuffle_public_key_selectors();
 
@@ -93,25 +99,28 @@ pub fn refresh_prover_params_public_key(params: &mut ProverParams, public_key: &
             let eval_poly = FpPolynomial::from_coefs(q_shuffle_public_key_eval);
             let cm = lagrange_pcs
                 .commit(&eval_poly)
-                .map_err(|_| SetUpError::ParameterError)?;
+                .map_err(|_| ZplonkError::ParameterError)?;
             cm_shuffle_public_key_vec.push(cm)
         } else {
             let cm = pcs
                 .commit(&q_shuffle_public_key_poly)
-                .map_err(|_| SetUpError::ParameterError)?;
+                .map_err(|_| ZplonkError::ParameterError)?;
             cm_shuffle_public_key_vec.push(cm)
         }
     }
 
     params.prover_params.q_shuffle_public_key_polys = q_shuffle_public_key_polys;
     params.prover_params.q_shuffle_public_key_coset_evals = q_shuffle_public_key_coset_evals;
-    params.prover_params.verifier_params.cm_shuffle_public_key_vec = cm_shuffle_public_key_vec;
+    params
+        .prover_params
+        .verifier_params
+        .cm_shuffle_public_key_vec = cm_shuffle_public_key_vec;
 
     Ok(())
 }
 
 /// Load the verifier parameters.
-pub fn get_shuffle_verifier_params() -> Result<VerifierParams, SetUpError> {
+pub fn get_shuffle_verifier_params() -> Result<VerifierParams, ZplonkError> {
     match load_shuffle_verifier_params() {
         Ok(vk) => Ok(vk),
         Err(_e) => Ok(VerifierParams::from(gen_shuffle_prover_params()?)),
@@ -119,14 +128,14 @@ pub fn get_shuffle_verifier_params() -> Result<VerifierParams, SetUpError> {
 }
 
 /// Load the verifier parameters from prepare.
-pub fn load_shuffle_verifier_params() -> Result<VerifierParams, SetUpError> {
+pub fn load_shuffle_verifier_params() -> Result<VerifierParams, ZplonkError> {
     match (VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS) {
         (Some(c_bytes), Some(s_bytes)) => {
             let common: VerifierParamsSplitCommon =
-                bincode::deserialize(c_bytes).map_err(|_| SetUpError::DeserializationError)?;
+                bincode::deserialize(c_bytes).map_err(|_| ZplonkError::DeserializationError)?;
 
             let special: VerifierParamsSplitSpecific =
-                bincode::deserialize(s_bytes).map_err(|_| SetUpError::DeserializationError)?;
+                bincode::deserialize(s_bytes).map_err(|_| ZplonkError::DeserializationError)?;
 
             Ok(VerifierParams {
                 shrunk_vk: common.shrunk_pcs,
@@ -134,6 +143,6 @@ pub fn load_shuffle_verifier_params() -> Result<VerifierParams, SetUpError> {
                 verifier_params: special.verifier_params,
             })
         }
-        _ => Err(SetUpError::MissingVerifierParamsError),
+        _ => Err(ZplonkError::MissingVerifierParamsError),
     }
 }

@@ -1,4 +1,4 @@
-use super::errors::UtilsError;
+use crate::errors::ZplonkError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
 
 pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
@@ -9,14 +9,14 @@ pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
 
 pub fn from_bytes<A: Default + CanonicalSerialize + CanonicalDeserialize>(
     bytes: &[u8],
-) -> Result<A, UtilsError> {
+) -> Result<A, ZplonkError> {
     let n = A::default().serialized_size(Compress::Yes);
     let mut new_bytes = vec![0u8; n];
     let m = core::cmp::min(n, bytes.len());
     new_bytes[..m].copy_from_slice(&bytes[..m]);
 
     A::deserialize_with_mode(new_bytes.as_slice(), Compress::Yes, Validate::Yes)
-        .map_err(|_| UtilsError::SerializationError)
+        .map_err(|_| ZplonkError::SerializationError)
 }
 
 pub fn ark_serialize<S, A: CanonicalSerialize>(a: &A, s: S) -> Result<S::Ok, S::Error>

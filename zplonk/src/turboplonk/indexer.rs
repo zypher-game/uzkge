@@ -1,11 +1,12 @@
+use ark_ff::{BigInteger, Field, One, PrimeField, Zero};
+use ark_poly::EvaluationDomain;
+
 use super::constraint_system::ConstraintSystem;
-use super::errors::ProofSystemError;
 use super::helpers::compute_lagrange_constant;
+use crate::errors::ZplonkError;
 use crate::poly_commit::field_polynomial::FpPolynomial;
 use crate::poly_commit::pcs::PolyComScheme;
 use crate::utils::{prelude::*, shift_u8_vec, u64_limbs_from_bytes};
-use ark_ff::{BigInteger, Field, One, PrimeField, Zero};
-use ark_poly::EvaluationDomain;
 
 /// The data structure of a Plonk proof.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -206,7 +207,7 @@ pub fn choose_ks<R: CryptoRng + RngCore, F: PrimeField>(
 pub fn indexer<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     cs: &CS,
     pcs: &PCS,
-) -> Result<PlonkProverParams<PCS>, ProofSystemError> {
+) -> Result<PlonkProverParams<PCS>, ZplonkError> {
     indexer_with_lagrange(cs, pcs, None, None)
 }
 
@@ -216,7 +217,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     pcs: &PCS,
     lagrange_pcs: Option<&PCS>,
     verifier_params: Option<PlonkVerifierParams<PCS>>,
-) -> Result<PlonkProverParams<PCS>, ProofSystemError> {
+) -> Result<PlonkProverParams<PCS>, ZplonkError> {
     let no_verifier = verifier_params.is_none();
 
     // It's okay to choose a fixed seed to generate quadratic non-residue.
@@ -226,7 +227,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     let m = cs.quot_eval_dom_size();
     let factor = m / n;
     if n * factor != m {
-        return Err(ProofSystemError::SetupError);
+        return Err(ZplonkError::SetupError);
     }
     let lagrange_pcs = if lagrange_pcs.is_some() && lagrange_pcs.unwrap().max_degree() + 1 == n {
         lagrange_pcs
@@ -234,10 +235,10 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
         None
     };
 
-    let domain = FpPolynomial::<PCS::Field>::evaluation_domain(n)
-        .ok_or(ProofSystemError::GroupNotFound(n))?;
+    let domain =
+        FpPolynomial::<PCS::Field>::evaluation_domain(n).ok_or(ZplonkError::GroupNotFound(n))?;
     let domain_m = FpPolynomial::<PCS::Field>::quotient_evaluation_domain(m)
-        .ok_or(ProofSystemError::GroupNotFound(m))?;
+        .ok_or(ZplonkError::GroupNotFound(m))?;
     let group = domain.elements().map(|v| v).collect::<Vec<_>>();
     let k = choose_ks::<_, PCS::Field>(&mut prng, n_wires_per_gate);
     let coset_quotient = domain_m
@@ -248,17 +249,17 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
 
     let commit = |evals: Vec<PCS::Field>,
                   coef_polynomial: &FpPolynomial<PCS::Field>|
-     -> Result<PCS::Commitment, ProofSystemError> {
+     -> Result<PCS::Commitment, ZplonkError> {
         if let Some(lagrange_pcs) = lagrange_pcs {
             let eval_poly = FpPolynomial::from_coefs(evals);
             let cm = lagrange_pcs
                 .commit(&eval_poly)
-                .map_err(|_| ProofSystemError::SetupError)?;
+                .map_err(|_| ZplonkError::SetupError)?;
             Ok(cm)
         } else {
             let cm = pcs
                 .commit(&coef_polynomial)
-                .map_err(|_| ProofSystemError::SetupError)?;
+                .map_err(|_| ZplonkError::SetupError)?;
             Ok(cm)
         }
     };
@@ -367,7 +368,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
                 .into_iter()
                 .zip(q_prk_polys.iter())
                 .map(|(q_prk_eval, q_prk_poly)| commit(q_prk_eval, q_prk_poly))
-                .collect::<Result<_, ProofSystemError>>()?
+                .collect::<Result<_, ZplonkError>>()?
         } else {
             vec![]
         };
@@ -416,7 +417,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
                 .map(|(q_shuffle_generator_eval, q_shuffle_generator_poly)| {
                     commit(q_shuffle_generator_eval, q_shuffle_generator_poly)
                 })
-                .collect::<Result<_, ProofSystemError>>()?
+                .collect::<Result<_, ZplonkError>>()?
         } else {
             vec![]
         };

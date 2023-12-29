@@ -11,7 +11,7 @@ use crate::{
     utils::prelude::*,
 };
 
-use super::errors::SetUpError;
+use super::errors::ZplonkError;
 
 #[cfg(not(feature = "no_srs"))]
 /// The SRS.
@@ -28,16 +28,13 @@ lazy_static! {
 }
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_4096: &'static [u8] =
-    include_bytes!("../parameters/lagrange-srs-4096.bin");
+static LAGRANGE_BASE_4096: &'static [u8] = include_bytes!("../parameters/lagrange-srs-4096.bin");
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_8192: &'static [u8] =
-    include_bytes!("../parameters/lagrange-srs-8192.bin");
+static LAGRANGE_BASE_8192: &'static [u8] = include_bytes!("../parameters/lagrange-srs-8192.bin");
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_16384: &'static [u8] =
-    include_bytes!("../parameters/lagrange-srs-16384.bin");
+static LAGRANGE_BASE_16384: &'static [u8] = include_bytes!("../parameters/lagrange-srs-16384.bin");
 
 #[cfg(not(feature = "no_srs"))]
 lazy_static! {
@@ -99,7 +96,7 @@ impl VerifierParams {
     /// Split the verifier parameters to the common part and the sspecific part.
     pub fn split(
         self,
-    ) -> Result<(VerifierParamsSplitCommon, VerifierParamsSplitSpecific), SetUpError> {
+    ) -> Result<(VerifierParamsSplitCommon, VerifierParamsSplitSpecific), ZplonkError> {
         Ok((
             VerifierParamsSplitCommon {
                 shrunk_pcs: self.shrunk_vk.shrink_to_verifier_only().unwrap(),
@@ -129,14 +126,14 @@ pub fn load_lagrange_params(size: usize) -> Option<KZGCommitmentSchemeBN254> {
     }
 }
 
-pub fn load_srs_params(size: usize) -> Result<KZGCommitmentSchemeBN254, SetUpError> {
-    let srs = SRS.ok_or(SetUpError::MissingSRSError)?;
+pub fn load_srs_params(size: usize) -> Result<KZGCommitmentSchemeBN254, ZplonkError> {
+    let srs = SRS.ok_or(ZplonkError::MissingSRSError)?;
 
     let KZGCommitmentSchemeBN254 {
         public_parameter_group_1,
         public_parameter_group_2,
     } = KZGCommitmentSchemeBN254::from_unchecked_bytes(&srs)
-        .map_err(|_| SetUpError::DeserializationError)?;
+        .map_err(|_| ZplonkError::DeserializationError)?;
 
     let mut new_group_1 = vec![G1Projective::default(); core::cmp::max(size + 3, 2051)];
     new_group_1[0..2051].copy_from_slice(&public_parameter_group_1[0..2051]);
@@ -154,7 +151,7 @@ pub fn load_srs_params(size: usize) -> Result<KZGCommitmentSchemeBN254, SetUpErr
     }
 
     if size > 16384 {
-        return Err(SetUpError::ParameterError);
+        return Err(ZplonkError::ParameterError);
     }
 
     Ok(KZGCommitmentSchemeBN254 {

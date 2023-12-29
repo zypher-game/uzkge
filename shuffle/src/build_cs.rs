@@ -2,11 +2,11 @@ use ark_bn254::Fr;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
 use rand_chacha::rand_core::{CryptoRng, RngCore};
 use zplonk::{
+    errors::Result,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     shuffle::{BabyJubjubShuffle, Permutation, Remark},
     turboplonk::{
         constraint_system::{shuffle::CardVar, TurboCS},
-        errors::Result,
         indexer::PlonkProof,
         prover::prover_with_lagrange,
         verifier::verifier,

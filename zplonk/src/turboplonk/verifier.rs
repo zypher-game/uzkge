@@ -2,11 +2,11 @@ use std::ops::Mul;
 
 use super::{
     constraint_system::ConstraintSystem,
-    errors::ProofSystemError,
     helpers::{eval_pi_poly, first_lagrange_poly, r_commitment, r_eval_zeta, PlonkChallenges},
     indexer::{PlonkProof, PlonkVerifierParams},
     transcript::transcript_init_plonk,
 };
+use crate::errors::ZplonkError;
 use crate::poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme};
 use crate::utils::transcript::Transcript;
 
@@ -18,9 +18,9 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     verifier_params: &PlonkVerifierParams<PCS>,
     pi: &[PCS::Field],
     proof: &PlonkProof<PCS>,
-) -> Result<(), ProofSystemError> {
+) -> Result<(), ZplonkError> {
     let domain = FpPolynomial::<PCS::Field>::evaluation_domain(cs.size())
-        .ok_or(ProofSystemError::GroupNotFound(cs.size()))?;
+        .ok_or(ZplonkError::GroupNotFound(cs.size()))?;
     let root = domain.group_gen;
 
     transcript_init_plonk(transcript, verifier_params, pi, &root);
@@ -146,7 +146,7 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         ],
         challenges.get_u().unwrap(),
     )
-    .map_err(|_| ProofSystemError::VerificationError)
+    .map_err(|_| ZplonkError::VerificationError)
 }
 
 fn compute_challenges<PCS: PolyComScheme>(

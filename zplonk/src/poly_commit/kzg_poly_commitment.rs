@@ -1,6 +1,6 @@
 use crate::{
+    errors::ZplonkError,
     poly_commit::{
-        errors::PolyComSchemeError,
         field_polynomial::FpPolynomial,
         pcs::{HomomorphicPolyComElem, PolyComScheme, ToBytes},
     },
@@ -199,7 +199,7 @@ impl<P: Pairing> KZGCommitmentScheme<P> {
     }
 
     /// Serialize the parameters to unchecked bytes.
-    pub fn to_unchecked_bytes(&self) -> Result<Vec<u8>, PolyComSchemeError> {
+    pub fn to_unchecked_bytes(&self) -> Result<Vec<u8>, ZplonkError> {
         let mut bytes = vec![];
         let len_1 = self.public_parameter_group_1.len() as u32;
         let len_2 = self.public_parameter_group_2.len() as u32;
@@ -220,9 +220,9 @@ impl<P: Pairing> KZGCommitmentScheme<P> {
     }
 
     /// Deserialize the parameters from unchecked bytes.
-    pub fn from_unchecked_bytes(bytes: &[u8]) -> Result<Self, PolyComSchemeError> {
+    pub fn from_unchecked_bytes(bytes: &[u8]) -> Result<Self, ZplonkError> {
         if bytes.len() < 8 {
-            return Err(PolyComSchemeError::DeserializationError);
+            return Err(ZplonkError::DeserializationError);
         }
         let mut len_1_bytes = [0u8; 4];
         let mut len_2_bytes = [0u8; 4];
@@ -241,14 +241,14 @@ impl<P: Pairing> KZGCommitmentScheme<P> {
         for i in 0..len_1 {
             let reader = &bytes_1[n_1 * i..n_1 * (i + 1)];
             let g1 = P::G1::deserialize_with_mode(reader, Compress::No, Validate::No)
-                .map_err(|_| PolyComSchemeError::DeserializationError)?;
+                .map_err(|_| ZplonkError::DeserializationError)?;
             p1.push(g1);
         }
 
         for i in 0..len_2 {
             let reader = &bytes_2[n_2 * i..n_2 * (i + 1)];
             let g2 = P::G2::deserialize_with_mode(reader, Compress::No, Validate::No)
-                .map_err(|_| PolyComSchemeError::DeserializationError)?;
+                .map_err(|_| ZplonkError::DeserializationError)?;
             p2.push(g2);
         }
 
@@ -270,16 +270,13 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         self.public_parameter_group_1.len() - 1
     }
 
-    fn commit(
-        &self,
-        polynomial: &FpPolynomial<Fr>,
-    ) -> Result<Self::Commitment, PolyComSchemeError> {
+    fn commit(&self, polynomial: &FpPolynomial<Fr>) -> Result<Self::Commitment, ZplonkError> {
         let coefs = polynomial.get_coefs_ref();
 
         let degree = polynomial.degree();
 
         if degree + 1 > self.public_parameter_group_1.len() {
-            return Err(PolyComSchemeError::DegreeError);
+            return Err(ZplonkError::DegreeError);
         }
 
         let points_raw =
@@ -315,11 +312,11 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         poly: &FpPolynomial<Self::Field>,
         x: &Self::Field,
         max_degree: usize,
-    ) -> Result<Self::Commitment, PolyComSchemeError> {
+    ) -> Result<Self::Commitment, ZplonkError> {
         let eval = poly.eval(x);
 
         if poly.degree() > max_degree {
-            return Err(PolyComSchemeError::DegreeError);
+            return Err(ZplonkError::DegreeError);
         }
 
         let nominator = poly.sub(&FpPolynomial::from_coefs(vec![eval]));
@@ -332,7 +329,7 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         let (q_poly, r_poly) = nominator.div_rem(&vanishing_poly); // P(X)-P(x) / (X-x)
 
         if !r_poly.is_zero() {
-            return Err(PolyComSchemeError::PCSProveEvalError);
+            return Err(ZplonkError::PCSProveEvalError);
         }
 
         let proof = self.commit(&q_poly).unwrap();
@@ -346,7 +343,7 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         point: &Self::Field,
         eval: &Self::Field,
         proof: &Self::Commitment,
-    ) -> Result<(), PolyComSchemeError> {
+    ) -> Result<(), ZplonkError> {
         let g1_0 = self.public_parameter_group_1[0].clone();
         let g2_0 = self.public_parameter_group_2[0].clone();
         let g2_1 = self.public_parameter_group_2[1].clone();
@@ -364,7 +361,7 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         if left_pairing_eval == right_pairing_eval {
             Ok(())
         } else {
-            Err(PolyComSchemeError::PCSProveEvalError)
+            Err(ZplonkError::PCSProveEvalError)
         }
     }
 
@@ -375,7 +372,7 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         eval_vec: &[Self::Field],
         proofs: &[Self::Commitment],
         challenge: &Self::Field,
-    ) -> Result<(), PolyComSchemeError> {
+    ) -> Result<(), ZplonkError> {
         assert!(proofs.len() > 0);
         assert_eq!(proofs.len(), point_vec.len());
         assert_eq!(proofs.len(), eval_vec.len());
@@ -416,11 +413,11 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
         if pairing_eval == Fp12::<Fq12Config>::one() {
             Ok(())
         } else {
-            Err(PolyComSchemeError::PCSProveEvalError)
+            Err(ZplonkError::PCSProveEvalError)
         }
     }
 
-    fn shrink_to_verifier_only(&self) -> Result<Self, PolyComSchemeError> {
+    fn shrink_to_verifier_only(&self) -> Result<Self, ZplonkError> {
         Ok(Self {
             public_parameter_group_1: vec![self.public_parameter_group_1[0].clone()],
             public_parameter_group_2: vec![

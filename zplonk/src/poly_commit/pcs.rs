@@ -1,8 +1,9 @@
-use crate::poly_commit::{errors::PolyComSchemeError, field_polynomial::FpPolynomial};
 use ark_ff::{BigInteger, One, PrimeField, Zero};
 use ark_std::fmt::Debug;
 use std::ops::{AddAssign, Mul, MulAssign, Neg};
 
+use crate::errors::ZplonkError;
+use crate::poly_commit::field_polynomial::FpPolynomial;
 use crate::utils::transcript::Transcript;
 
 /// The trait for serialization to bytes
@@ -67,7 +68,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
     fn commit(
         &self,
         polynomial: &FpPolynomial<Self::Field>,
-    ) -> Result<Self::Commitment, PolyComSchemeError>;
+    ) -> Result<Self::Commitment, ZplonkError>;
 
     /// Evaluate the polynomial using the commitment opening to it.
     fn eval(&self, polynomial: &FpPolynomial<Self::Field>, point: &Self::Field) -> Self::Field;
@@ -78,7 +79,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
         polynomial: &FpPolynomial<Self::Field>,
         point: &Self::Field,
         max_degree: usize,
-    ) -> Result<Self::Commitment, PolyComSchemeError>;
+    ) -> Result<Self::Commitment, ZplonkError>;
 
     /// Verify an evaluation proof that polynomial inside commitment
     /// evaluates to `value` on input `point `.
@@ -89,7 +90,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
         point: &Self::Field,
         value: &Self::Field,
         proof: &Self::Commitment,
-    ) -> Result<(), PolyComSchemeError>;
+    ) -> Result<(), ZplonkError>;
 
     /// Apply blind factors over the vanishing part
     fn apply_blind_factors(
@@ -110,7 +111,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
         polys: &[&FpPolynomial<Self::Field>],
         point: &Self::Field,
         max_degree: usize,
-    ) -> Result<Self::Commitment, PolyComSchemeError> {
+    ) -> Result<Self::Commitment, ZplonkError> {
         assert!(polys.len() > 0);
 
         Self::init_pcs_batch_eval_transcript(transcript, max_degree, point);
@@ -131,7 +132,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
 
         let (q, rem) = h.div_rem(&z);
         if !rem.is_zero() {
-            return Err(PolyComSchemeError::PCSProveEvalError);
+            return Err(ZplonkError::PCSProveEvalError);
         }
 
         if let Some(lagrange_pcs) = lagrange_pcs {
@@ -155,8 +156,8 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
             }
 
             let sub_q = FpPolynomial::from_coefs(new_coefs);
-            let q_eval = FpPolynomial::fft(&sub_q, max_power_of_2)
-                .ok_or(PolyComSchemeError::PCSProveEvalError)?;
+            let q_eval =
+                FpPolynomial::fft(&sub_q, max_power_of_2).ok_or(ZplonkError::PCSProveEvalError)?;
             let q_eval = FpPolynomial::from_coefs(q_eval);
 
             let cm = lagrange_pcs.commit(&q_eval)?;
@@ -198,7 +199,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
         point: &Self::Field,
         values: &[Self::Field],
         proof: &Self::Commitment,
-    ) -> Result<(), PolyComSchemeError> {
+    ) -> Result<(), ZplonkError> {
         let (cm_combined, eval_combined) =
             self.batch(transcript, commitments, max_degree, point, values);
 
@@ -213,7 +214,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
         eval_vec: &[Self::Field],
         proof: &[Self::Commitment],
         challenge: &Self::Field,
-    ) -> Result<(), PolyComSchemeError>;
+    ) -> Result<(), ZplonkError>;
 
     /// Initialize the transcript for batch evaluation.
     fn init_pcs_batch_eval_transcript(
@@ -237,7 +238,7 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
     }
 
     /// Shrink this to only for verifier use.
-    fn shrink_to_verifier_only(&self) -> Result<Self, PolyComSchemeError>;
+    fn shrink_to_verifier_only(&self) -> Result<Self, ZplonkError>;
 }
 
 #[cfg(test)]

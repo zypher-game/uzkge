@@ -1,6 +1,8 @@
 use super::build_cs::{prove_shuffle, verify_shuffle};
 use super::{keygen::*, mask::*, reveal::*, *};
-use crate::parameters::{PROVER_PARAMS, refresh_prover_params_public_key, get_shuffle_verifier_params};
+use crate::parameters::{
+    get_shuffle_verifier_params, refresh_prover_params_public_key, PROVER_PARAMS,
+};
 use ark_ed_on_bn254::{EdwardsAffine, Fr};
 use ark_ff::{BigInteger, One, PrimeField, UniformRand};
 use ark_std::rand::{CryptoRng, RngCore, SeedableRng};

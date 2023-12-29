@@ -9,7 +9,8 @@ pub mod anemoi;
 /// Module for shuffle.
 pub mod shuffle;
 
-use crate::turboplonk::errors::ProofSystemError;
+use crate::errors::ZplonkError;
+
 /// Default used constraint system.
 #[doc(hidden)]
 pub use turbo::TurboCS;
@@ -121,19 +122,15 @@ pub trait ConstraintSystem<F: PrimeField>: Sized {
     fn compute_witness_selectors(&self) -> [Vec<F>; N_WIRE_SELECTORS];
 
     /// Borrow the (index)-th selector vector.
-    fn selector(&self, index: usize) -> Result<&[F], ProofSystemError>;
+    fn selector(&self, index: usize) -> Result<&[F], ZplonkError>;
 
     /// Evaluate the constraint equation given public input and the
     /// values of the wires and the selectors.
-    fn eval_gate_func(
-        wire_vals: &[&F],
-        sel_vals: &[&F],
-        pub_input: &F,
-    ) -> Result<F, ProofSystemError>;
+    fn eval_gate_func(wire_vals: &[&F], sel_vals: &[&F], pub_input: &F) -> Result<F, ZplonkError>;
 
     /// Given the wires values of a gate, evaluate the coefficients
     /// of the selectors in the constraint equation.
-    fn eval_selector_multipliers(wire_vals: &[&F]) -> Result<Vec<F>, ProofSystemError>;
+    fn eval_selector_multipliers(wire_vals: &[&F]) -> Result<Vec<F>, ZplonkError>;
 
     /// is only for verifier use.
     fn is_verifier_only(&self) -> bool {

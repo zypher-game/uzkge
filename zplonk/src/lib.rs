@@ -6,6 +6,7 @@ pub mod utils;
 
 pub mod params;
 
+/// Module for error handling.
 pub mod errors;
 
 pub mod anemoi;

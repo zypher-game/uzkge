@@ -1,10 +1,3 @@
-use super::{
-    constraint_system::ConstraintSystem,
-    errors::ProofSystemError,
-    indexer::{PlonkProof, PlonkProverParams, PlonkVerifierParams},
-};
-use crate::poly_commit::pcs::HomomorphicPolyComElem;
-use crate::poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme};
 use ark_ff::{batch_inversion, Field, One, PrimeField, UniformRand, Zero};
 use ark_poly::EvaluationDomain;
 use ark_std::cfg_into_iter;
@@ -14,6 +7,14 @@ use std::{cmp::min, ops::*};
 
 #[cfg(feature = "parallel")]
 use rayon::{iter::IntoParallelIterator, prelude::ParallelIterator};
+
+use super::{
+    constraint_system::ConstraintSystem,
+    indexer::{PlonkProof, PlonkProverParams, PlonkVerifierParams},
+};
+use crate::errors::ZplonkError;
+use crate::poly_commit::pcs::HomomorphicPolyComElem;
+use crate::poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme};
 
 /// The data structure for challenges in Plonk.
 #[derive(Default)]
@@ -30,79 +31,79 @@ impl<F: PrimeField> PlonkChallenges<F> {
     }
 
     /// Insert beta and gamma.
-    pub(super) fn insert_beta_gamma(&mut self, beta: F, gamma: F) -> Result<(), ProofSystemError> {
+    pub(super) fn insert_beta_gamma(&mut self, beta: F, gamma: F) -> Result<(), ZplonkError> {
         if self.challenges.is_empty() {
             self.challenges.push(beta);
             self.challenges.push(gamma);
             Ok(())
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Insert alpha.
-    pub(super) fn insert_alpha(&mut self, alpha: F) -> Result<(), ProofSystemError> {
+    pub(super) fn insert_alpha(&mut self, alpha: F) -> Result<(), ZplonkError> {
         if self.challenges.len() == 2 {
             self.challenges.push(alpha);
             Ok(())
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Insert zeta.
-    pub(super) fn insert_zeta(&mut self, zeta: F) -> Result<(), ProofSystemError> {
+    pub(super) fn insert_zeta(&mut self, zeta: F) -> Result<(), ZplonkError> {
         if self.challenges.len() == 3 {
             self.challenges.push(zeta);
             Ok(())
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Insert u.
-    pub(super) fn insert_u(&mut self, u: F) -> Result<(), ProofSystemError> {
+    pub(super) fn insert_u(&mut self, u: F) -> Result<(), ZplonkError> {
         if self.challenges.len() == 4 {
             self.challenges.push(u);
             Ok(())
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Return beta and gamma.
-    pub(super) fn get_beta_gamma(&self) -> Result<(&F, &F), ProofSystemError> {
+    pub(super) fn get_beta_gamma(&self) -> Result<(&F, &F), ZplonkError> {
         if self.challenges.len() > 1 {
             Ok((&self.challenges[0], &self.challenges[1]))
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Return alpha.
-    pub(super) fn get_alpha(&self) -> Result<&F, ProofSystemError> {
+    pub(super) fn get_alpha(&self) -> Result<&F, ZplonkError> {
         if self.challenges.len() > 2 {
             Ok(&self.challenges[2])
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Return zeta.
-    pub(super) fn get_zeta(&self) -> Result<&F, ProofSystemError> {
+    pub(super) fn get_zeta(&self) -> Result<&F, ZplonkError> {
         if self.challenges.len() > 3 {
             Ok(&self.challenges[3])
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 
     /// Return u.
-    pub(super) fn get_u(&self) -> Result<&F, ProofSystemError> {
+    pub(super) fn get_u(&self) -> Result<&F, ZplonkError> {
         if self.challenges.len() > 4 {
             Ok(&self.challenges[4])
         } else {
-            Err(ProofSystemError::ChallengeError)
+            Err(ZplonkError::ChallengeError)
         }
     }
 }
@@ -227,17 +228,17 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     z: &FpPolynomial<PCS::Field>,
     challenges: &PlonkChallenges<PCS::Field>,
     pi: &FpPolynomial<PCS::Field>,
-) -> Result<FpPolynomial<PCS::Field>, ProofSystemError> {
+) -> Result<FpPolynomial<PCS::Field>, ZplonkError> {
     let n = cs.size();
     let m = cs.quot_eval_dom_size();
     let factor = m / n;
     if n * factor != m {
-        return Err(ProofSystemError::SetupError);
+        return Err(ZplonkError::SetupError);
     }
     let one = PCS::Field::ONE;
 
     let domain_m = FpPolynomial::<PCS::Field>::quotient_evaluation_domain(m)
-        .ok_or(ProofSystemError::GroupNotFound(n))?;
+        .ok_or(ZplonkError::GroupNotFound(n))?;
     let k = &prover_params.verifier_params.k;
 
     let mut z_h_inv_coset_evals: Vec<PCS::Field> = Vec::with_capacity(factor);
@@ -644,7 +645,7 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         })
         .collect::<Vec<PCS::Field>>();
 
-    let k_inv = k[1].inverse().ok_or(ProofSystemError::DivisionByZero)?;
+    let k_inv = k[1].inverse().ok_or(ZplonkError::DivisionByZero)?;
 
     Ok(FpPolynomial::coset_ifft_with_domain(
         &domain_m,
@@ -1280,7 +1281,7 @@ pub(crate) fn split_t_and_commit<R: CryptoRng + RngCore, PCS: PolyComScheme>(
     t: &FpPolynomial<PCS::Field>,
     n_wires_per_gate: usize,
     n: usize,
-) -> Result<(Vec<PCS::Commitment>, Vec<FpPolynomial<PCS::Field>>), ProofSystemError> {
+) -> Result<(Vec<PCS::Commitment>, Vec<FpPolynomial<PCS::Field>>), ZplonkError> {
     let mut cm_t_vec = vec![];
     let mut t_polys = vec![];
     let coefs_len = t.get_coefs_ref().len();
@@ -1337,20 +1338,19 @@ pub(crate) fn split_t_and_commit<R: CryptoRng + RngCore, PCS: PolyComScheme>(
             }
 
             let sub_q = FpPolynomial::from_coefs(new_coefs);
-            let q_eval =
-                FpPolynomial::fft(&sub_q, max_power_of_2).ok_or(ProofSystemError::FFTError)?;
+            let q_eval = FpPolynomial::fft(&sub_q, max_power_of_2).ok_or(ZplonkError::FFTError)?;
             let q_eval = FpPolynomial::from_coefs(q_eval);
 
             let cm = lagrange_pcs
                 .commit(&q_eval)
-                .map_err(|_| ProofSystemError::CommitmentError)?;
+                .map_err(|_| ZplonkError::CommitmentError)?;
             let cm_t = pcs.apply_blind_factors(&cm, &blinds, max_power_of_2);
             (cm_t, FpPolynomial::from_coefs(coefs))
         } else {
             let t_poly = FpPolynomial::from_coefs(coefs);
             let cm_t = pcs
                 .commit(&t_poly)
-                .map_err(|_| ProofSystemError::CommitmentError)?;
+                .map_err(|_| ZplonkError::CommitmentError)?;
             (cm_t, t_poly)
         };
 

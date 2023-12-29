@@ -6,6 +6,3 @@ pub mod kzg_poly_commitment;
 
 /// Module for polynomial commitment traits.
 pub mod pcs;
-
-/// Module for error handling.
-pub mod errors;

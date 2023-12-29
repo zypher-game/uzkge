@@ -7,9 +7,9 @@ use ark_std::{
 };
 
 use crate::{
+    errors::{Result, ZplonkError},
     poly_commit::pcs::ToBytes,
-    turboplonk::errors::{ProofSystemError, Result},
-    utils::{errors::UtilsError, prelude::*, transcript::Transcript},
+    utils::{prelude::*, transcript::Transcript},
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -47,9 +47,9 @@ impl ChaumPedersenDLProof {
         bytes
     }
 
-    pub fn from_uncompress(bytes: &[u8]) -> core::result::Result<Self, UtilsError> {
+    pub fn from_uncompress(bytes: &[u8]) -> core::result::Result<Self, ZplonkError> {
         if bytes.len() < 160 {
-            return Err(UtilsError::SerializationError);
+            return Err(ZplonkError::SerializationError);
         }
 
         let ax = Fq::from_be_bytes_mod_order(&bytes[..32]);
@@ -122,11 +122,11 @@ pub fn verify(
     let c: Fr = transcript.get_challenge_field_elem(b"Chaum Pedersen C");
 
     if parameters.g.mul(&proof.r) != proof.a + c1.mul(&c) {
-        return Err(ProofSystemError::VerificationError);
+        return Err(ZplonkError::VerificationError);
     }
 
     if parameters.h.mul(&proof.r) != proof.b + c2.mul(&c) {
-        return Err(ProofSystemError::VerificationError);
+        return Err(ZplonkError::VerificationError);
     }
 
     Ok(())

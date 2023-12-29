@@ -15,5 +15,3 @@ pub mod verifier;
 
 /// Module for help functions.
 pub(crate) mod helpers;
-
-pub mod errors;

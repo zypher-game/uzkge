@@ -2,8 +2,6 @@ pub mod serialization;
 
 pub mod transcript;
 
-pub mod errors;
-
 pub mod prelude;
 
 /// Shift a big integer (represented as a little-endian bytes vector) by one bit.

@@ -26,5 +26,5 @@ pub static VERIFIER_SPECIFIC_PARAMS: Option<&'static [u8]> = None;
 #[cfg(not(feature = "no_srs"))]
 lazy_static! {
     pub static ref PROVER_PARAMS: Mutex<ProverParams> =
-    Mutex::new(gen_shuffle_prover_params().unwrap());
+        Mutex::new(gen_shuffle_prover_params().unwrap());
 }

@@ -3,7 +3,7 @@ use ark_ed_on_bn254::{EdwardsProjective, Fr};
 use ark_std::rand::{CryptoRng, RngCore};
 use zplonk::{
     chaum_pedersen::dl::{prove, verify, ChaumPedersenDLParameters, ChaumPedersenDLProof},
-    turboplonk::errors::Result,
+    errors::Result,
     utils::transcript::Transcript,
 };
 

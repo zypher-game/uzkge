@@ -1,6 +1,7 @@
 use ark_poly::Radix2EvaluationDomain;
 
 use crate::{
+    errors::ZplonkError,
     poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
     turboplonk::helpers::{
         first_lagrange_poly, hide_polynomial, pi_poly, r_poly, split_t_and_commit, t_poly, z_poly,
@@ -11,7 +12,6 @@ use crate::{
 
 use super::{
     constraint_system::ConstraintSystem,
-    errors::ProofSystemError,
     indexer::{PlonkProof, PlonkProverParams},
     transcript::transcript_init_plonk,
 };
@@ -76,7 +76,7 @@ pub fn prover<R: CryptoRng + RngCore, PCS: PolyComScheme, CS: ConstraintSystem<P
     cs: &CS,
     params: &PlonkProverParams<PCS>,
     witness: &[PCS::Field],
-) -> Result<PlonkProof<PCS>, ProofSystemError> {
+) -> Result<PlonkProof<PCS>, ZplonkError> {
     prover_with_lagrange(prng, transcript, pcs, None, cs, params, witness)
 }
 
@@ -93,13 +93,13 @@ pub fn prover_with_lagrange<
     cs: &CS,
     prover_params: &PlonkProverParams<PCS>,
     w: &[PCS::Field],
-) -> Result<PlonkProof<PCS>, ProofSystemError> {
+) -> Result<PlonkProof<PCS>, ZplonkError> {
     if cs.is_verifier_only() {
-        return Err(ProofSystemError::FuncParamsError);
+        return Err(ZplonkError::FuncParamsError);
     }
 
     let domain = FpPolynomial::<PCS::Field>::evaluation_domain(cs.size())
-        .ok_or(ProofSystemError::GroupNotFound(cs.size()))?;
+        .ok_or(ZplonkError::GroupNotFound(cs.size()))?;
     let root = domain.group_gen;
 
     let online_values: Vec<PCS::Field> = cs
@@ -128,18 +128,18 @@ pub fn prover_with_lagrange<
     let commit = |evals: Vec<PCS::Field>,
                   coef_polynomial: &FpPolynomial<PCS::Field>,
                   blinds: &[PCS::Field]|
-     -> Result<PCS::Commitment, ProofSystemError> {
+     -> Result<PCS::Commitment, ZplonkError> {
         if let Some(lagrange_pcs) = lagrange_pcs {
             let eval_poly = FpPolynomial::from_coefs(evals);
             let cm = lagrange_pcs
                 .commit(&eval_poly)
-                .map_err(|_| ProofSystemError::SetupError)?;
+                .map_err(|_| ZplonkError::SetupError)?;
             let cm = pcs.apply_blind_factors(&cm, &blinds, n_constraints);
             Ok(cm)
         } else {
             let cm = pcs
                 .commit(&coef_polynomial)
-                .map_err(|_| ProofSystemError::SetupError)?;
+                .map_err(|_| ZplonkError::SetupError)?;
             Ok(cm)
         }
     };
@@ -333,7 +333,7 @@ pub fn prover_with_lagrange<
             &zeta,
             n_constraints + 2,
         )
-        .map_err(|_| ProofSystemError::ProofError)?;
+        .map_err(|_| ZplonkError::ProofError)?;
 
     let polys_to_open: Vec<&FpPolynomial<PCS::Field>> =
         vec![&z_poly, &w_polys[0], &w_polys[1], &w_polys[2]];
@@ -346,7 +346,7 @@ pub fn prover_with_lagrange<
             &zeta_omega,
             n_constraints + 2,
         )
-        .map_err(|_| ProofSystemError::ProofError)?;
+        .map_err(|_| ZplonkError::ProofError)?;
 
     // return proof
     Ok(PlonkProof {
