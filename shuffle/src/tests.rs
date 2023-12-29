@@ -1,6 +1,6 @@
 use super::build_cs::{prove_shuffle, verify_shuffle};
 use super::{keygen::*, mask::*, reveal::*, *};
-use crate::parameters::{VerifierParams, PROVER_PARAMS};
+use crate::parameters::{PROVER_PARAMS, refresh_prover_params_public_key, get_shuffle_verifier_params};
 use ark_ed_on_bn254::{EdwardsAffine, Fr};
 use ark_ff::{BigInteger, One, PrimeField, UniformRand};
 use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
@@ -210,9 +210,9 @@ fn test_poker() {
     }
 
     let mut prover_params = PROVER_PARAMS.lock().unwrap();
-    prover_params.refresh_public_key(&joint_pk).unwrap();
+    refresh_prover_params_public_key(&mut prover_params, &joint_pk).unwrap();
 
-    let mut verifier_params = VerifierParams::get_shuffle().unwrap();
+    let mut verifier_params = get_shuffle_verifier_params().unwrap();
     verifier_params.verifier_params = prover_params.prover_params.verifier_params.clone();
 
     // Alice, start shuffling.
