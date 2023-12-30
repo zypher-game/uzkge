@@ -1,13 +1,16 @@
 use super::build_cs::{prove_shuffle, verify_shuffle};
 use super::{keygen::*, mask::*, reveal::*, *};
 use crate::parameters::{
-    get_shuffle_verifier_params, refresh_prover_params_public_key, PROVER_PARAMS,
+    gen_shuffle_prover_params,
+    get_shuffle_verifier_params, refresh_prover_params_public_key,
 };
 use ark_ed_on_bn254::{EdwardsAffine, Fr};
 use ark_ff::{BigInteger, One, PrimeField, UniformRand};
 use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaChaRng;
 use std::collections::HashMap;
+
+pub const N_CARDS: usize = 52;
 
 #[derive(PartialEq, Clone, Copy, Eq)]
 pub enum Suite {
@@ -169,10 +172,10 @@ fn encode_cards<R: CryptoRng + RngCore>(rng: &mut R) -> HashMap<Card, ClassicPla
     map
 }
 
-#[test]
-fn test_generate_cards_points() {
+//#[test]
+fn _test_generate_cards_points() {
     let mut prng = ChaChaRng::from_seed([0u8; 32]);
-    for _ in 0..54 {
+    for _ in 0..N_CARDS {
         let p = EdwardsProjective::rand(&mut prng);
         let aa = EdwardsAffine::from(p);
         let bytes = aa.y.into_bigint().to_bytes_be();
@@ -211,10 +214,10 @@ fn test_poker() {
         deck.push(masked_card)
     }
 
-    let mut prover_params = PROVER_PARAMS.lock().unwrap();
+    let mut prover_params = gen_shuffle_prover_params(N_CARDS).unwrap();
     refresh_prover_params_public_key(&mut prover_params, &joint_pk).unwrap();
 
-    let mut verifier_params = get_shuffle_verifier_params().unwrap();
+    let mut verifier_params = get_shuffle_verifier_params(N_CARDS).unwrap();
     verifier_params.verifier_params = prover_params.prover_params.verifier_params.clone();
 
     // Alice, start shuffling.

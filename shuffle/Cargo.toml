@@ -10,19 +10,11 @@ required-features = ['gen']
 
 [dependencies]
 zplonk = { path = "../zplonk" }
-rand_chacha = "0.3.1"
-sha3 = "^0.10"
-num-bigint = "0.4.3"
-num-integer = "0.1.45"
-serde = '1.0'
-serde_derive = '1.0'
-merlin = '3.0.0'
-itertools = '0.10.0'
-rayon = { version = "1.7.0", optional = true}
-displaydoc = { version = "0.2.4", default-features = false }
-structopt =  { version = "0.3.26", optional = true}
 bincode = '1.3.1'
-lazy_static = "1.4.0"
+rand_chacha = "0.3.1"
+serde = { version = "1.0", features = ["derive"] }
+rayon = { version = "1.7.0", optional = true}
+structopt =  { version = "0.3.26", optional = true}
 
 [dependencies.ark-ec]
 version = '0.4.0'
@@ -34,10 +26,6 @@ default-features = false
 features = ['asm']
 
 [dependencies.ark-std]
-version = '0.4.0'
-default-features = false
-
-[dependencies.ark-poly]
 version = '0.4.0'
 default-features = false
 
@@ -60,11 +48,19 @@ hex = "0.4"
 
 [features]
 default = []
-std = ["ark-ec/std", "ark-std/std", "ark-ff/std", "ark-bn254/std"]
-debug = []
-parallel = ["rayon", "ark-std/parallel", "ark-ff/parallel", "ark-ec/parallel"]
-no_srs = []
+std = [
+  "ark-ec/std",
+  "ark-std/std",
+  "ark-ff/std",
+  "ark-bn254/std",
+  "zplonk/std"
+]
+parallel = [
+  "rayon",
+  "ark-std/parallel",
+  "ark-ff/parallel",
+  "ark-ec/parallel",
+  "zplonk/parallel"
+]
 no_vk = []
-gen = ["parallel","structopt"]
-shuffle = []
-anemoi = []
+gen = ["parallel", "structopt"]

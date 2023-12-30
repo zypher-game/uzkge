@@ -15,7 +15,7 @@ use zplonk::{
 };
 
 use crate::parameters::{ProverParams, VerifierParams};
-use crate::{MaskedCard, N_CARDS};
+use crate::MaskedCard;
 
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";
@@ -25,10 +25,11 @@ pub(crate) fn build_cs<R: CryptoRng + RngCore>(
     aggregate_public_key: &EdwardsProjective,
     input_cards: &[MaskedCard],
 ) -> (TurboCS<Fr>, Vec<CardVar>) {
+    let n = input_cards.len();
     let mut cs = TurboCS::new();
     cs.load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(aggregate_public_key);
 
-    let mut remark_card_vars = Vec::with_capacity(N_CARDS);
+    let mut remark_card_vars = Vec::with_capacity(n);
 
     for input in input_cards.iter() {
         let bits = BabyJubjubShuffle::sample_random_scalar_bits(prng);
@@ -39,7 +40,7 @@ pub(crate) fn build_cs<R: CryptoRng + RngCore>(
         remark_card_vars.push(output_var);
     }
 
-    let permutation = Permutation::rand(prng, N_CARDS);
+    let permutation = Permutation::rand(prng, n);
     let shuffle_card_vars = cs.shuffle_card(&remark_card_vars, &permutation);
     for card_var in shuffle_card_vars.iter() {
         cs.prepare_pi_card_variable(card_var);
@@ -56,11 +57,14 @@ pub fn prove_shuffle<R: CryptoRng + RngCore>(
     input_cards: &[MaskedCard],
     prover_params: &ProverParams,
 ) -> Result<(PlonkProof<KZGCommitmentSchemeBN254>, Vec<MaskedCard>)> {
+    let n = input_cards.len();
+    // FIXME check n eq prover_params
+
     let (mut cs, output_vars) = build_cs(prng, aggregate_public_key, input_cards);
     let witness = cs.get_and_clear_witness();
 
     let mut transcript = Transcript::new(PLONK_PROOF_TRANSCRIPT);
-    transcript.append_u64(N_CARDS_TRANSCRIPT, N_CARDS as u64);
+    transcript.append_u64(N_CARDS_TRANSCRIPT, n as u64);
 
     let proof = prover_with_lagrange(
         prng,
@@ -95,8 +99,11 @@ pub fn verify_shuffle(
     output_cards: &[MaskedCard],
     proof: &PlonkProof<KZGCommitmentSchemeBN254>,
 ) -> Result<()> {
+    let n = input_cards.len();
+    // FIXME check n eq verifier_params
+
     let mut transcript = Transcript::new(PLONK_PROOF_TRANSCRIPT);
-    transcript.append_u64(N_CARDS_TRANSCRIPT, N_CARDS as u64);
+    transcript.append_u64(N_CARDS_TRANSCRIPT, n as u64);
 
     let mut online_inputs = vec![];
 

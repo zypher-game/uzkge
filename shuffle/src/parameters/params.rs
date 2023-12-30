@@ -16,24 +16,24 @@ use zplonk::{
 };
 
 use crate::build_cs::build_cs;
-use crate::parameters::{VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS};
-use crate::{MaskedCard, N_CARDS};
+use crate::parameters::{VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54};
+use crate::MaskedCard;
 
 // re-export
 pub use zplonk::params::{ProverParams, VerifierParams};
 
 /// Obtain the parameters for shuffle.
-pub fn gen_shuffle_prover_params() -> Result<ProverParams, ZplonkError> {
+pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> {
     let mut rng = ChaChaRng::from_seed([0u8; 32]);
     let apk = EdwardsProjective::rand(&mut rng);
-    let cards = [MaskedCard::rand(&mut rng); N_CARDS];
+    let cards = vec![MaskedCard::rand(&mut rng); n];
     let (cs, _) = build_cs(&mut rng, &apk, &cards);
 
     let cs_size = cs.size();
     let pcs = load_srs_params(cs_size)?;
     let lagrange_pcs = load_lagrange_params(cs_size);
 
-    let verifier_params = if let Ok(v) = load_shuffle_verifier_params() {
+    let verifier_params = if let Ok(v) = load_shuffle_verifier_params(n) {
         Some(v.verifier_params)
     } else {
         None
@@ -119,17 +119,28 @@ pub fn refresh_prover_params_public_key(
     Ok(())
 }
 
-/// Load the verifier parameters.
-pub fn get_shuffle_verifier_params() -> Result<VerifierParams, ZplonkError> {
-    match load_shuffle_verifier_params() {
+/// Parse the verifier parameters from bytes.
+pub fn parse_shuffle_verifier_params(vk: &[u8]) -> Result<VerifierParams, ZplonkError> {
+    bincode::deserialize(vk).map_err(|_| ZplonkError::DeserializationError)
+}
+
+/// Get the verifier parameters.
+pub fn get_shuffle_verifier_params(n: usize) -> Result<VerifierParams, ZplonkError> {
+    match load_shuffle_verifier_params(n) {
         Ok(vk) => Ok(vk),
-        Err(_e) => Ok(VerifierParams::from(gen_shuffle_prover_params()?)),
+        Err(_e) => Ok(VerifierParams::from(gen_shuffle_prover_params(n)?)),
     }
 }
 
 /// Load the verifier parameters from prepare.
-pub fn load_shuffle_verifier_params() -> Result<VerifierParams, ZplonkError> {
-    match (VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS) {
+pub fn load_shuffle_verifier_params(n: usize) -> Result<VerifierParams, ZplonkError> {
+    let specific = match n {
+        52 => VERIFIER_SPECIFIC_PARAMS_52,
+        54 => VERIFIER_SPECIFIC_PARAMS_54,
+        _ => return Err(ZplonkError::DeserializationError),
+    };
+
+    match (VERIFIER_COMMON_PARAMS, specific) {
         (Some(c_bytes), Some(s_bytes)) => {
             let common: VerifierParamsSplitCommon =
                 bincode::deserialize(c_bytes).map_err(|_| ZplonkError::DeserializationError)?;
