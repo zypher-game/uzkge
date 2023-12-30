@@ -9,7 +9,7 @@ resolver = "2"
 opt-level = 3
 lto = "thin"
 incremental = true
-panic = 'abort'
+panic = "abort"
 
 [profile.bench]
 opt-level = 3
@@ -25,7 +25,7 @@ lto = "thin"
 incremental = true
 debug-assertions = true
 debug = true
-panic = 'abort'
+panic = "abort"
 
 [profile.test]
 opt-level = 2

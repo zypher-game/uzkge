@@ -1,8 +1,11 @@
-use crate::anemoi::bn254::AnemoiJive254;
-use crate::anemoi::mds::{ApplicableMDSMatrix, MDSMatrix};
-use crate::anemoi::{AnemoiJive, N_ANEMOI_ROUNDS};
 use ark_bn254::Fr;
 use ark_ff::{AdditiveGroup, Field, MontFp};
+
+use crate::anemoi::{
+    bn254::AnemoiJive254,
+    mds::{ApplicableMDSMatrix, MDSMatrix},
+    AnemoiJive, N_ANEMOI_ROUNDS,
+};
 
 #[test]
 fn test_anemoi_variable_length_hash() {

@@ -1,17 +1,16 @@
 use ark_bn254::{Fr, G1Projective};
 use ark_std::collections::BTreeMap;
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
 use crate::{
+    errors::ZplonkError,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     poly_commit::pcs::PolyComScheme,
     turboplonk::constraint_system::ConstraintSystem,
     turboplonk::constraint_system::TurboCS,
     turboplonk::indexer::{PlonkProverParams, PlonkVerifierParams},
-    utils::prelude::*,
 };
-
-use super::errors::ZplonkError;
 
 #[cfg(not(feature = "no_srs"))]
 /// The SRS.

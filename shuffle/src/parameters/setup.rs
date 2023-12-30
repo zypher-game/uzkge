@@ -6,9 +6,11 @@ use ark_bn254::{Fr, G1Projective};
 use ark_ed_on_bn254::EdwardsProjective;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
 use serde::Serialize;
-use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 use structopt::StructOpt;
 use zshuffle::parameters::get_shuffle_verifier_params;
 

@@ -1,17 +1,22 @@
+use ark_bn254::{Bn254, Fq12Config, Fr, G1Projective};
+use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
+use ark_ff::{AdditiveGroup, Fp12, One, PrimeField};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
+use ark_std::{
+    ops::*,
+    rand::{CryptoRng, RngCore},
+    UniformRand, Zero,
+};
+use serde::{Deserialize, Serialize};
+
 use crate::{
     errors::ZplonkError,
     poly_commit::{
         field_polynomial::FpPolynomial,
         pcs::{HomomorphicPolyComElem, PolyComScheme, ToBytes},
     },
-    utils::prelude::*,
+    utils::serialization::{ark_deserialize, ark_serialize},
 };
-
-use ark_bn254::{Bn254, Fq12Config, Fr, G1Projective};
-use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
-use ark_ff::{AdditiveGroup, Fp12, One, PrimeField};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
-use ark_std::{UniformRand, Zero};
 
 /// KZG commitment scheme over the `Group`.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
@@ -430,6 +435,9 @@ impl<'b> PolyComScheme for KZGCommitmentSchemeBN254 {
 
 #[cfg(test)]
 mod tests_kzg_impl {
+    use ark_std::rand::SeedableRng;
+    use rand_chacha::ChaChaRng;
+
     use super::*;
 
     fn check_public_parameters_generation<P: Pairing>() {

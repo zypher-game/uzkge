@@ -1,7 +1,8 @@
 use ark_ff::Field;
 
-use super::N_SELECT_BITS;
 use crate::turboplonk::constraint_system::turbo::N_WIRE_SELECTORS;
+
+use super::N_SELECT_BITS;
 
 /// The structure for the trace of shuffle remark.
 #[derive(Default, Clone)]

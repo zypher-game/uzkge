@@ -1,6 +1,9 @@
-use crate::anemoi::{AnemoiJive, AnemoiVLHTrace, N_ANEMOI_ROUNDS};
-use crate::turboplonk::constraint_system::{TurboCS, VarIndex};
 use ark_ff::PrimeField;
+
+use crate::{
+    anemoi::{AnemoiJive, AnemoiVLHTrace, N_ANEMOI_ROUNDS},
+    turboplonk::constraint_system::{TurboCS, VarIndex},
+};
 
 impl<F: PrimeField> TurboCS<F> {
     /// Create constraints for the Anemoi permutation.
@@ -305,9 +308,12 @@ impl<F: PrimeField> TurboCS<F> {
 
 #[cfg(test)]
 mod test_bn254 {
-    use crate::anemoi::{AnemoiJive, AnemoiJive254};
-    use crate::turboplonk::constraint_system::TurboCS;
     use ark_bn254::Fr;
+
+    use crate::{
+        anemoi::{AnemoiJive, AnemoiJive254},
+        turboplonk::constraint_system::TurboCS,
+    };
 
     #[test]
     fn test_anemoi_variable_length_hash_constraint_system() {

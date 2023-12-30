@@ -1,12 +1,17 @@
-use crate::anemoi::{AnemoiJive, N_ANEMOI_ROUNDS};
-use crate::errors::ZplonkError;
-use crate::shuffle::Remark;
-use crate::turboplonk::constraint_system::{ConstraintSystem, CsIndex, VarIndex};
-use crate::utils::prelude::*;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField};
+use serde::{Deserialize, Serialize};
+
 #[cfg(feature = "debug")]
-use std::collections::HashMap;
+use ark_std::collections::HashMap;
+
+use crate::{
+    anemoi::{AnemoiJive, N_ANEMOI_ROUNDS},
+    errors::ZplonkError,
+    shuffle::Remark,
+    turboplonk::constraint_system::{ConstraintSystem, CsIndex, VarIndex},
+    utils::serialization::{ark_deserialize, ark_serialize},
+};
 
 /// The wires number of a gate in Turbo CS.
 pub const N_WIRES_PER_GATE: usize = 5;

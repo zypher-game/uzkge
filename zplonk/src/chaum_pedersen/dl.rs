@@ -5,11 +5,15 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     UniformRand,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::{Result, ZplonkError},
     poly_commit::pcs::ToBytes,
-    utils::{prelude::*, transcript::Transcript},
+    utils::{
+        serialization::{ark_deserialize, ark_serialize},
+        transcript::Transcript,
+    },
 };
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

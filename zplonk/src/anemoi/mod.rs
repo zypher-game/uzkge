@@ -1,20 +1,20 @@
-use crate::anemoi::mds::{ApplicableMDSMatrix, MDSMatrix};
-use ark_ff::PrimeField;
-
 /// The module for the AnemoiJive254 data structure.
 mod bn254;
 /// The module for the MDS matrices.
 mod mds;
 
-pub use bn254::*;
+/// The module for the trace data structure.
+mod traces;
+pub use traces::*;
 
 /// The module for tests.
 #[cfg(test)]
 mod tests;
 
-/// The module for the trace data structure.
-mod traces;
-pub use traces::*;
+use ark_ff::PrimeField;
+pub use bn254::*;
+
+use crate::anemoi::mds::{ApplicableMDSMatrix, MDSMatrix};
 
 /// The trait for the Anemoi-Jive parameters.
 pub trait AnemoiJive<F: PrimeField, const N: usize, const NUM_ROUNDS: usize>

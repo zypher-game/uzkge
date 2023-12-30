@@ -10,7 +10,7 @@ pub use trace::RemarkTrace;
 
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::UniformRand;
-use rand_chacha::rand_core::{CryptoRng, RngCore};
+use ark_std::rand::{CryptoRng, RngCore};
 
 pub const N_SELECT_BITS: usize = 4;
 

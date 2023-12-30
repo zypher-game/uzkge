@@ -2,9 +2,9 @@ use ark_ff::{BigInteger, One, PrimeField, Zero};
 use ark_std::fmt::Debug;
 use std::ops::{AddAssign, Mul, MulAssign, Neg};
 
-use crate::errors::ZplonkError;
-use crate::poly_commit::field_polynomial::FpPolynomial;
-use crate::utils::transcript::Transcript;
+use crate::{
+    errors::ZplonkError, poly_commit::field_polynomial::FpPolynomial, utils::transcript::Transcript,
+};
 
 /// The trait for serialization to bytes
 pub trait ToBytes {
@@ -246,15 +246,16 @@ pub trait PolyComScheme: Sized + Eq + PartialEq + Clone {
 mod test {
     use ark_bn254::Fr;
     use ark_ff::{One, Zero};
-    use ark_std::rand::SeedableRng;
-    use ark_std::UniformRand;
+    use ark_std::{ops::*, rand::SeedableRng, UniformRand};
     use rand_chacha::ChaChaRng;
-    use std::ops::*;
 
-    use crate::poly_commit::field_polynomial::FpPolynomial;
-    use crate::poly_commit::kzg_poly_commitment::KZGCommitmentScheme;
-    use crate::poly_commit::pcs::PolyComScheme;
-    use crate::utils::transcript::Transcript;
+    use crate::{
+        poly_commit::{
+            field_polynomial::FpPolynomial, kzg_poly_commitment::KZGCommitmentScheme,
+            pcs::PolyComScheme,
+        },
+        utils::transcript::Transcript,
+    };
 
     #[test]
     fn test_pcs_eval() {

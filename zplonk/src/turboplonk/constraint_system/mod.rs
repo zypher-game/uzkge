@@ -1,5 +1,3 @@
-use ark_ff::PrimeField;
-
 /// Module for Turbo PLONK Constrain System.
 pub mod turbo;
 
@@ -8,6 +6,8 @@ pub mod anemoi;
 
 /// Module for shuffle.
 pub mod shuffle;
+
+use ark_ff::PrimeField;
 
 use crate::errors::ZplonkError;
 

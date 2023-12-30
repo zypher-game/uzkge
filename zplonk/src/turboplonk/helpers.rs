@@ -1,9 +1,9 @@
 use ark_ff::{batch_inversion, Field, One, PrimeField, UniformRand, Zero};
 use ark_poly::EvaluationDomain;
 use ark_std::cfg_into_iter;
+use ark_std::{cmp::min, ops::*};
 use itertools::Itertools;
 use rand_chacha::rand_core::{CryptoRng, RngCore};
-use std::{cmp::min, ops::*};
 
 #[cfg(feature = "parallel")]
 use rayon::{iter::IntoParallelIterator, prelude::ParallelIterator};
@@ -1378,6 +1378,11 @@ pub(super) fn first_lagrange_poly<PCS: PolyComScheme>(
 
 #[cfg(test)]
 mod test {
+    use ark_bn254::Bn254;
+    use ark_ff::{One, Zero};
+    use ark_std::{ops::*, rand::SeedableRng};
+    use rand_chacha::ChaChaRng;
+
     use crate::{
         poly_commit::kzg_poly_commitment::{KZGCommitmentScheme, KZGCommitmentSchemeBN254},
         turboplonk::{
@@ -1386,10 +1391,6 @@ mod test {
             indexer::indexer,
         },
     };
-    use ark_bn254::Bn254;
-    use ark_ff::{One, Zero};
-    use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
-    use std::ops::*;
 
     #[test]
     fn test_z_polynomial() {

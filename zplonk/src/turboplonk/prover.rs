@@ -1,4 +1,8 @@
 use ark_poly::Radix2EvaluationDomain;
+use ark_std::{
+    ops::*,
+    rand::{CryptoRng, RngCore},
+};
 
 use crate::{
     errors::ZplonkError,
@@ -7,7 +11,7 @@ use crate::{
         first_lagrange_poly, hide_polynomial, pi_poly, r_poly, split_t_and_commit, t_poly, z_poly,
         PlonkChallenges,
     },
-    utils::prelude::*,
+    utils::transcript::Transcript,
 };
 
 use super::{

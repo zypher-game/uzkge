@@ -1,4 +1,10 @@
-use std::ops::Mul;
+use ark_std::ops::Mul;
+
+use crate::{
+    errors::ZplonkError,
+    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
+    utils::transcript::Transcript,
+};
 
 use super::{
     constraint_system::ConstraintSystem,
@@ -6,9 +12,6 @@ use super::{
     indexer::{PlonkProof, PlonkVerifierParams},
     transcript::transcript_init_plonk,
 };
-use crate::errors::ZplonkError;
-use crate::poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme};
-use crate::utils::transcript::Transcript;
 
 /// Verify a proof.
 pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(

@@ -1,16 +1,14 @@
 pub mod permutation;
 pub mod remark;
 
-use std::ops::Index;
-
-use ark_ec::CurveGroup;
+use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::PrimeField;
+use ark_std::ops::Index;
 
 use crate::{
     shuffle::{Ciphertext, N_SELECT_BITS},
     turboplonk::constraint_system::{TurboCS, VarIndex},
 };
-use ark_ec::AffineRepr;
 
 #[derive(Debug, Clone, Default)]
 pub struct CardVar([VarIndex; N_SELECT_BITS]);

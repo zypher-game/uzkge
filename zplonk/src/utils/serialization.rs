@@ -1,5 +1,6 @@
-use crate::errors::ZplonkError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
+
+use crate::errors::ZplonkError;
 
 pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
     let mut bytes = vec![];

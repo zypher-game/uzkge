@@ -1,14 +1,17 @@
-use super::build_cs::{prove_shuffle, verify_shuffle};
-use super::{keygen::*, mask::*, reveal::*, *};
-use crate::parameters::{
-    gen_shuffle_prover_params,
-    get_shuffle_verifier_params, refresh_prover_params_public_key,
-};
 use ark_ed_on_bn254::{EdwardsAffine, Fr};
 use ark_ff::{BigInteger, One, PrimeField, UniformRand};
 use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaChaRng;
 use std::collections::HashMap;
+
+use crate::parameters::{
+    gen_shuffle_prover_params, get_shuffle_verifier_params, refresh_prover_params_public_key,
+};
+
+use super::{
+    build_cs::{prove_shuffle, verify_shuffle},
+    {keygen::*, mask::*, reveal::*, *},
+};
 
 pub const N_CARDS: usize = 52;
 

@@ -1,7 +1,8 @@
-use super::indexer::PlonkVerifierParams;
-use crate::poly_commit::pcs::PolyComScheme;
-use crate::utils::transcript::Transcript;
 use ark_ff::{BigInteger, PrimeField};
+
+use crate::{poly_commit::pcs::PolyComScheme, utils::transcript::Transcript};
+
+use super::indexer::PlonkVerifierParams;
 
 /// Initialize the transcript when compute PLONK proof.
 pub(crate) fn transcript_init_plonk<PCS: PolyComScheme>(

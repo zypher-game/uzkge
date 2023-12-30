@@ -1,10 +1,12 @@
-use crate::utils::prelude::*;
 use ark_ff::{BigInteger, PrimeField};
 use ark_poly::{EvaluationDomain, MixedRadixEvaluationDomain, Radix2EvaluationDomain};
 use ark_std::rand::{CryptoRng, RngCore};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::{IntoParallelRefMutIterator, ParallelIterator};
+
+use crate::utils::serialization::{ark_deserialize, ark_serialize};
 
 /// Field polynomial.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]

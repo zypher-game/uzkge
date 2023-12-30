@@ -1,10 +1,7 @@
-use ark_std::error;
-use displaydoc::Display;
-
 pub type Result<T> = core::result::Result<T, ZplonkError>;
 
 /// zplonk errors.
-#[derive(Debug, Clone, Eq, PartialEq, Display)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ZplonkError {
     /// Common: Could not serialize object.
     SerializationError,
@@ -46,7 +43,13 @@ pub enum ZplonkError {
     Message(String),
 }
 
-impl error::Error for ZplonkError {
+impl core::fmt::Display for ZplonkError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl ark_std::error::Error for ZplonkError {
     #[cfg(feature = "std")]
     fn description(&self) -> &str {
         Box::leak(format!("{}", self).into_boxed_str())

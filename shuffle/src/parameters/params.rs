@@ -1,23 +1,25 @@
 use ark_bn254::Fr;
 use ark_ed_on_bn254::EdwardsProjective;
-use ark_std::UniformRand;
+use ark_std::{rand::SeedableRng, UniformRand};
+use rand_chacha::ChaChaRng;
 use zplonk::{
     errors::ZplonkError,
     params::{
         load_lagrange_params, load_srs_params, VerifierParamsSplitCommon,
         VerifierParamsSplitSpecific,
     },
-    poly_commit::field_polynomial::FpPolynomial,
-    poly_commit::pcs::PolyComScheme,
+    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
     shuffle::BabyJubjubShuffle,
-    turboplonk::constraint_system::ConstraintSystem,
-    turboplonk::indexer::indexer_with_lagrange,
-    utils::prelude::*,
+    turboplonk::{constraint_system::ConstraintSystem, indexer::indexer_with_lagrange},
 };
 
-use crate::build_cs::build_cs;
-use crate::parameters::{VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54};
-use crate::MaskedCard;
+use crate::{
+    build_cs::build_cs,
+    parameters::{
+        VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54,
+    },
+    MaskedCard,
+};
 
 // re-export
 pub use zplonk::params::{ProverParams, VerifierParams};

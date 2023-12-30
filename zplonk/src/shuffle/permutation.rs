@@ -1,6 +1,5 @@
 use ark_ff::PrimeField;
-use ark_std::rand::Rng;
-use rand_chacha::rand_core::{CryptoRng, RngCore};
+use ark_std::rand::{CryptoRng, Rng, RngCore};
 
 #[derive(Debug)]
 pub struct Permutation<F: PrimeField>(Vec<Vec<F>>);
@@ -45,7 +44,8 @@ impl<F: PrimeField> Permutation<F> {
 #[cfg(test)]
 mod test {
     use ark_bn254::Fr;
-    use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
+    use ark_std::rand::SeedableRng;
+    use rand_chacha::ChaChaRng;
 
     use super::Permutation;
 

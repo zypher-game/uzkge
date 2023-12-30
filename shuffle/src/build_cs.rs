@@ -1,6 +1,6 @@
 use ark_bn254::Fr;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
-use rand_chacha::rand_core::{CryptoRng, RngCore};
+use ark_std::rand::{CryptoRng, RngCore};
 use zplonk::{
     errors::Result,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
@@ -11,11 +11,13 @@ use zplonk::{
         prover::prover_with_lagrange,
         verifier::verifier,
     },
-    utils::prelude::Transcript,
+    utils::transcript::Transcript,
 };
 
-use crate::parameters::{ProverParams, VerifierParams};
-use crate::MaskedCard;
+use crate::{
+    parameters::{ProverParams, VerifierParams},
+    MaskedCard,
+};
 
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";

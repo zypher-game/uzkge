@@ -1,5 +1,4 @@
-use ark_ec::twisted_edwards::TECurveConfig;
-use ark_ec::CurveGroup;
+use ark_ec::{twisted_edwards::TECurveConfig, CurveGroup};
 use ark_ed_on_bn254::{EdwardsConfig, EdwardsProjective};
 use ark_ff::MontFp;
 
@@ -3571,7 +3570,7 @@ fn test_babyjubjub_remark() {
     use ark_ec::PrimeGroup;
     use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fr};
     use ark_ff::UniformRand;
-    use rand_chacha::rand_core::SeedableRng;
+    use ark_std::rand::SeedableRng;
     use rand_chacha::ChaChaRng;
 
     use crate::shuffle::{BabyJubjubShuffle, Ciphertext, Remark};

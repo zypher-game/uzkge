@@ -2,8 +2,6 @@ pub mod serialization;
 
 pub mod transcript;
 
-pub mod prelude;
-
 /// Shift a big integer (represented as a little-endian bytes vector) by one bit.
 pub fn shift_u8_vec(r: &mut Vec<u8>) {
     let mut next = 0u8;

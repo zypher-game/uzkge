@@ -1,6 +1,7 @@
-use crate::anemoi::AnemoiJive;
 use ark_bn254::Fr;
 use ark_ff::MontFp;
+
+use crate::anemoi::AnemoiJive;
 
 /// The round number of Anemoi.
 pub const N_ANEMOI_ROUNDS: usize = 14;

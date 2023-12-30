@@ -1,9 +1,10 @@
+use ark_ff::PrimeField;
+use itertools::Itertools;
+
 use crate::{
     shuffle::RemarkTrace,
     turboplonk::constraint_system::{turbo::N_WIRE_SELECTORS, TurboCS},
 };
-use ark_ff::PrimeField;
-use itertools::Itertools;
 
 use super::CardVar;
 
@@ -91,13 +92,15 @@ impl<F: PrimeField> TurboCS<F> {
 
 #[cfg(test)]
 mod test {
-    use crate::shuffle::{BabyJubjubShuffle, Ciphertext, Remark};
-    use crate::turboplonk::constraint_system::TurboCS;
     use ark_ec::PrimeGroup;
     use ark_ed_on_bn254::{EdwardsProjective, Fr};
-    use ark_ff::UniformRand;
-    use rand_chacha::rand_core::SeedableRng;
+    use ark_std::{rand::SeedableRng, UniformRand};
     use rand_chacha::ChaChaRng;
+
+    use crate::{
+        shuffle::{BabyJubjubShuffle, Ciphertext, Remark},
+        turboplonk::constraint_system::TurboCS,
+    };
 
     #[test]
     fn test_remark_constraint_system() {

@@ -1,12 +1,22 @@
 use ark_ff::{BigInteger, Field, One, PrimeField, Zero};
 use ark_poly::EvaluationDomain;
+use ark_std::{
+    ops::*,
+    rand::{CryptoRng, RngCore, SeedableRng},
+};
+use rand_chacha::ChaChaRng;
+use serde::{Deserialize, Serialize};
 
-use super::constraint_system::ConstraintSystem;
-use super::helpers::compute_lagrange_constant;
-use crate::errors::ZplonkError;
-use crate::poly_commit::field_polynomial::FpPolynomial;
-use crate::poly_commit::pcs::PolyComScheme;
-use crate::utils::{prelude::*, shift_u8_vec, u64_limbs_from_bytes};
+use crate::{
+    errors::ZplonkError,
+    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
+    utils::{
+        serialization::{ark_deserialize, ark_serialize},
+        shift_u8_vec, u64_limbs_from_bytes,
+    },
+};
+
+use super::{constraint_system::ConstraintSystem, helpers::compute_lagrange_constant};
 
 /// The data structure of a Plonk proof.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -485,9 +495,10 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use ark_bn254::Fr;
     use rand_chacha::ChaChaRng;
+
+    use super::*;
 
     type F = Fr;
 
