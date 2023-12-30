@@ -35,9 +35,9 @@ debug-assertions = true
 debug = true
 
 [patch.crates-io]
-ark-ff = { git = "https://github.com/arkworks-rs/algebra/" }
-ark-ec = { git = "https://github.com/arkworks-rs/algebra/" }
-ark-poly = { git = "https://github.com/arkworks-rs/algebra/" }
-ark-serialize = { git = "https://github.com/arkworks-rs/algebra/" }
-ark-bn254 = { git = "https://github.com/arkworks-rs/curves/", rev = "fc8379d9edfa4b1cf63c9f008c8a2d9deaf7024a" }
-ark-ed-on-bn254 = { git = "https://github.com/arkworks-rs/curves/", rev = "fc8379d9edfa4b1cf63c9f008c8a2d9deaf7024a"}
+ark-ff = { git = "https://github.com/arkworks-rs/algebra" }
+ark-ec = { git = "https://github.com/arkworks-rs/algebra" }
+ark-poly = { git = "https://github.com/arkworks-rs/algebra" }
+ark-serialize = { git = "https://github.com/arkworks-rs/algebra" }
+ark-bn254 = { git = "https://github.com/arkworks-rs/algebra" }
+ark-ed-on-bn254 = { git = "https://github.com/arkworks-rs/algebra" }
