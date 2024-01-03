@@ -55,8 +55,10 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     );
 
     let w_polys_eval_zeta_as_ref: Vec<&PCS::Field> = proof.w_polys_eval_zeta.iter().collect();
+    #[cfg(feature = "shuffle")]
     let w_polys_eval_zeta_omega_as_ref: Vec<&PCS::Field> =
         proof.w_polys_eval_zeta_omega.iter().collect();
+    #[cfg(feature = "shuffle")]
     let w_sel_polys_eval_zeta_as_ref: Vec<&PCS::Field> =
         proof.w_sel_polys_eval_zeta.iter().collect();
     let s_eval_zeta_as_ref: Vec<&PCS::Field> = proof.s_polys_eval_zeta.iter().collect();
@@ -64,10 +66,13 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         verifier_params,
         &proof.cm_z,
         &w_polys_eval_zeta_as_ref[..],
+        #[cfg(feature = "shuffle")]
         &w_sel_polys_eval_zeta_as_ref[..],
         &s_eval_zeta_as_ref[..],
         &proof.prk_3_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         &proof.q_ecc_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         &w_polys_eval_zeta_omega_as_ref[..],
         &proof.z_eval_zeta_omega,
         &challenges,
@@ -90,9 +95,12 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         .collect();
     commitments.push(&verifier_params.cm_prk_vec[2]);
     commitments.push(&verifier_params.cm_prk_vec[3]);
-    commitments.push(&verifier_params.cm_q_ecc);
-    for cm_w_sel in proof.cm_w_sel_vec.iter() {
-        commitments.push(cm_w_sel);
+    #[cfg(feature = "shuffle")]
+    {
+        commitments.push(&verifier_params.cm_q_ecc);
+        for cm_w_sel in proof.cm_w_sel_vec.iter() {
+            commitments.push(cm_w_sel);
+        }
     }
     commitments.push(&cm_r);
 
@@ -104,9 +112,12 @@ pub fn verifier<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         .collect();
     values.push(proof.prk_3_poly_eval_zeta);
     values.push(proof.prk_4_poly_eval_zeta);
-    values.push(proof.q_ecc_poly_eval_zeta);
-    for w_sel_eval_zeta in proof.w_sel_polys_eval_zeta.iter() {
-        values.push(*w_sel_eval_zeta);
+    #[cfg(feature = "shuffle")]
+    {
+        values.push(proof.q_ecc_poly_eval_zeta);
+        for w_sel_eval_zeta in proof.w_sel_polys_eval_zeta.iter() {
+            values.push(*w_sel_eval_zeta);
+        }
     }
     values.push(r_eval_zeta);
 
@@ -162,6 +173,7 @@ fn compute_challenges<PCS: PolyComScheme>(
         transcript.append_commitment::<PCS::Commitment>(cm_w);
     }
 
+    #[cfg(feature = "shuffle")]
     for cm_w_sel in proof.cm_w_sel_vec.iter() {
         transcript.append_commitment::<PCS::Commitment>(cm_w_sel);
     }
@@ -182,17 +194,23 @@ fn compute_challenges<PCS: PolyComScheme>(
     // 3. compute zeta challenge.
     let zeta = transcript.get_challenge_field_elem(b"zeta");
     challenges.insert_zeta(zeta).unwrap();
-    for eval_zeta in proof.w_polys_eval_zeta.iter().chain(
-        proof
-            .s_polys_eval_zeta
-            .iter()
-            .chain(proof.w_sel_polys_eval_zeta.iter()),
-    ) {
+    for eval_zeta in proof
+        .w_polys_eval_zeta
+        .iter()
+        .chain(proof.s_polys_eval_zeta.iter())
+    {
         transcript.append_challenge(eval_zeta);
+    }
+    #[cfg(feature = "shuffle")]
+    {
+        for eval_zeta in proof.w_sel_polys_eval_zeta.iter() {
+            transcript.append_challenge(eval_zeta);
+        }
     }
     transcript.append_challenge(&proof.prk_3_poly_eval_zeta);
     transcript.append_challenge(&proof.prk_4_poly_eval_zeta);
     transcript.append_challenge(&proof.z_eval_zeta_omega);
+    #[cfg(feature = "shuffle")]
     transcript.append_challenge(&proof.q_ecc_poly_eval_zeta);
     for eval_zeta_omega in proof.w_polys_eval_zeta_omega.iter() {
         transcript.append_challenge(eval_zeta_omega);

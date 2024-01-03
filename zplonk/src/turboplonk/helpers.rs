@@ -224,7 +224,7 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     cs: &CS,
     prover_params: &PlonkProverParams<PCS>,
     w_polys: &[FpPolynomial<PCS::Field>],
-    w_sel_polys: &[FpPolynomial<PCS::Field>],
+    #[cfg(feature = "shuffle")] w_sel_polys: &[FpPolynomial<PCS::Field>],
     z: &FpPolynomial<PCS::Field>,
     challenges: &PlonkChallenges<PCS::Field>,
     pi: &FpPolynomial<PCS::Field>,
@@ -257,6 +257,7 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         .iter()
         .map(|poly| poly.coset_fft_with_domain(&domain_m, &k[1]))
         .collect();
+    #[cfg(feature = "shuffle")]
     let w_sel_polys_coset_evals: Vec<Vec<PCS::Field>> = w_sel_polys
         .iter()
         .map(|poly| poly.coset_fft_with_domain(&domain_m, &k[1]))
@@ -276,15 +277,6 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     let alpha_pow_7 = alpha_pow_6.mul(alpha);
     let alpha_pow_8 = alpha_pow_7.mul(alpha);
     let alpha_pow_9 = alpha_pow_8.mul(alpha);
-    let alpha_pow_10 = alpha_pow_9.mul(alpha);
-    let alpha_pow_11 = alpha_pow_10.mul(alpha);
-    let alpha_pow_12 = alpha_pow_11.mul(alpha);
-    let alpha_pow_13 = alpha_pow_12.mul(alpha);
-    let alpha_pow_14 = alpha_pow_13.mul(alpha);
-    let alpha_pow_15 = alpha_pow_14.mul(alpha);
-    let alpha_pow_16 = alpha_pow_15.mul(alpha);
-
-    let edwards_a: &<PCS as PolyComScheme>::Field = cs.get_edwards_a_ref();
 
     let t_coset_evals = cfg_into_iter!(0..m)
         .map(|point| {
@@ -419,210 +411,233 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
                     - &w1_eval_point_next,
             );
 
-            let w_sel0_eval_point = w_sel_polys_coset_evals[0][point];
-            let w_sel1_eval_point = w_sel_polys_coset_evals[1][point];
-            let w_sel2_eval_point = w_sel_polys_coset_evals[2][point];
-            let q_pk_x_00_eval_point = prover_params.q_shuffle_public_key_coset_evals[0][point];
-            let q_pk_x_01_eval_point = prover_params.q_shuffle_public_key_coset_evals[1][point];
-            let q_pk_x_10_eval_point = prover_params.q_shuffle_public_key_coset_evals[2][point];
-            let q_pk_x_11_eval_point = prover_params.q_shuffle_public_key_coset_evals[3][point];
-            let q_pk_y_00_eval_point = prover_params.q_shuffle_public_key_coset_evals[4][point];
-            let q_pk_y_01_eval_point = prover_params.q_shuffle_public_key_coset_evals[5][point];
-            let q_pk_y_10_eval_point = prover_params.q_shuffle_public_key_coset_evals[6][point];
-            let q_pk_y_11_eval_point = prover_params.q_shuffle_public_key_coset_evals[7][point];
-            let q_pk_dxy_00_eval_point = prover_params.q_shuffle_public_key_coset_evals[8][point];
-            let q_pk_dxy_01_eval_point = prover_params.q_shuffle_public_key_coset_evals[9][point];
-            let q_pk_dxy_10_eval_point = prover_params.q_shuffle_public_key_coset_evals[10][point];
-            let q_pk_dxy_11_eval_point = prover_params.q_shuffle_public_key_coset_evals[11][point];
-            let q_g_x_00_eval_point = prover_params.q_shuffle_generator_coset_evals[0][point];
-            let q_g_x_01_eval_point = prover_params.q_shuffle_generator_coset_evals[1][point];
-            let q_g_x_10_eval_point = prover_params.q_shuffle_generator_coset_evals[2][point];
-            let q_g_x_11_eval_point = prover_params.q_shuffle_generator_coset_evals[3][point];
-            let q_g_y_00_eval_point = prover_params.q_shuffle_generator_coset_evals[4][point];
-            let q_g_y_01_eval_point = prover_params.q_shuffle_generator_coset_evals[5][point];
-            let q_g_y_10_eval_point = prover_params.q_shuffle_generator_coset_evals[6][point];
-            let q_g_y_11_eval_point = prover_params.q_shuffle_generator_coset_evals[7][point];
-            let q_g_dxy_00_eval_point = prover_params.q_shuffle_generator_coset_evals[8][point];
-            let q_g_dxy_01_eval_point = prover_params.q_shuffle_generator_coset_evals[9][point];
-            let q_g_dxy_10_eval_point = prover_params.q_shuffle_generator_coset_evals[10][point];
-            let q_g_dxy_11_eval_point = prover_params.q_shuffle_generator_coset_evals[11][point];
-            let q_ecc = prover_params.q_ecc_coset_eval[point];
+            #[cfg(feature = "shuffle")]
+            let (term12, term13, term14, term15, term16, term17, term18) = {
+                let alpha_pow_10 = alpha_pow_9.mul(alpha);
+                let alpha_pow_11 = alpha_pow_10.mul(alpha);
+                let alpha_pow_12 = alpha_pow_11.mul(alpha);
+                let alpha_pow_13 = alpha_pow_12.mul(alpha);
+                let alpha_pow_14 = alpha_pow_13.mul(alpha);
+                let alpha_pow_15 = alpha_pow_14.mul(alpha);
+                let alpha_pow_16 = alpha_pow_15.mul(alpha);
+                let edwards_a: <PCS as PolyComScheme>::Field = cs.get_edwards_a();
 
-            let sel_00 = (one - w_sel0_eval_point) * (one - w_sel1_eval_point) + q_ecc - one;
-            let sel_01 = w_sel0_eval_point * (one - w_sel1_eval_point);
-            let sel_10 = (one - w_sel0_eval_point) * w_sel1_eval_point;
-            let sel_11 = w_sel0_eval_point * w_sel1_eval_point;
+                let w_sel0_eval_point = w_sel_polys_coset_evals[0][point];
+                let w_sel1_eval_point = w_sel_polys_coset_evals[1][point];
+                let w_sel2_eval_point = w_sel_polys_coset_evals[2][point];
+                let q_pk_x_00_eval_point = prover_params.q_shuffle_public_key_coset_evals[0][point];
+                let q_pk_x_01_eval_point = prover_params.q_shuffle_public_key_coset_evals[1][point];
+                let q_pk_x_10_eval_point = prover_params.q_shuffle_public_key_coset_evals[2][point];
+                let q_pk_x_11_eval_point = prover_params.q_shuffle_public_key_coset_evals[3][point];
+                let q_pk_y_00_eval_point = prover_params.q_shuffle_public_key_coset_evals[4][point];
+                let q_pk_y_01_eval_point = prover_params.q_shuffle_public_key_coset_evals[5][point];
+                let q_pk_y_10_eval_point = prover_params.q_shuffle_public_key_coset_evals[6][point];
+                let q_pk_y_11_eval_point = prover_params.q_shuffle_public_key_coset_evals[7][point];
+                let q_pk_dxy_00_eval_point =
+                    prover_params.q_shuffle_public_key_coset_evals[8][point];
+                let q_pk_dxy_01_eval_point =
+                    prover_params.q_shuffle_public_key_coset_evals[9][point];
+                let q_pk_dxy_10_eval_point =
+                    prover_params.q_shuffle_public_key_coset_evals[10][point];
+                let q_pk_dxy_11_eval_point =
+                    prover_params.q_shuffle_public_key_coset_evals[11][point];
+                let q_g_x_00_eval_point = prover_params.q_shuffle_generator_coset_evals[0][point];
+                let q_g_x_01_eval_point = prover_params.q_shuffle_generator_coset_evals[1][point];
+                let q_g_x_10_eval_point = prover_params.q_shuffle_generator_coset_evals[2][point];
+                let q_g_x_11_eval_point = prover_params.q_shuffle_generator_coset_evals[3][point];
+                let q_g_y_00_eval_point = prover_params.q_shuffle_generator_coset_evals[4][point];
+                let q_g_y_01_eval_point = prover_params.q_shuffle_generator_coset_evals[5][point];
+                let q_g_y_10_eval_point = prover_params.q_shuffle_generator_coset_evals[6][point];
+                let q_g_y_11_eval_point = prover_params.q_shuffle_generator_coset_evals[7][point];
+                let q_g_dxy_00_eval_point = prover_params.q_shuffle_generator_coset_evals[8][point];
+                let q_g_dxy_01_eval_point = prover_params.q_shuffle_generator_coset_evals[9][point];
+                let q_g_dxy_10_eval_point =
+                    prover_params.q_shuffle_generator_coset_evals[10][point];
+                let q_g_dxy_11_eval_point =
+                    prover_params.q_shuffle_generator_coset_evals[11][point];
+                let q_ecc = prover_params.q_ecc_coset_eval[point];
 
-            // alpha^10 *
-            // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_00} - w[1] * q_{pk_x_00} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_00}) *
-            // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_01} - w[1] * q_{pk_x_01} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_01})
-            // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_10} - w[1] * q_{pk_x_10} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_10})
-            // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_11} - w[1] * q_{pk_x_11} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_11})
-            let term12 = alpha_pow_10.mul(
-                sel_00
-                    * (w_sel2_eval_point * w0_eval_point_next
-                        - w_sel2_eval_point * w0_eval_point * q_pk_y_00_eval_point
-                        - w1_eval_point * q_pk_x_00_eval_point
-                        + w0_eval_point
-                            * w1_eval_point
-                            * w0_eval_point_next
-                            * q_pk_dxy_00_eval_point)
-                    + sel_01
+                let sel_00 = (one - w_sel0_eval_point) * (one - w_sel1_eval_point) + q_ecc - one;
+                let sel_01 = w_sel0_eval_point * (one - w_sel1_eval_point);
+                let sel_10 = (one - w_sel0_eval_point) * w_sel1_eval_point;
+                let sel_11 = w_sel0_eval_point * w_sel1_eval_point;
+
+                // alpha^10 *
+                // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_00} - w[1] * q_{pk_x_00} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_00}) *
+                // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_01} - w[1] * q_{pk_x_01} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_01})
+                // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_10} - w[1] * q_{pk_x_10} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_10})
+                // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[0] - w_sel[2] * w[0] * q_{pk_y_11} - w[1] * q_{pk_x_11} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_11})
+                let term12 = alpha_pow_10.mul(
+                    sel_00
                         * (w_sel2_eval_point * w0_eval_point_next
-                            - w_sel2_eval_point * w0_eval_point * q_pk_y_01_eval_point
-                            - w1_eval_point * q_pk_x_01_eval_point
+                            - w_sel2_eval_point * w0_eval_point * q_pk_y_00_eval_point
+                            - w1_eval_point * q_pk_x_00_eval_point
                             + w0_eval_point
                                 * w1_eval_point
                                 * w0_eval_point_next
-                                * q_pk_dxy_01_eval_point)
-                    + sel_10
-                        * (w_sel2_eval_point * w0_eval_point_next
-                            - w_sel2_eval_point * w0_eval_point * q_pk_y_10_eval_point
-                            - w1_eval_point * q_pk_x_10_eval_point
-                            + w0_eval_point
-                                * w1_eval_point
-                                * w0_eval_point_next
-                                * q_pk_dxy_10_eval_point)
-                    + sel_11
-                        * (w_sel2_eval_point * w0_eval_point_next
-                            - w_sel2_eval_point * w0_eval_point * q_pk_y_11_eval_point
-                            - w1_eval_point * q_pk_x_11_eval_point
-                            + w0_eval_point
-                                * w1_eval_point
-                                * w0_eval_point_next
-                                * q_pk_dxy_11_eval_point),
-            );
+                                * q_pk_dxy_00_eval_point)
+                        + sel_01
+                            * (w_sel2_eval_point * w0_eval_point_next
+                                - w_sel2_eval_point * w0_eval_point * q_pk_y_01_eval_point
+                                - w1_eval_point * q_pk_x_01_eval_point
+                                + w0_eval_point
+                                    * w1_eval_point
+                                    * w0_eval_point_next
+                                    * q_pk_dxy_01_eval_point)
+                        + sel_10
+                            * (w_sel2_eval_point * w0_eval_point_next
+                                - w_sel2_eval_point * w0_eval_point * q_pk_y_10_eval_point
+                                - w1_eval_point * q_pk_x_10_eval_point
+                                + w0_eval_point
+                                    * w1_eval_point
+                                    * w0_eval_point_next
+                                    * q_pk_dxy_10_eval_point)
+                        + sel_11
+                            * (w_sel2_eval_point * w0_eval_point_next
+                                - w_sel2_eval_point * w0_eval_point * q_pk_y_11_eval_point
+                                - w1_eval_point * q_pk_x_11_eval_point
+                                + w0_eval_point
+                                    * w1_eval_point
+                                    * w0_eval_point_next
+                                    * q_pk_dxy_11_eval_point),
+                );
 
-            // alpha^11 *
-            // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_00} - w_sel[2] * w[1] * q_{pk_y_00} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_00}) +
-            // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_01} - w_sel[2] * w[1] * q_{pk_y_01} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_01}) +
-            // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_10} - w_sel[2] * w[1] * q_{pk_y_10} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_10}) +
-            // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_11} - w_sel[2] * w[1] * q_{pk_y_11} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_11}) +
-            let term13 = alpha_pow_11.mul(
-                sel_00
-                    * (w_sel2_eval_point * w1_eval_point_next
-                        + w0_eval_point * edwards_a * q_pk_x_00_eval_point
-                        - w_sel2_eval_point * w1_eval_point * q_pk_y_00_eval_point
-                        - w0_eval_point
-                            * w1_eval_point
-                            * w1_eval_point_next
-                            * q_pk_dxy_00_eval_point)
-                    + sel_01
+                // alpha^11 *
+                // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_00} - w_sel[2] * w[1] * q_{pk_y_00} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_00}) +
+                // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_01} - w_sel[2] * w[1] * q_{pk_y_01} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_01}) +
+                // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_10} - w_sel[2] * w[1] * q_{pk_y_10} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_10}) +
+                // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[1] + a * w[0] * q_{pk_x_11} - w_sel[2] * w[1] * q_{pk_y_11} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_11}) +
+                let term13 = alpha_pow_11.mul(
+                    sel_00
                         * (w_sel2_eval_point * w1_eval_point_next
-                            + w0_eval_point * edwards_a * q_pk_x_01_eval_point
-                            - w_sel2_eval_point * w1_eval_point * q_pk_y_01_eval_point
+                            + w0_eval_point * edwards_a * q_pk_x_00_eval_point
+                            - w_sel2_eval_point * w1_eval_point * q_pk_y_00_eval_point
                             - w0_eval_point
                                 * w1_eval_point
                                 * w1_eval_point_next
-                                * q_pk_dxy_01_eval_point)
-                    + sel_10
-                        * (w_sel2_eval_point * w1_eval_point_next
-                            + w0_eval_point * edwards_a * q_pk_x_10_eval_point
-                            - w_sel2_eval_point * w1_eval_point * q_pk_y_10_eval_point
-                            - w0_eval_point
-                                * w1_eval_point
-                                * w1_eval_point_next
-                                * q_pk_dxy_10_eval_point)
-                    + sel_11
-                        * (w_sel2_eval_point * w1_eval_point_next
-                            + w0_eval_point * edwards_a * q_pk_x_11_eval_point
-                            - w_sel2_eval_point * w1_eval_point * q_pk_y_11_eval_point
-                            - w0_eval_point
-                                * w1_eval_point
-                                * w1_eval_point_next
-                                * q_pk_dxy_11_eval_point),
-            );
+                                * q_pk_dxy_00_eval_point)
+                        + sel_01
+                            * (w_sel2_eval_point * w1_eval_point_next
+                                + w0_eval_point * edwards_a * q_pk_x_01_eval_point
+                                - w_sel2_eval_point * w1_eval_point * q_pk_y_01_eval_point
+                                - w0_eval_point
+                                    * w1_eval_point
+                                    * w1_eval_point_next
+                                    * q_pk_dxy_01_eval_point)
+                        + sel_10
+                            * (w_sel2_eval_point * w1_eval_point_next
+                                + w0_eval_point * edwards_a * q_pk_x_10_eval_point
+                                - w_sel2_eval_point * w1_eval_point * q_pk_y_10_eval_point
+                                - w0_eval_point
+                                    * w1_eval_point
+                                    * w1_eval_point_next
+                                    * q_pk_dxy_10_eval_point)
+                        + sel_11
+                            * (w_sel2_eval_point * w1_eval_point_next
+                                + w0_eval_point * edwards_a * q_pk_x_11_eval_point
+                                - w_sel2_eval_point * w1_eval_point * q_pk_y_11_eval_point
+                                - w0_eval_point
+                                    * w1_eval_point
+                                    * w1_eval_point_next
+                                    * q_pk_dxy_11_eval_point),
+                );
 
-            // alpha^12 *
-            // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_00} - w[3] * q_{g_x_00} + w[2] * w[3] * w_next[2] *  q_{g_dxy_00}) +
-            // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_01} - w[3] * q_{g_x_01} + w[2] * w[3] * w_next[2] *  q_{g_dxy_01}) +
-            // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_10} - w[3] * q_{g_x_10} + w[2] * w[3] * w_next[2] *  q_{g_dxy_10}) +
-            // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_11} - w[3] * q_{g_x_11} + w[2] * w[3] * w_next[2] *  q_{g_dxy_11}) +
-            let term14 = alpha_pow_12.mul(
-                sel_00
-                    * (w_sel2_eval_point * w2_eval_point_next
-                        - w_sel2_eval_point * w2_eval_point * q_g_y_00_eval_point
-                        - w3_eval_point * q_g_x_00_eval_point
-                        + w2_eval_point
-                            * w3_eval_point
-                            * w2_eval_point_next
-                            * q_g_dxy_00_eval_point)
-                    + sel_01
+                // alpha^12 *
+                // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_00} - w[3] * q_{g_x_00} + w[2] * w[3] * w_next[2] *  q_{g_dxy_00}) +
+                // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_01} - w[3] * q_{g_x_01} + w[2] * w[3] * w_next[2] *  q_{g_dxy_01}) +
+                // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_10} - w[3] * q_{g_x_10} + w[2] * w[3] * w_next[2] *  q_{g_dxy_10}) +
+                // w_sel[0] *  w_sel[1] * (w_sel[2] * w_next[2] - w_sel[2] * w[2] * q_{g_y_11} - w[3] * q_{g_x_11} + w[2] * w[3] * w_next[2] *  q_{g_dxy_11}) +
+                let term14 = alpha_pow_12.mul(
+                    sel_00
                         * (w_sel2_eval_point * w2_eval_point_next
-                            - w_sel2_eval_point * w2_eval_point * q_g_y_01_eval_point
-                            - w3_eval_point * q_g_x_01_eval_point
+                            - w_sel2_eval_point * w2_eval_point * q_g_y_00_eval_point
+                            - w3_eval_point * q_g_x_00_eval_point
                             + w2_eval_point
                                 * w3_eval_point
                                 * w2_eval_point_next
-                                * q_g_dxy_01_eval_point)
-                    + sel_10
-                        * (w_sel2_eval_point * w2_eval_point_next
-                            - w_sel2_eval_point * w2_eval_point * q_g_y_10_eval_point
-                            - w3_eval_point * q_g_x_10_eval_point
-                            + w2_eval_point
-                                * w3_eval_point
-                                * w2_eval_point_next
-                                * q_g_dxy_10_eval_point)
-                    + sel_11
-                        * (w_sel2_eval_point * w2_eval_point_next
-                            - w_sel2_eval_point * w2_eval_point * q_g_y_11_eval_point
-                            - w3_eval_point * q_g_x_11_eval_point
-                            + w2_eval_point
-                                * w3_eval_point
-                                * w2_eval_point_next
-                                * q_g_dxy_11_eval_point),
-            );
+                                * q_g_dxy_00_eval_point)
+                        + sel_01
+                            * (w_sel2_eval_point * w2_eval_point_next
+                                - w_sel2_eval_point * w2_eval_point * q_g_y_01_eval_point
+                                - w3_eval_point * q_g_x_01_eval_point
+                                + w2_eval_point
+                                    * w3_eval_point
+                                    * w2_eval_point_next
+                                    * q_g_dxy_01_eval_point)
+                        + sel_10
+                            * (w_sel2_eval_point * w2_eval_point_next
+                                - w_sel2_eval_point * w2_eval_point * q_g_y_10_eval_point
+                                - w3_eval_point * q_g_x_10_eval_point
+                                + w2_eval_point
+                                    * w3_eval_point
+                                    * w2_eval_point_next
+                                    * q_g_dxy_10_eval_point)
+                        + sel_11
+                            * (w_sel2_eval_point * w2_eval_point_next
+                                - w_sel2_eval_point * w2_eval_point * q_g_y_11_eval_point
+                                - w3_eval_point * q_g_x_11_eval_point
+                                + w2_eval_point
+                                    * w3_eval_point
+                                    * w2_eval_point_next
+                                    * q_g_dxy_11_eval_point),
+                );
 
-            // alpha^13 *
-            // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w[4] + a * w[2] * q_{g_x_00} - w_sel[2] * w[3] * q_{g_y_00} + w[2] * w[3] * w[4] *  q_{pk_gxy_00}) +
-            // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w[4] + a * w[2] * q_{g_x_01} - w_sel[2] * w[3] * q_{g_y_01} + w[2] * w[3] * w[4] *  q_{pk_gxy_01}) +
-            // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w[4] + a * w[2] * q_{g_x_10} - w_sel[2] * w[3] * q_{g_y_10} + w[2] * w[3] * w[4] *  q_{pk_gxy_10}) +
-            // w_sel[0] *  w_sel[1] * (w_sel[2] * w[4] + a * w[2] * q_{g_x_11} - w_sel[2] * w[3] * q_{g_y_11} + w[2] * w[3] * w[4] *  q_{pk_gxy_11}) +
-            let term15 = alpha_pow_13.mul(
-                sel_00
-                    * (w_sel2_eval_point * wo_eval_point
-                        + w2_eval_point * edwards_a * q_g_x_00_eval_point
-                        - w_sel2_eval_point * w3_eval_point * q_g_y_00_eval_point
-                        - w2_eval_point * w3_eval_point * wo_eval_point * q_g_dxy_00_eval_point)
-                    + sel_01
+                // alpha^13 *
+                // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (w_sel[2] * w[4] + a * w[2] * q_{g_x_00} - w_sel[2] * w[3] * q_{g_y_00} + w[2] * w[3] * w[4] *  q_{pk_gxy_00}) +
+                // w_sel[0] *  (1 - w_sel[1]) * (w_sel[2] * w[4] + a * w[2] * q_{g_x_01} - w_sel[2] * w[3] * q_{g_y_01} + w[2] * w[3] * w[4] *  q_{pk_gxy_01}) +
+                // (1 - w_sel[0]) *  w_sel[1] * (w_sel[2] * w[4] + a * w[2] * q_{g_x_10} - w_sel[2] * w[3] * q_{g_y_10} + w[2] * w[3] * w[4] *  q_{pk_gxy_10}) +
+                // w_sel[0] *  w_sel[1] * (w_sel[2] * w[4] + a * w[2] * q_{g_x_11} - w_sel[2] * w[3] * q_{g_y_11} + w[2] * w[3] * w[4] *  q_{pk_gxy_11}) +
+                let term15 = alpha_pow_13.mul(
+                    sel_00
                         * (w_sel2_eval_point * wo_eval_point
-                            + w2_eval_point * edwards_a * q_g_x_01_eval_point
-                            - w_sel2_eval_point * w3_eval_point * q_g_y_01_eval_point
+                            + w2_eval_point * edwards_a * q_g_x_00_eval_point
+                            - w_sel2_eval_point * w3_eval_point * q_g_y_00_eval_point
                             - w2_eval_point
                                 * w3_eval_point
                                 * wo_eval_point
-                                * q_g_dxy_01_eval_point)
-                    + sel_10
-                        * (w_sel2_eval_point * wo_eval_point
-                            + w2_eval_point * edwards_a * q_g_x_10_eval_point
-                            - w_sel2_eval_point * w3_eval_point * q_g_y_10_eval_point
-                            - w2_eval_point
-                                * w3_eval_point
-                                * wo_eval_point
-                                * q_g_dxy_10_eval_point)
-                    + sel_11
-                        * (w_sel2_eval_point * wo_eval_point
-                            + w2_eval_point * edwards_a * q_g_x_11_eval_point
-                            - w_sel2_eval_point * w3_eval_point * q_g_y_11_eval_point
-                            - w2_eval_point
-                                * w3_eval_point
-                                * wo_eval_point
-                                * q_g_dxy_11_eval_point),
-            );
+                                * q_g_dxy_00_eval_point)
+                        + sel_01
+                            * (w_sel2_eval_point * wo_eval_point
+                                + w2_eval_point * edwards_a * q_g_x_01_eval_point
+                                - w_sel2_eval_point * w3_eval_point * q_g_y_01_eval_point
+                                - w2_eval_point
+                                    * w3_eval_point
+                                    * wo_eval_point
+                                    * q_g_dxy_01_eval_point)
+                        + sel_10
+                            * (w_sel2_eval_point * wo_eval_point
+                                + w2_eval_point * edwards_a * q_g_x_10_eval_point
+                                - w_sel2_eval_point * w3_eval_point * q_g_y_10_eval_point
+                                - w2_eval_point
+                                    * w3_eval_point
+                                    * wo_eval_point
+                                    * q_g_dxy_10_eval_point)
+                        + sel_11
+                            * (w_sel2_eval_point * wo_eval_point
+                                + w2_eval_point * edwards_a * q_g_x_11_eval_point
+                                - w_sel2_eval_point * w3_eval_point * q_g_y_11_eval_point
+                                - w2_eval_point
+                                    * w3_eval_point
+                                    * wo_eval_point
+                                    * q_g_dxy_11_eval_point),
+                );
 
-            // alpha^14 * (q_{ecc} * w_sel[0] * (1 - w_sel[0]) + (1 - q_{ecc}) *  w_sel[0])
-            let term16 = alpha_pow_14.mul(
-                q_ecc * w_sel0_eval_point * (one - w_sel0_eval_point)
-                    + (one - q_ecc) * w_sel0_eval_point,
-            );
-            // alpha^15 * (q_{ecc} * w_sel[1] * (1 - w_sel[1]) + (1 - q_{ecc}) *  w_sel[1])
-            let term17 = alpha_pow_15.mul(
-                q_ecc * w_sel1_eval_point * (one - w_sel1_eval_point)
-                    + (one - q_ecc) * w_sel1_eval_point,
-            );
-            // alpha^16 * q_{ecc} * (1 + w_sel[2])  * (1 - w_sel[2])
-            let term18 =
-                alpha_pow_16.mul(q_ecc * (one + w_sel2_eval_point) * (one - w_sel2_eval_point));
+                // alpha^14 * (q_{ecc} * w_sel[0] * (1 - w_sel[0]) + (1 - q_{ecc}) *  w_sel[0])
+                let term16 = alpha_pow_14.mul(
+                    q_ecc * w_sel0_eval_point * (one - w_sel0_eval_point)
+                        + (one - q_ecc) * w_sel0_eval_point,
+                );
+                // alpha^15 * (q_{ecc} * w_sel[1] * (1 - w_sel[1]) + (1 - q_{ecc}) *  w_sel[1])
+                let term17 = alpha_pow_15.mul(
+                    q_ecc * w_sel1_eval_point * (one - w_sel1_eval_point)
+                        + (one - q_ecc) * w_sel1_eval_point,
+                );
+                // alpha^16 * q_{ecc} * (1 + w_sel[2])  * (1 - w_sel[2])
+                let term18 =
+                    alpha_pow_16.mul(q_ecc * (one + w_sel2_eval_point) * (one - w_sel2_eval_point));
+
+                (term12, term13, term14, term15, term16, term17, term18)
+            };
 
             let numerator = term1
                 .add(&term2)
@@ -633,14 +648,20 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
                 .sub(&term8)
                 .sub(&term9)
                 .sub(&term10)
-                .sub(&term11)
-                .add(&term12)
-                .add(&term13)
-                .add(&term14)
-                .add(&term15)
-                .add(&term16)
-                .add(&term17)
-                .add(&term18);
+                .sub(&term11);
+
+            #[cfg(feature = "shuffle")]
+            let numerator = {
+                numerator
+                    .add(&term12)
+                    .add(&term13)
+                    .add(&term14)
+                    .add(&term15)
+                    .add(&term16)
+                    .add(&term17)
+                    .add(&term18)
+            };
+
             numerator.mul(&z_h_inv_coset_evals[point % factor])
         })
         .collect::<Vec<PCS::Field>>();
@@ -661,16 +682,16 @@ fn r_poly_or_comm<F: PrimeField, PCSType: HomomorphicPolyComElem<Scalar = F>>(
     qb_poly_or_comm: &PCSType,
     q_prk1_poly_or_comm: &PCSType,
     q_prk2_poly_or_comm: &PCSType,
-    q_shuffle_generator_polys_or_comms: &[PCSType],
-    q_shuffle_public_key_polys_or_comms: &[PCSType],
-    q_ecc_poly_eval_zeta: &F,
-    w_sel_polys_eval_zeta: &[&F],
+    #[cfg(feature = "shuffle")] q_shuffle_generator_polys_or_comms: &[PCSType],
+    #[cfg(feature = "shuffle")] q_shuffle_public_key_polys_or_comms: &[PCSType],
+    #[cfg(feature = "shuffle")] q_ecc_poly_eval_zeta: &F,
+    #[cfg(feature = "shuffle")] w_sel_polys_eval_zeta: &[&F],
     k: &[F],
-    edwards_a: &F,
+    #[cfg(feature = "shuffle")] edwards_a: &F,
     last_s_poly_or_comm: &PCSType,
     z_poly_or_comm: &PCSType,
     w_polys_eval_zeta: &[&F],
-    w_polys_eval_zeta_omega: &[&F],
+    #[cfg(feature = "shuffle")] w_polys_eval_zeta_omega: &[&F],
     s_polys_eval_zeta: &[&F],
     q_prk3_eval_zeta: &F,
     z_eval_zeta_omega: &F,
@@ -691,10 +712,6 @@ fn r_poly_or_comm<F: PrimeField, PCSType: HomomorphicPolyComElem<Scalar = F>>(
     let alpha_pow_5 = alpha_pow_4.mul(alpha);
     let alpha_pow_6 = alpha_pow_5.mul(alpha);
     let alpha_pow_7 = alpha_pow_6.mul(alpha);
-    let alpha_pow_10 = alpha_pow_7.mul(alpha.mul(alpha).mul(alpha));
-    let alpha_pow_11 = alpha_pow_10.mul(alpha);
-    let alpha_pow_12 = alpha_pow_11.mul(alpha);
-    let alpha_pow_13 = alpha_pow_12.mul(alpha);
 
     // 1. sum_{i=1..n_selectors} wi * qi(X)
     let mut l = q_polys_or_comms[0].mul(&w[0]);
@@ -729,236 +746,244 @@ fn r_poly_or_comm<F: PrimeField, PCSType: HomomorphicPolyComElem<Scalar = F>>(
     l.add_assign(&q_prk1_poly_or_comm.mul(&q_prk3_eval_zeta.mul(alpha_pow_6)));
     l.add_assign(&q_prk2_poly_or_comm.mul(&q_prk3_eval_zeta.mul(alpha_pow_7)));
 
-    let sel_00 = (one - w_sel_polys_eval_zeta[0]) * (one - w_sel_polys_eval_zeta[1])
-        + q_ecc_poly_eval_zeta
-        - one;
-    let sel_01 = *w_sel_polys_eval_zeta[0] * (one - w_sel_polys_eval_zeta[1]);
-    let sel_10 = (one - w_sel_polys_eval_zeta[0]) * w_sel_polys_eval_zeta[1];
-    let sel_11 = *w_sel_polys_eval_zeta[0] * w_sel_polys_eval_zeta[1];
-    let q_pk_x_00 = &q_shuffle_public_key_polys_or_comms[0];
-    let q_pk_x_01 = &q_shuffle_public_key_polys_or_comms[1];
-    let q_pk_x_10 = &q_shuffle_public_key_polys_or_comms[2];
-    let q_pk_x_11 = &q_shuffle_public_key_polys_or_comms[3];
-    let q_pk_y_00 = &q_shuffle_public_key_polys_or_comms[4];
-    let q_pk_y_01 = &q_shuffle_public_key_polys_or_comms[5];
-    let q_pk_y_10 = &q_shuffle_public_key_polys_or_comms[6];
-    let q_pk_y_11 = &q_shuffle_public_key_polys_or_comms[7];
-    let q_pk_dxy_00 = &q_shuffle_public_key_polys_or_comms[8];
-    let q_pk_dxy_01 = &q_shuffle_public_key_polys_or_comms[9];
-    let q_pk_dxy_10 = &q_shuffle_public_key_polys_or_comms[10];
-    let q_pk_dxy_11 = &q_shuffle_public_key_polys_or_comms[11];
-    let q_g_x_00 = &q_shuffle_generator_polys_or_comms[0];
-    let q_g_x_01 = &q_shuffle_generator_polys_or_comms[1];
-    let q_g_x_10 = &q_shuffle_generator_polys_or_comms[2];
-    let q_g_x_11 = &q_shuffle_generator_polys_or_comms[3];
-    let q_g_y_00 = &q_shuffle_generator_polys_or_comms[4];
-    let q_g_y_01 = &q_shuffle_generator_polys_or_comms[5];
-    let q_g_y_10 = &q_shuffle_generator_polys_or_comms[6];
-    let q_g_y_11 = &q_shuffle_generator_polys_or_comms[7];
-    let q_g_dxy_00 = &q_shuffle_generator_polys_or_comms[8];
-    let q_g_dxy_01 = &q_shuffle_generator_polys_or_comms[9];
-    let q_g_dxy_10 = &q_shuffle_generator_polys_or_comms[10];
-    let q_g_dxy_11 = &q_shuffle_generator_polys_or_comms[11];
+    #[cfg(feature = "shuffle")]
+    {
+        let alpha_pow_10 = alpha_pow_7.mul(alpha.mul(alpha).mul(alpha));
+        let alpha_pow_11 = alpha_pow_10.mul(alpha);
+        let alpha_pow_12 = alpha_pow_11.mul(alpha);
+        let alpha_pow_13 = alpha_pow_12.mul(alpha);
 
-    // 6. +  alpha^10 *
-    // (((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (- w_sel[2] * w[0] * q_{pk_y_00} - w[1] * q_{pk_x_00} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_00}) +
-    // w_sel[0] *  (1 - w_sel[1]) * (- w_sel[2] * w[0] * q_{pk_y_01} - w[1] * q_{pk_x_01} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_01}) +
-    // (1 - w_sel[0]) *  w_sel[1] * (- w_sel[2] * w[0] * q_{pk_y_10} - w[1] * q_{pk_x_10} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_10}) +
-    // w_sel[0] *  w_sel[1] * (- w_sel[2] * w[0] * q_{pk_y_11} - w[1] * q_{pk_x_11} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_11}))
-    let tmp = q_pk_dxy_00
-        .mul(
-            &w_polys_eval_zeta[0]
-                .mul(w_polys_eval_zeta[1])
-                .mul(w_polys_eval_zeta_omega[0]),
-        )
-        .sub(&q_pk_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
-        .sub(&q_pk_x_00.mul(&w_polys_eval_zeta[1]))
-        .mul(&sel_00)
-        .add(
-            &q_pk_dxy_01
-                .mul(
-                    &w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[0]),
-                )
-                .sub(&q_pk_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
-                .sub(&q_pk_x_01.mul(&w_polys_eval_zeta[1]))
-                .mul(&sel_01),
-        )
-        .add(
-            &q_pk_dxy_10
-                .mul(
-                    &w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[0]),
-                )
-                .sub(&q_pk_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
-                .sub(&q_pk_x_10.mul(&w_polys_eval_zeta[1]))
-                .mul(&sel_10),
-        )
-        .add(
-            &q_pk_dxy_11
-                .mul(
-                    &w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[0]),
-                )
-                .sub(&q_pk_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
-                .sub(&q_pk_x_11.mul(&w_polys_eval_zeta[1]))
-                .mul(&sel_11),
-        );
+        let sel_00 = (one - w_sel_polys_eval_zeta[0]) * (one - w_sel_polys_eval_zeta[1])
+            + q_ecc_poly_eval_zeta
+            - one;
+        let sel_01 = *w_sel_polys_eval_zeta[0] * (one - w_sel_polys_eval_zeta[1]);
+        let sel_10 = (one - w_sel_polys_eval_zeta[0]) * w_sel_polys_eval_zeta[1];
+        let sel_11 = *w_sel_polys_eval_zeta[0] * w_sel_polys_eval_zeta[1];
+        let q_pk_x_00 = &q_shuffle_public_key_polys_or_comms[0];
+        let q_pk_x_01 = &q_shuffle_public_key_polys_or_comms[1];
+        let q_pk_x_10 = &q_shuffle_public_key_polys_or_comms[2];
+        let q_pk_x_11 = &q_shuffle_public_key_polys_or_comms[3];
+        let q_pk_y_00 = &q_shuffle_public_key_polys_or_comms[4];
+        let q_pk_y_01 = &q_shuffle_public_key_polys_or_comms[5];
+        let q_pk_y_10 = &q_shuffle_public_key_polys_or_comms[6];
+        let q_pk_y_11 = &q_shuffle_public_key_polys_or_comms[7];
+        let q_pk_dxy_00 = &q_shuffle_public_key_polys_or_comms[8];
+        let q_pk_dxy_01 = &q_shuffle_public_key_polys_or_comms[9];
+        let q_pk_dxy_10 = &q_shuffle_public_key_polys_or_comms[10];
+        let q_pk_dxy_11 = &q_shuffle_public_key_polys_or_comms[11];
+        let q_g_x_00 = &q_shuffle_generator_polys_or_comms[0];
+        let q_g_x_01 = &q_shuffle_generator_polys_or_comms[1];
+        let q_g_x_10 = &q_shuffle_generator_polys_or_comms[2];
+        let q_g_x_11 = &q_shuffle_generator_polys_or_comms[3];
+        let q_g_y_00 = &q_shuffle_generator_polys_or_comms[4];
+        let q_g_y_01 = &q_shuffle_generator_polys_or_comms[5];
+        let q_g_y_10 = &q_shuffle_generator_polys_or_comms[6];
+        let q_g_y_11 = &q_shuffle_generator_polys_or_comms[7];
+        let q_g_dxy_00 = &q_shuffle_generator_polys_or_comms[8];
+        let q_g_dxy_01 = &q_shuffle_generator_polys_or_comms[9];
+        let q_g_dxy_10 = &q_shuffle_generator_polys_or_comms[10];
+        let q_g_dxy_11 = &q_shuffle_generator_polys_or_comms[11];
 
-    l.add_assign(&tmp.mul(&alpha_pow_10));
+        // 6. +  alpha^10 *
+        // (((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (- w_sel[2] * w[0] * q_{pk_y_00} - w[1] * q_{pk_x_00} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_00}) +
+        // w_sel[0] *  (1 - w_sel[1]) * (- w_sel[2] * w[0] * q_{pk_y_01} - w[1] * q_{pk_x_01} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_01}) +
+        // (1 - w_sel[0]) *  w_sel[1] * (- w_sel[2] * w[0] * q_{pk_y_10} - w[1] * q_{pk_x_10} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_10}) +
+        // w_sel[0] *  w_sel[1] * (- w_sel[2] * w[0] * q_{pk_y_11} - w[1] * q_{pk_x_11} + w[0] * w[1] * w_next[0] *  q_{pk_dxy_11}))
+        let tmp = q_pk_dxy_00
+            .mul(
+                &w_polys_eval_zeta[0]
+                    .mul(w_polys_eval_zeta[1])
+                    .mul(w_polys_eval_zeta_omega[0]),
+            )
+            .sub(&q_pk_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
+            .sub(&q_pk_x_00.mul(&w_polys_eval_zeta[1]))
+            .mul(&sel_00)
+            .add(
+                &q_pk_dxy_01
+                    .mul(
+                        &w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[0]),
+                    )
+                    .sub(&q_pk_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
+                    .sub(&q_pk_x_01.mul(&w_polys_eval_zeta[1]))
+                    .mul(&sel_01),
+            )
+            .add(
+                &q_pk_dxy_10
+                    .mul(
+                        &w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[0]),
+                    )
+                    .sub(&q_pk_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
+                    .sub(&q_pk_x_10.mul(&w_polys_eval_zeta[1]))
+                    .mul(&sel_10),
+            )
+            .add(
+                &q_pk_dxy_11
+                    .mul(
+                        &w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[0]),
+                    )
+                    .sub(&q_pk_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[0])))
+                    .sub(&q_pk_x_11.mul(&w_polys_eval_zeta[1]))
+                    .mul(&sel_11),
+            );
 
-    // 7. +  alpha^11 *
-    // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (a * w[0] * q_{pk_x_00} - w_sel[2] * w[1] * q_{pk_y_00} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_00}) *
-    // w_sel[0] *  (1 - w_sel[1]) * (a * w[0] * q_{pk_x_01} - w_sel[2] * w[1] * q_{pk_y_01} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_01})
-    // (1 - w_sel[0]) *  w_sel[1] * (a * w[0] * q_{pk_x_10} - w_sel[2] * w[1] * q_{pk_y_10} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_10})
-    // w_sel[0] *  w_sel[1] * (a * w[0] * q_{pk_x_11} - w_sel[2] * w[1] * q_{pk_y_11} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_11})
-    let tmp = q_pk_dxy_00
-        .mul(
-            &-w_polys_eval_zeta[0]
-                .mul(w_polys_eval_zeta[1])
-                .mul(w_polys_eval_zeta_omega[1]),
-        )
-        .add(&q_pk_x_00.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
-        .sub(&q_pk_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
-        .mul(&sel_00)
-        .add(
-            &q_pk_dxy_01
-                .mul(
-                    &-w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[1]),
-                )
-                .add(&q_pk_x_01.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
-                .sub(&q_pk_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
-                .mul(&sel_01),
-        )
-        .add(
-            &q_pk_dxy_10
-                .mul(
-                    &-w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[1]),
-                )
-                .add(&q_pk_x_10.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
-                .sub(&q_pk_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
-                .mul(&sel_10),
-        )
-        .add(
-            &q_pk_dxy_11
-                .mul(
-                    &-w_polys_eval_zeta[0]
-                        .mul(w_polys_eval_zeta[1])
-                        .mul(w_polys_eval_zeta_omega[1]),
-                )
-                .add(&q_pk_x_11.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
-                .sub(&q_pk_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
-                .mul(&sel_11),
-        );
+        l.add_assign(&tmp.mul(&alpha_pow_10));
 
-    l.add_assign(&tmp.mul(&alpha_pow_11));
+        // 7. +  alpha^11 *
+        // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (a * w[0] * q_{pk_x_00} - w_sel[2] * w[1] * q_{pk_y_00} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_00}) *
+        // w_sel[0] *  (1 - w_sel[1]) * (a * w[0] * q_{pk_x_01} - w_sel[2] * w[1] * q_{pk_y_01} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_01})
+        // (1 - w_sel[0]) *  w_sel[1] * (a * w[0] * q_{pk_x_10} - w_sel[2] * w[1] * q_{pk_y_10} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_10})
+        // w_sel[0] *  w_sel[1] * (a * w[0] * q_{pk_x_11} - w_sel[2] * w[1] * q_{pk_y_11} - w[0] * w[1] * w_next[1] *  q_{pk_dxy_11})
+        let tmp = q_pk_dxy_00
+            .mul(
+                &-w_polys_eval_zeta[0]
+                    .mul(w_polys_eval_zeta[1])
+                    .mul(w_polys_eval_zeta_omega[1]),
+            )
+            .add(&q_pk_x_00.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
+            .sub(&q_pk_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
+            .mul(&sel_00)
+            .add(
+                &q_pk_dxy_01
+                    .mul(
+                        &-w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[1]),
+                    )
+                    .add(&q_pk_x_01.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
+                    .sub(&q_pk_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
+                    .mul(&sel_01),
+            )
+            .add(
+                &q_pk_dxy_10
+                    .mul(
+                        &-w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[1]),
+                    )
+                    .add(&q_pk_x_10.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
+                    .sub(&q_pk_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
+                    .mul(&sel_10),
+            )
+            .add(
+                &q_pk_dxy_11
+                    .mul(
+                        &-w_polys_eval_zeta[0]
+                            .mul(w_polys_eval_zeta[1])
+                            .mul(w_polys_eval_zeta_omega[1]),
+                    )
+                    .add(&q_pk_x_11.mul(&w_polys_eval_zeta[0].mul(edwards_a)))
+                    .sub(&q_pk_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[1])))
+                    .mul(&sel_11),
+            );
 
-    // 8. +  alpha^12 *
-    // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (- w_sel[2] * w[2] * q_{g_y_00} - w[3] * q_{g_x_00} + w[2] * w[3] * w_next[2] *  q_{g_dxy_00}) *
-    // w_sel[0] *  (1 - w_sel[1]) * (- w_sel[2] * w[2] * q_{g_y_01} - w[3] * q_{g_x_01} + w[2] * w[3] * w_next[2] *  q_{g_dxy_01})
-    // (1 - w_sel[0]) *  w_sel[1] * (- w_sel[2] * w[2] * q_{g_y_10} - w[3] * q_{g_x_10} + w[2] * w[3] * w_next[2] *  q_{g_dxy_10})
-    // w_sel[0] *  w_sel[1] * (- w_sel[2] * w[2] * q_{g_y_11} - w[3] * q_{g_x_11} + w[2] * w[3] * w_next[2] *  q_{g_dxy_11})
-    let tmp = q_g_dxy_00
-        .mul(
-            &w_polys_eval_zeta[2]
-                .mul(w_polys_eval_zeta[3])
-                .mul(w_polys_eval_zeta_omega[2]),
-        )
-        .sub(&q_g_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
-        .sub(&q_g_x_00.mul(&w_polys_eval_zeta[3]))
-        .mul(&sel_00)
-        .add(
-            &q_g_dxy_01
-                .mul(
-                    &w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta_omega[2]),
-                )
-                .sub(&q_g_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
-                .sub(&q_g_x_01.mul(&w_polys_eval_zeta[3]))
-                .mul(&sel_01),
-        )
-        .add(
-            &q_g_dxy_10
-                .mul(
-                    &w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta_omega[2]),
-                )
-                .sub(&q_g_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
-                .sub(&q_g_x_10.mul(&w_polys_eval_zeta[3]))
-                .mul(&sel_10),
-        )
-        .add(
-            &q_g_dxy_11
-                .mul(
-                    &w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta_omega[2]),
-                )
-                .sub(&q_g_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
-                .sub(&q_g_x_11.mul(&w_polys_eval_zeta[3]))
-                .mul(&sel_11),
-        );
+        l.add_assign(&tmp.mul(&alpha_pow_11));
 
-    l.add_assign(&tmp.mul(&alpha_pow_12));
+        // 8. +  alpha^12 *
+        // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (- w_sel[2] * w[2] * q_{g_y_00} - w[3] * q_{g_x_00} + w[2] * w[3] * w_next[2] *  q_{g_dxy_00}) *
+        // w_sel[0] *  (1 - w_sel[1]) * (- w_sel[2] * w[2] * q_{g_y_01} - w[3] * q_{g_x_01} + w[2] * w[3] * w_next[2] *  q_{g_dxy_01})
+        // (1 - w_sel[0]) *  w_sel[1] * (- w_sel[2] * w[2] * q_{g_y_10} - w[3] * q_{g_x_10} + w[2] * w[3] * w_next[2] *  q_{g_dxy_10})
+        // w_sel[0] *  w_sel[1] * (- w_sel[2] * w[2] * q_{g_y_11} - w[3] * q_{g_x_11} + w[2] * w[3] * w_next[2] *  q_{g_dxy_11})
+        let tmp = q_g_dxy_00
+            .mul(
+                &w_polys_eval_zeta[2]
+                    .mul(w_polys_eval_zeta[3])
+                    .mul(w_polys_eval_zeta_omega[2]),
+            )
+            .sub(&q_g_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
+            .sub(&q_g_x_00.mul(&w_polys_eval_zeta[3]))
+            .mul(&sel_00)
+            .add(
+                &q_g_dxy_01
+                    .mul(
+                        &w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta_omega[2]),
+                    )
+                    .sub(&q_g_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
+                    .sub(&q_g_x_01.mul(&w_polys_eval_zeta[3]))
+                    .mul(&sel_01),
+            )
+            .add(
+                &q_g_dxy_10
+                    .mul(
+                        &w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta_omega[2]),
+                    )
+                    .sub(&q_g_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
+                    .sub(&q_g_x_10.mul(&w_polys_eval_zeta[3]))
+                    .mul(&sel_10),
+            )
+            .add(
+                &q_g_dxy_11
+                    .mul(
+                        &w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta_omega[2]),
+                    )
+                    .sub(&q_g_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[2])))
+                    .sub(&q_g_x_11.mul(&w_polys_eval_zeta[3]))
+                    .mul(&sel_11),
+            );
 
-    // 9. +  alpha^13 *
-    // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (a * w[2] * q_{g_x_00} - w_sel[2] * w[3] * q_{g_y_00} + w[2] * w[3] * w[4] *  q_{pk_gxy_00}) *
-    // w_sel[0] *  (1 - w_sel[1]) * (a * w[2] * q_{g_x_01} - w_sel[2] * w[3] * q_{g_y_01} + w[2] * w[3] * w[4] *  q_{pk_gxy_01})
-    // (1 - w_sel[0]) *  w_sel[1] * (a * w[2] * q_{g_x_10} - w_sel[2] * w[3] * q_{g_y_10} + w[2] * w[3] * w[4] *  q_{pk_gxy_10})
-    // w_sel[0] *  w_sel[1] * (a * w[2] * q_{g_x_11} - w_sel[2] * w[3] * q_{g_y_11} + w[2] * w[3] * w[4] *  q_{pk_gxy_11})
-    let tmp = q_g_dxy_00
-        .mul(
-            &-w_polys_eval_zeta[2]
-                .mul(w_polys_eval_zeta[3])
-                .mul(w_polys_eval_zeta[4]),
-        )
-        .add(&q_g_x_00.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
-        .sub(&q_g_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
-        .mul(&sel_00)
-        .add(
-            &q_g_dxy_01
-                .mul(
-                    &-w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta[4]),
-                )
-                .add(&q_g_x_01.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
-                .sub(&q_g_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
-                .mul(&sel_01),
-        )
-        .add(
-            &q_g_dxy_10
-                .mul(
-                    &-w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta[4]),
-                )
-                .add(&q_g_x_10.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
-                .sub(&q_g_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
-                .mul(&sel_10),
-        )
-        .add(
-            &q_g_dxy_11
-                .mul(
-                    &-w_polys_eval_zeta[2]
-                        .mul(w_polys_eval_zeta[3])
-                        .mul(w_polys_eval_zeta[4]),
-                )
-                .add(&q_g_x_11.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
-                .sub(&q_g_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
-                .mul(&sel_11),
-        );
+        l.add_assign(&tmp.mul(&alpha_pow_12));
 
-    l.add_assign(&tmp.mul(&alpha_pow_13));
+        // 9. +  alpha^13 *
+        // ((1 - w_sel[0]) * (1 - w_sel[1]) + q_{ecc} - 1) * (a * w[2] * q_{g_x_00} - w_sel[2] * w[3] * q_{g_y_00} + w[2] * w[3] * w[4] *  q_{pk_gxy_00}) *
+        // w_sel[0] *  (1 - w_sel[1]) * (a * w[2] * q_{g_x_01} - w_sel[2] * w[3] * q_{g_y_01} + w[2] * w[3] * w[4] *  q_{pk_gxy_01})
+        // (1 - w_sel[0]) *  w_sel[1] * (a * w[2] * q_{g_x_10} - w_sel[2] * w[3] * q_{g_y_10} + w[2] * w[3] * w[4] *  q_{pk_gxy_10})
+        // w_sel[0] *  w_sel[1] * (a * w[2] * q_{g_x_11} - w_sel[2] * w[3] * q_{g_y_11} + w[2] * w[3] * w[4] *  q_{pk_gxy_11})
+        let tmp = q_g_dxy_00
+            .mul(
+                &-w_polys_eval_zeta[2]
+                    .mul(w_polys_eval_zeta[3])
+                    .mul(w_polys_eval_zeta[4]),
+            )
+            .add(&q_g_x_00.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
+            .sub(&q_g_y_00.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
+            .mul(&sel_00)
+            .add(
+                &q_g_dxy_01
+                    .mul(
+                        &-w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta[4]),
+                    )
+                    .add(&q_g_x_01.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
+                    .sub(&q_g_y_01.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
+                    .mul(&sel_01),
+            )
+            .add(
+                &q_g_dxy_10
+                    .mul(
+                        &-w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta[4]),
+                    )
+                    .add(&q_g_x_10.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
+                    .sub(&q_g_y_10.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
+                    .mul(&sel_10),
+            )
+            .add(
+                &q_g_dxy_11
+                    .mul(
+                        &-w_polys_eval_zeta[2]
+                            .mul(w_polys_eval_zeta[3])
+                            .mul(w_polys_eval_zeta[4]),
+                    )
+                    .add(&q_g_x_11.mul(&w_polys_eval_zeta[2].mul(edwards_a)))
+                    .sub(&q_g_y_11.mul(&w_sel_polys_eval_zeta[2].mul(w_polys_eval_zeta[3])))
+                    .mul(&sel_11),
+            );
+
+        l.add_assign(&tmp.mul(&alpha_pow_13));
+    }
 
     let factor = zeta.pow(&[n_t_polys as u64]);
     let mut exponent = z_h_eval_zeta.mul(factor);
@@ -1004,17 +1029,17 @@ pub(super) fn r_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     prover_params: &PlonkProverParams<PCS>,
     z: &FpPolynomial<PCS::Field>,
     w_polys_eval_zeta: &[&PCS::Field],
-    w_polys_eval_zeta_omega: &[&PCS::Field],
+    #[cfg(feature = "shuffle")] w_polys_eval_zeta_omega: &[&PCS::Field],
     s_polys_eval_zeta: &[&PCS::Field],
     q_prk3_eval_zeta: &PCS::Field,
     z_eval_zeta_omega: &PCS::Field,
-    q_ecc_poly_eval_zeta: &PCS::Field,
-    w_sel_polys_eval_zeta: &[&PCS::Field],
+    #[cfg(feature = "shuffle")] q_ecc_poly_eval_zeta: &PCS::Field,
+    #[cfg(feature = "shuffle")] w_sel_polys_eval_zeta: &[&PCS::Field],
     challenges: &PlonkChallenges<PCS::Field>,
     t_polys: &[FpPolynomial<PCS::Field>],
     first_lagrange_eval_zeta: &PCS::Field,
     z_h_eval_zeta: &PCS::Field,
-    edwards_a: &PCS::Field,
+    #[cfg(feature = "shuffle")] edwards_a: &PCS::Field,
     n_t_polys: usize,
 ) -> FpPolynomial<PCS::Field> {
     let w = CS::eval_selector_multipliers(w_polys_eval_zeta).unwrap(); // safe unwrap
@@ -1024,15 +1049,21 @@ pub(super) fn r_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
         &prover_params.qb_poly,
         &prover_params.q_prk_polys[0],
         &prover_params.q_prk_polys[1],
+        #[cfg(feature = "shuffle")]
         &prover_params.q_shuffle_generator_polys,
+        #[cfg(feature = "shuffle")]
         &prover_params.q_shuffle_public_key_polys,
+        #[cfg(feature = "shuffle")]
         q_ecc_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         w_sel_polys_eval_zeta,
         &prover_params.verifier_params.k,
+        #[cfg(feature = "shuffle")]
         edwards_a,
         &prover_params.s_polys[CS::n_wires_per_gate() - 1],
         z,
         w_polys_eval_zeta,
+        #[cfg(feature = "shuffle")]
         w_polys_eval_zeta_omega,
         s_polys_eval_zeta,
         q_prk3_eval_zeta,
@@ -1050,11 +1081,11 @@ pub(super) fn r_commitment<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>
     verifier_params: &PlonkVerifierParams<PCS>,
     cm_z: &PCS::Commitment,
     w_polys_eval_zeta: &[&PCS::Field],
-    w_sel_polys_eval_zeta: &[&PCS::Field],
+    #[cfg(feature = "shuffle")] w_sel_polys_eval_zeta: &[&PCS::Field],
     s_polys_eval_zeta: &[&PCS::Field],
     q_prk3_eval_zeta: &PCS::Field,
-    q_ecc_poly_eval_zeta: &PCS::Field,
-    w_polys_eval_zeta_omega: &[&PCS::Field],
+    #[cfg(feature = "shuffle")] q_ecc_poly_eval_zeta: &PCS::Field,
+    #[cfg(feature = "shuffle")] w_polys_eval_zeta_omega: &[&PCS::Field],
     z_eval_zeta_omega: &PCS::Field,
     challenges: &PlonkChallenges<PCS::Field>,
     t_polys: &[PCS::Commitment],
@@ -1069,15 +1100,21 @@ pub(super) fn r_commitment<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>
         &verifier_params.cm_qb,
         &verifier_params.cm_prk_vec[0],
         &verifier_params.cm_prk_vec[1],
+        #[cfg(feature = "shuffle")]
         &verifier_params.cm_shuffle_generator_vec,
+        #[cfg(feature = "shuffle")]
         &verifier_params.cm_shuffle_public_key_vec,
+        #[cfg(feature = "shuffle")]
         q_ecc_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         w_sel_polys_eval_zeta,
         &verifier_params.k,
+        #[cfg(feature = "shuffle")]
         &verifier_params.edwards_a,
         &verifier_params.cm_s_vec[CS::n_wires_per_gate() - 1],
         cm_z,
         w_polys_eval_zeta,
+        #[cfg(feature = "shuffle")]
         w_polys_eval_zeta_omega,
         s_polys_eval_zeta,
         q_prk3_eval_zeta,
@@ -1148,7 +1185,6 @@ pub(super) fn r_eval_zeta<PCS: PolyComScheme>(
     anemoi_generator: PCS::Field,
     anemoi_generator_inv: PCS::Field,
 ) -> PCS::Field {
-    let one = PCS::Field::ONE;
     let alpha = challenges.get_alpha().unwrap();
     let alpha_pow_2 = alpha.mul(alpha);
     let alpha_pow_3 = alpha_pow_2.mul(alpha);
@@ -1158,13 +1194,6 @@ pub(super) fn r_eval_zeta<PCS: PolyComScheme>(
     let alpha_pow_7 = alpha_pow_6.mul(alpha);
     let alpha_pow_8 = alpha_pow_7.mul(alpha);
     let alpha_pow_9 = alpha_pow_8.mul(alpha);
-    let alpha_pow_10 = alpha_pow_9.mul(alpha);
-    let alpha_pow_11 = alpha_pow_10.mul(alpha);
-    let alpha_pow_12 = alpha_pow_11.mul(alpha);
-    let alpha_pow_13 = alpha_pow_12.mul(alpha);
-    let alpha_pow_14 = alpha_pow_13.mul(alpha);
-    let alpha_pow_15 = alpha_pow_14.mul(alpha);
-    let alpha_pow_16 = alpha_pow_15.mul(alpha);
 
     let (beta, gamma) = challenges.get_beta_gamma().unwrap();
 
@@ -1215,62 +1244,77 @@ pub(super) fn r_eval_zeta<PCS: PolyComScheme>(
             - &proof.w_polys_eval_zeta_omega[1],
     );
 
-    let sel_00 = one
-        .sub(&proof.w_sel_polys_eval_zeta[0])
-        .mul(one.sub(&proof.w_sel_polys_eval_zeta[1]))
-        .add(&proof.q_ecc_poly_eval_zeta)
-        .sub(&one);
-    let sel_01 = proof.w_sel_polys_eval_zeta[0].mul(one.sub(&proof.w_sel_polys_eval_zeta[1]));
-    let sel_10 = one
-        .sub(&proof.w_sel_polys_eval_zeta[0])
-        .mul(&proof.w_sel_polys_eval_zeta[1]);
-    let sel_11 = proof.w_sel_polys_eval_zeta[0].mul(&proof.w_sel_polys_eval_zeta[1]);
-    let term7 = proof.w_sel_polys_eval_zeta[2]
-        .mul(
-            alpha_pow_10
-                .mul(&proof.w_polys_eval_zeta_omega[0])
-                .add(alpha_pow_11.mul(&proof.w_polys_eval_zeta_omega[1]))
-                .add(alpha_pow_12.mul(&proof.w_polys_eval_zeta_omega[2]))
-                .add(alpha_pow_13.mul(&proof.w_polys_eval_zeta[4])),
-        )
-        .mul(sel_00.add(&sel_01).add(&sel_10).add(&sel_11));
+    #[cfg(feature = "shuffle")]
+    let (term7, term8, term9, term10) = {
+        let one = PCS::Field::ONE;
+        let alpha_pow_10 = alpha_pow_9.mul(alpha);
+        let alpha_pow_11 = alpha_pow_10.mul(alpha);
+        let alpha_pow_12 = alpha_pow_11.mul(alpha);
+        let alpha_pow_13 = alpha_pow_12.mul(alpha);
+        let alpha_pow_14 = alpha_pow_13.mul(alpha);
+        let alpha_pow_15 = alpha_pow_14.mul(alpha);
+        let alpha_pow_16 = alpha_pow_15.mul(alpha);
 
-    let term8 = alpha_pow_14.mul(
-        proof
-            .q_ecc_poly_eval_zeta
-            .mul(&proof.w_sel_polys_eval_zeta[0])
-            .mul(one.sub(&proof.w_sel_polys_eval_zeta[0]))
-            .add(
-                one.sub(&proof.q_ecc_poly_eval_zeta)
-                    .mul(&proof.w_sel_polys_eval_zeta[0]),
-            ),
-    );
-    let term9 = alpha_pow_15.mul(
-        proof
-            .q_ecc_poly_eval_zeta
-            .mul(&proof.w_sel_polys_eval_zeta[1])
+        let sel_00 = one
+            .sub(&proof.w_sel_polys_eval_zeta[0])
             .mul(one.sub(&proof.w_sel_polys_eval_zeta[1]))
-            .add(
-                one.sub(&proof.q_ecc_poly_eval_zeta)
-                    .mul(&proof.w_sel_polys_eval_zeta[1]),
-            ),
-    );
-    let term10 = alpha_pow_16
-        .mul(proof.q_ecc_poly_eval_zeta)
-        .mul(one.sub(&proof.w_sel_polys_eval_zeta[2]))
-        .mul(one.add(&proof.w_sel_polys_eval_zeta[2]));
+            .add(&proof.q_ecc_poly_eval_zeta)
+            .sub(&one);
+        let sel_01 = proof.w_sel_polys_eval_zeta[0].mul(one.sub(&proof.w_sel_polys_eval_zeta[1]));
+        let sel_10 = one
+            .sub(&proof.w_sel_polys_eval_zeta[0])
+            .mul(&proof.w_sel_polys_eval_zeta[1]);
+        let sel_11 = proof.w_sel_polys_eval_zeta[0].mul(&proof.w_sel_polys_eval_zeta[1]);
+        let term7 = proof.w_sel_polys_eval_zeta[2]
+            .mul(
+                alpha_pow_10
+                    .mul(&proof.w_polys_eval_zeta_omega[0])
+                    .add(alpha_pow_11.mul(&proof.w_polys_eval_zeta_omega[1]))
+                    .add(alpha_pow_12.mul(&proof.w_polys_eval_zeta_omega[2]))
+                    .add(alpha_pow_13.mul(&proof.w_polys_eval_zeta[4])),
+            )
+            .mul(sel_00.add(&sel_01).add(&sel_10).add(&sel_11));
+
+        let term8 = alpha_pow_14.mul(
+            proof
+                .q_ecc_poly_eval_zeta
+                .mul(&proof.w_sel_polys_eval_zeta[0])
+                .mul(one.sub(&proof.w_sel_polys_eval_zeta[0]))
+                .add(
+                    one.sub(&proof.q_ecc_poly_eval_zeta)
+                        .mul(&proof.w_sel_polys_eval_zeta[0]),
+                ),
+        );
+        let term9 = alpha_pow_15.mul(
+            proof
+                .q_ecc_poly_eval_zeta
+                .mul(&proof.w_sel_polys_eval_zeta[1])
+                .mul(one.sub(&proof.w_sel_polys_eval_zeta[1]))
+                .add(
+                    one.sub(&proof.q_ecc_poly_eval_zeta)
+                        .mul(&proof.w_sel_polys_eval_zeta[1]),
+                ),
+        );
+        let term10 = alpha_pow_16
+            .mul(proof.q_ecc_poly_eval_zeta)
+            .mul(one.sub(&proof.w_sel_polys_eval_zeta[2]))
+            .mul(one.add(&proof.w_sel_polys_eval_zeta[2]));
+
+        (term7, term8, term9, term10)
+    };
 
     let term1_plus_term2 = term1.add(&term2);
-    term1_plus_term2
+    let res = term1_plus_term2
         .sub(term0)
         .add(term3)
         .add(term4)
         .add(term5)
-        .add(term6)
-        .sub(term7)
-        .sub(term8)
-        .sub(term9)
-        .sub(term10)
+        .add(term6);
+
+    #[cfg(feature = "shuffle")]
+    let res = { res.sub(term7).sub(term8).sub(term9).sub(term10) };
+
+    res
 }
 
 /// Split the t polynomial into `n_wires_per_gate` degree-`n` polynomials and commit.

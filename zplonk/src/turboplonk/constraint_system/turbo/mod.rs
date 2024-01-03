@@ -132,8 +132,8 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
         N_SELECTORS
     }
 
-    fn get_edwards_a_ref(&self) -> &F {
-        &self.edwards_a
+    fn get_edwards_a(&self) -> F {
+        self.edwards_a
     }
 
     fn public_vars_constraint_indices(&self) -> &[CsIndex] {
@@ -899,13 +899,13 @@ impl<F: PrimeField> TurboCS<F> {
     /// Set the parameters for the shuffle remark.
     pub fn load_shuffle_remark_parameters<G: CurveGroup<BaseField = F>, H: Remark<G>>(
         &mut self,
-        pk: &G,
+        shuffle_pk: &G,
     ) {
         let generators_x = H::get_preprocessed_generators_x();
         let generators_y = H::get_preprocessed_generators_y();
         let generators_dxy = H::get_preprocessed_generators_dxy();
 
-        let public_keys = H::crate_public_keys(pk);
+        let public_keys = H::crate_public_keys(shuffle_pk);
 
         let mut public_keys_x = vec![];
         let mut public_keys_y = vec![];

@@ -52,7 +52,7 @@ pub trait ConstraintSystem<F: PrimeField>: Sized {
     fn num_selectors(&self) -> usize;
 
     /// Return the paramater a of twisted Edwards curve.
-    fn get_edwards_a_ref(&self) -> &F;
+    fn get_edwards_a(&self) -> F;
 
     /// Compute the permutation implied by the copy constraints.
     fn compute_permutation(&self) -> Vec<usize> {

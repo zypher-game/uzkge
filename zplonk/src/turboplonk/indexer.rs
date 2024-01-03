@@ -24,6 +24,7 @@ pub struct PlonkProof<PCS: PolyComScheme> {
     /// The witness polynomial commitments.
     pub cm_w_vec: Vec<PCS::Commitment>,
     /// The witness selector polynomial commitments.
+    #[cfg(feature = "shuffle")]
     pub cm_w_sel_vec: Vec<PCS::Commitment>,
     /// The split quotient polynomial commitments
     pub cm_t_vec: Vec<PCS::Commitment>,
@@ -49,9 +50,11 @@ pub struct PlonkProof<PCS: PolyComScheme> {
     pub s_polys_eval_zeta: Vec<PCS::Field>,
     /// The opening of q_{ecc}(X) at point \zeta .
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub q_ecc_poly_eval_zeta: PCS::Field,
     /// The opening of the witness selector polynomial at point \zeta .
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub w_sel_polys_eval_zeta: Vec<PCS::Field>,
     /// The commitment for the first witness polynomial, for \zeta.
     pub opening_witness_zeta: PCS::Commitment,
@@ -71,10 +74,13 @@ pub struct PlonkProverParams<PCS: PolyComScheme> {
     /// The four polynomials for the Anemoi/Jive constraints.
     pub q_prk_polys: Vec<FpPolynomial<PCS::Field>>,
     /// The polynomial for ecc constraints.
+    #[cfg(feature = "shuffle")]
     pub q_ecc_poly: FpPolynomial<PCS::Field>,
     /// The generator polynomials for the shuffle constraints.
+    #[cfg(feature = "shuffle")]
     pub q_shuffle_generator_polys: Vec<FpPolynomial<PCS::Field>>,
     /// The public key polynomials for the shuffle constraints.
+    #[cfg(feature = "shuffle")]
     pub q_shuffle_public_key_polys: Vec<FpPolynomial<PCS::Field>>,
     /// The permutation for copy constraints.
     pub permutation: Vec<usize>,
@@ -110,12 +116,15 @@ pub struct PlonkProverParams<PCS: PolyComScheme> {
     pub q_prk_coset_evals: Vec<Vec<PCS::Field>>,
     /// The ecc constraint polynomial's FFT of the polynomial of unity root set.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub q_ecc_coset_eval: Vec<PCS::Field>,
     /// The shuffle generator polynomials' FFT of the polynomial of unity root set.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub q_shuffle_generator_coset_evals: Vec<Vec<PCS::Field>>,
     /// The shuffle public key polynomials' FFT of the polynomial of unity root set.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub q_shuffle_public_key_coset_evals: Vec<Vec<PCS::Field>>,
 }
 
@@ -143,10 +152,13 @@ pub struct PlonkVerifierParams<PCS: PolyComScheme> {
     /// The commitments of the preprocessed round key selectors.
     pub cm_prk_vec: Vec<PCS::Commitment>,
     /// The commitment of the ecc selector.
+    #[cfg(feature = "shuffle")]
     pub cm_q_ecc: PCS::Commitment,
     /// The commitments of the shuffle generator selectors.
+    #[cfg(feature = "shuffle")]
     pub cm_shuffle_generator_vec: Vec<PCS::Commitment>,
     /// The commitments of the shuffle public key selectors.
+    #[cfg(feature = "shuffle")]
     pub cm_shuffle_public_key_vec: Vec<PCS::Commitment>,
     /// the Anemoi generator.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
@@ -159,6 +171,7 @@ pub struct PlonkVerifierParams<PCS: PolyComScheme> {
     pub k: Vec<PCS::Field>,
     /// the paramater a of twisted edwards curve.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
+    #[cfg(feature = "shuffle")]
     pub edwards_a: PCS::Field,
     /// The size of constraint system.
     pub cs_size: usize,
@@ -387,6 +400,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     };
 
     // Step 7: commit `shuffle_remark_constraint_indices`
+    #[cfg(feature = "shuffle")]
     let (q_ecc_coset_eval, q_ecc_poly, cm_q_ecc) = {
         let mut q_ecc = vec![PCS::Field::zero(); n];
         for i in cs.shuffle_remark_constraint_indices().iter() {
@@ -407,6 +421,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     };
 
     // Step 8: compute polynomials related to shuffle and commit them.
+    #[cfg(feature = "shuffle")]
     let (q_shuffle_generator_coset_evals, q_shuffle_generator_polys, cm_shuffle_generator_vec) = {
         let q_shuffle_generator_evals = cs.compute_shuffle_generator_selectors();
 
@@ -440,27 +455,33 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     };
 
     //  Step 9: fake public key paramaters with generator paramaters.
+    #[cfg(feature = "shuffle")]
     let q_shuffle_public_key_polys = q_shuffle_generator_polys.clone();
+    #[cfg(feature = "shuffle")]
     let q_shuffle_public_key_coset_evals = q_shuffle_generator_coset_evals.clone();
+    #[cfg(feature = "shuffle")]
     let cm_shuffle_public_key_vec = cm_shuffle_generator_vec.clone();
 
     let verifier_params = if let Some(verifier) = verifier_params {
         verifier
     } else {
         let (anemoi_generator, anemoi_generator_inv) = cs.get_anemoi_parameters();
-        let edwards_a = *cs.get_edwards_a_ref();
         PlonkVerifierParams {
             cm_q_vec,
             cm_s_vec,
             cm_qb,
             cm_prk_vec,
+            #[cfg(feature = "shuffle")]
             cm_q_ecc,
+            #[cfg(feature = "shuffle")]
             cm_shuffle_generator_vec,
+            #[cfg(feature = "shuffle")]
             cm_shuffle_public_key_vec,
             anemoi_generator,
             anemoi_generator_inv,
             k,
-            edwards_a,
+            #[cfg(feature = "shuffle")]
+            edwards_a: cs.get_edwards_a(),
             cs_size: n,
             public_vars_constraint_indices: cs.public_vars_constraint_indices().to_vec(),
             lagrange_constants,
@@ -472,8 +493,11 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
         s_polys,
         qb_poly,
         q_prk_polys,
+        #[cfg(feature = "shuffle")]
         q_ecc_poly,
+        #[cfg(feature = "shuffle")]
         q_shuffle_generator_polys,
+        #[cfg(feature = "shuffle")]
         q_shuffle_public_key_polys,
         permutation: raw_perm,
         verifier_params,
@@ -487,8 +511,11 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
         s_coset_evals,
         qb_coset_eval,
         q_prk_coset_evals,
+        #[cfg(feature = "shuffle")]
         q_ecc_coset_eval,
+        #[cfg(feature = "shuffle")]
         q_shuffle_generator_coset_evals,
+        #[cfg(feature = "shuffle")]
         q_shuffle_public_key_coset_evals,
     })
 }

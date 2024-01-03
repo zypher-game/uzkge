@@ -175,9 +175,12 @@ pub fn prover_with_lagrange<
     }
 
     // 3. build witness selector polynomials, hide them and commit
+    #[cfg(feature = "shuffle")]
     let mut w_sel_polys = vec![];
+    #[cfg(feature = "shuffle")]
     let mut cm_w_sel_vec = vec![];
 
+    #[cfg(feature = "shuffle")]
     for witness_selector in cs.compute_witness_selectors().iter() {
         let mut f_coefs = FpPolynomial::ifft_with_domain(&domain, witness_selector);
         let blinds = hide_polynomial(prng, &mut f_coefs, 2, n_constraints);
@@ -214,6 +217,7 @@ pub fn prover_with_lagrange<
         cs,
         prover_params,
         &w_polys,
+        #[cfg(feature = "shuffle")]
         &w_sel_polys,
         &z_poly,
         &challenges,
@@ -260,22 +264,28 @@ pub fn prover_with_lagrange<
         .map(|poly| pcs.eval(poly, &zeta_omega))
         .collect();
 
+    #[cfg(feature = "shuffle")]
     let q_ecc_poly_eval_zeta = pcs.eval(&prover_params.q_ecc_poly, &zeta);
+    #[cfg(feature = "shuffle")]
     let w_sel_polys_eval_zeta: Vec<PCS::Field> = w_sel_polys
         .iter()
         .map(|poly| pcs.eval(poly, &zeta))
         .collect();
 
     //  b). build the r polynomial, and eval at zeta
-    for eval_zeta in w_polys_eval_zeta
-        .iter()
-        .chain(s_polys_eval_zeta.iter().chain(w_sel_polys_eval_zeta.iter()))
-    {
+    for eval_zeta in w_polys_eval_zeta.iter().chain(s_polys_eval_zeta.iter()) {
         transcript.append_challenge(eval_zeta);
     }
+
+    #[cfg(feature = "shuffle")]
+    for eval_zeta in w_sel_polys_eval_zeta.iter() {
+        transcript.append_challenge(eval_zeta);
+    }
+
     transcript.append_challenge(&prk_3_poly_eval_zeta);
     transcript.append_challenge(&prk_4_poly_eval_zeta);
     transcript.append_challenge(&z_eval_zeta_omega);
+    #[cfg(feature = "shuffle")]
     transcript.append_challenge(&q_ecc_poly_eval_zeta);
     for eval_zeta_omega in w_polys_eval_zeta_omega.iter() {
         transcript.append_challenge(eval_zeta_omega);
@@ -286,8 +296,10 @@ pub fn prover_with_lagrange<
     challenges.insert_u(u).unwrap();
 
     let w_polys_eval_zeta_as_ref: Vec<&PCS::Field> = w_polys_eval_zeta.iter().collect();
+    #[cfg(feature = "shuffle")]
     let w_polys_eval_zeta_omega_as_ref: Vec<&PCS::Field> = w_polys_eval_zeta_omega.iter().collect();
     let s_poly_eval_zeta_as_ref: Vec<&PCS::Field> = s_polys_eval_zeta.iter().collect();
+    #[cfg(feature = "shuffle")]
     let w_sel_polys_eval_zeta_as_ref: Vec<&PCS::Field> = w_sel_polys_eval_zeta.iter().collect();
 
     let (z_h_eval_zeta, first_lagrange_eval_zeta) =
@@ -296,17 +308,21 @@ pub fn prover_with_lagrange<
         prover_params,
         &z_poly,
         &w_polys_eval_zeta_as_ref,
+        #[cfg(feature = "shuffle")]
         &w_polys_eval_zeta_omega_as_ref,
         &s_poly_eval_zeta_as_ref,
         &prk_3_poly_eval_zeta,
         &z_eval_zeta_omega,
+        #[cfg(feature = "shuffle")]
         &q_ecc_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         &w_sel_polys_eval_zeta_as_ref,
         &challenges,
         &t_polys,
         &first_lagrange_eval_zeta,
         &z_h_eval_zeta,
-        cs.get_edwards_a_ref(),
+        #[cfg(feature = "shuffle")]
+        &cs.get_edwards_a(),
         n_constraints + 2,
     );
 
@@ -321,9 +337,12 @@ pub fn prover_with_lagrange<
         .collect();
     polys_to_open.push(&prover_params.q_prk_polys[2]);
     polys_to_open.push(&prover_params.q_prk_polys[3]);
-    polys_to_open.push(&prover_params.q_ecc_poly);
-    for w_sel_poly in w_sel_polys.iter() {
-        polys_to_open.push(w_sel_poly);
+    #[cfg(feature = "shuffle")]
+    {
+        polys_to_open.push(&prover_params.q_ecc_poly);
+        for w_sel_poly in w_sel_polys.iter() {
+            polys_to_open.push(w_sel_poly);
+        }
     }
     polys_to_open.push(&r_poly);
 
@@ -355,6 +374,7 @@ pub fn prover_with_lagrange<
     // return proof
     Ok(PlonkProof {
         cm_w_vec,
+        #[cfg(feature = "shuffle")]
         cm_w_sel_vec,
         cm_t_vec,
         cm_z,
@@ -364,7 +384,9 @@ pub fn prover_with_lagrange<
         w_polys_eval_zeta_omega,
         z_eval_zeta_omega,
         s_polys_eval_zeta,
+        #[cfg(feature = "shuffle")]
         q_ecc_poly_eval_zeta,
+        #[cfg(feature = "shuffle")]
         w_sel_polys_eval_zeta,
         opening_witness_zeta,
         opening_witness_zeta_omega,

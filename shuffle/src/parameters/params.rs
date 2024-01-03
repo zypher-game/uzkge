@@ -1,4 +1,3 @@
-use ark_bn254::Fr;
 use ark_ed_on_bn254::EdwardsProjective;
 use ark_std::{rand::SeedableRng, UniformRand};
 use rand_chacha::ChaChaRng;
@@ -8,8 +7,6 @@ use zplonk::{
         load_lagrange_params, load_srs_params, VerifierParamsSplitCommon,
         VerifierParamsSplitSpecific,
     },
-    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
-    shuffle::BabyJubjubShuffle,
     turboplonk::{constraint_system::ConstraintSystem, indexer::indexer_with_lagrange},
 };
 
@@ -52,14 +49,21 @@ pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> 
     })
 }
 
-/// Refresh the public key.
+#[cfg(feature = "shuffle")]
+/// Refresh the public key for shuffle.
 pub fn refresh_prover_params_public_key(
     params: &mut ProverParams,
-    public_key: &EdwardsProjective,
+    shuffle_pk: &EdwardsProjective,
 ) -> Result<(), ZplonkError> {
+    use ark_bn254::Fr;
+    use zplonk::{
+        poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
+        shuffle::BabyJubjubShuffle,
+    };
+
     params
         .cs
-        .load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(public_key);
+        .load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(shuffle_pk);
 
     let n = params.cs.size();
     let m = params.cs.quot_eval_dom_size();

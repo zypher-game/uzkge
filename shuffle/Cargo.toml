@@ -47,7 +47,7 @@ default-features = false
 hex = "0.4"
 
 [features]
-default = []
+default = ["shuffle"]
 std = [
   "ark-ec/std",
   "ark-std/std",
@@ -64,3 +64,4 @@ parallel = [
 ]
 no_vk = []
 gen = ["parallel", "structopt"]
+shuffle = ["zplonk/shuffle"]
