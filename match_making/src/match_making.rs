@@ -161,6 +161,7 @@ impl<const N: usize, F: PrimeField> MatchMaking<N, F> {
                         _ => unreachable!(),
                     }
                 }
+                cs.insert_constant_gate(sum_bits_var, one);
             }
 
             for i in 0..bits_vars.len() {

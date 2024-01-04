@@ -35,7 +35,7 @@ fn test_match_making_constraint_system() {
         random_number_var,
     );
     mmr.generate_constraints::<AnemoiJive254>(&mut cs);
-    assert_eq!(cs.size, 5059);
+    assert_eq!(cs.size, 5108);
 
     let witness = cs.get_and_clear_witness();
     cs.verify_witness(&witness, &[]).unwrap();
