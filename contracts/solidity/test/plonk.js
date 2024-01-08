@@ -469,12 +469,12 @@ describe("Plonk Verify Contract", function () {
     const { gasUsed: gasUsed2 } = await res2.wait();
     console.log("Set pc gas used:", gasUsed2);
 
-    const res3 = await verifier.verifyShuffle(deck2, proof);
+    const res3 = await verifier.verify(deck2, proof);
     const { gasUsed: gasUsed3 } = await res3.wait();
     console.log("Shuffle1 verify gas used:", gasUsed3);
 
     const pi = deck1.concat(deck2);
-    const is_ok = await verifier.verify(proof, pi, pkc);
+    const is_ok = await verifier.verify_shuffle(proof, pi, pkc);
     expect(is_ok).to.equal(true);
   });
 });
