@@ -18,18 +18,17 @@ import "./Utils.sol";
 //    * d = 168696/168700 mod q
 //        = 9706598848417545097372247223557719406784115219466060233080913168975159366771
 library EdOnBN254 {
-    uint256 public constant Q =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 public constant E_A = 1;
-    uint256 public constant E_D =
-        9706598848417545097372247223557719406784115219466060233080913168975159366771;
+    uint256 internal constant Q = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    uint256 internal constant R = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
+    uint256 internal constant E_A = 1;
+    uint256 internal constant E_D = 9706598848417545097372247223557719406784115219466060233080913168975159366771;
 
     struct Point {
         uint256 x;
         uint256 y;
     }
 
-    function primeSubgroupGenerator() public pure returns (Point memory) {
+    function generator() internal pure returns (Point memory) {
         return
             Point(
                 0x2B8CFD91B905CAE31D41E7DEDF4A927EE3BC429AAD7E344D59D2810D82876C32,
@@ -37,11 +36,15 @@ library EdOnBN254 {
             );
     }
 
-    function zero() public pure returns (Point memory) {
+    function zero() internal pure returns (Point memory) {
         return Point(0, 1);
     }
 
-    function add(Point memory a1, Point memory a2) public view returns (Point memory) {
+    function eq(Point memory a1, Point memory a2) internal pure returns (bool) {
+        return a1.x == a2.x && a1.y == a2.y;
+    }
+
+    function add(Point memory a1, Point memory a2) internal view returns (Point memory) {
         if (a1.x == 0 && a1.y == 0) {
             return a2;
         }
@@ -63,11 +66,11 @@ library EdOnBN254 {
             );
     }
 
-    function double(Point memory a) public view returns (Point memory) {
+    function double(Point memory a) internal view returns (Point memory) {
         return add(a, a);
     }
 
-    function scalarMul(Point memory a, uint256 s) public view returns (Point memory) {
+    function scalarMul(Point memory a, uint256 s) internal view returns (Point memory) {
         uint256 remaining = s;
         Point memory p = Point(a.x, a.y);
         Point memory ret = Point(0, 0);
@@ -85,7 +88,7 @@ library EdOnBN254 {
         return ret;
     }
 
-    function neg(Point memory a) public pure returns (Point memory) {
+    function neg(Point memory a) internal pure returns (Point memory) {
         if (a.x == 0 && a.y == 0) return a;
         return Point(submod(0, a.x, Q), a.y);
     }

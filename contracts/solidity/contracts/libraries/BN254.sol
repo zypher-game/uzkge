@@ -25,10 +25,8 @@ library BN254 {
     // and G_T as a subgroup of a multiplicative group (GF(p^12))^* of order r.
     //
     // BN254 is defined over a 254-bit prime order p, embedding degree k = 12.
-    uint256 public constant P_MOD =
-        21888242871839275222246405745257275088696311157297823662689037894645226208583;
-    uint256 public constant R_MOD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    uint256 public constant P_MOD = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+    uint256 public constant R_MOD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     struct G1Point {
         uint X;
@@ -42,18 +40,23 @@ library BN254 {
     }
 
     /// @return the generator of G1
-    function P1() pure internal returns (G1Point memory) {
+    function P1() internal pure returns (G1Point memory) {
         return G1Point(1, 2);
     }
 
     /// @return the generator of G2
-    function P2() pure internal returns (G2Point memory) {
-        return G2Point(
-            [10857046999023057135944570762232829481370756359578518086990519993285655852781,
-             11559732032986387107991004021392285783925812861821192530917403151452391805634],
-            [8495653923123431417604973247489272438418190587263600148770280649306958101930,
-             4082367875863433681332203403145435568316851327593401208105741076214120093531]
-        );
+    function P2() internal pure returns (G2Point memory) {
+        return
+            G2Point(
+                [
+                    10857046999023057135944570762232829481370756359578518086990519993285655852781,
+                    11559732032986387107991004021392285783925812861821192530917403151452391805634
+                ],
+                [
+                    8495653923123431417604973247489272438418190587263600148770280649306958101930,
+                    4082367875863433681332203403145435568316851327593401208105741076214120093531
+                ]
+            );
     }
 
     /// @dev check if a G1 point is Infinity
@@ -74,9 +77,8 @@ library BN254 {
     }
 
     /// @return the negation of p, i.e. p.addition(p.negate()) should be zero.
-    function neg(G1Point memory p) pure internal returns (G1Point memory) {
-        if (p.X == 0 && p.Y == 0)
-            return G1Point(0, 0);
+    function neg(G1Point memory p) internal pure returns (G1Point memory) {
+        if (p.X == 0 && p.Y == 0) return G1Point(0, 0);
         return G1Point(p.X, P_MOD - (p.Y % P_MOD));
     }
 
@@ -89,9 +91,12 @@ library BN254 {
         input[3] = p2.Y;
         bool success;
         assembly {
-        success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
-                // Use "invalid" to make gas estimation work
-                switch success case 0 { invalid() }
+            success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
+            // Use "invalid" to make gas estimation work
+            switch success
+            case 0 {
+                invalid()
+            }
         }
         require(success);
     }
@@ -105,11 +110,14 @@ library BN254 {
         input[2] = s;
         bool success;
         assembly {
-        success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
-                // Use "invalid" to make gas estimation work
-                switch success case 0 { invalid() }
+            success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
+            // Use "invalid" to make gas estimation work
+            switch success
+            case 0 {
+                invalid()
+            }
         }
-        require (success);
+        require(success);
     }
 
     /// @return the result of computing the pairing check
@@ -121,28 +129,35 @@ library BN254 {
         uint elements = p1.length;
         uint inputSize = elements * 6;
         uint[] memory input = new uint[](inputSize);
-        for (uint i = 0; i < elements; i++)
-            {
-                input[i * 6 + 0] = p1[i].X;
-                input[i * 6 + 1] = p1[i].Y;
-                input[i * 6 + 2] = p2[i].X[1];
-                input[i * 6 + 3] = p2[i].X[0];
-                input[i * 6 + 4] = p2[i].Y[1];
-                input[i * 6 + 5] = p2[i].Y[0];
-            }
+        for (uint i = 0; i < elements; i++) {
+            input[i * 6 + 0] = p1[i].X;
+            input[i * 6 + 1] = p1[i].Y;
+            input[i * 6 + 2] = p2[i].X[1];
+            input[i * 6 + 3] = p2[i].X[0];
+            input[i * 6 + 4] = p2[i].Y[1];
+            input[i * 6 + 5] = p2[i].Y[0];
+        }
         uint[1] memory out;
         bool success;
         assembly {
-        success := staticcall(sub(gas(), 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
-                // Use "invalid" to make gas estimation work
-                switch success case 0 { invalid() }
+            success := staticcall(sub(gas(), 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+            // Use "invalid" to make gas estimation work
+            switch success
+            case 0 {
+                invalid()
+            }
         }
         require(success);
         return out[0] != 0;
     }
 
     /// Convenience method for a pairing check for two pairs.
-    function pairingProd2(G1Point memory a1, G2Point memory a2, G1Point memory b1, G2Point memory b2) internal view returns (bool) {
+    function pairingProd2(
+        G1Point memory a1,
+        G2Point memory a2,
+        G1Point memory b1,
+        G2Point memory b2
+    ) internal view returns (bool) {
         G1Point[] memory p1 = new G1Point[](2);
         G2Point[] memory p2 = new G2Point[](2);
         p1[0] = a1;
@@ -153,7 +168,14 @@ library BN254 {
     }
 
     /// Convenience method for a pairing check for three pairs.
-    function pairingProd3(G1Point memory a1, G2Point memory a2, G1Point memory b1, G2Point memory b2, G1Point memory c1, G2Point memory c2) internal view returns (bool) {
+    function pairingProd3(
+        G1Point memory a1,
+        G2Point memory a2,
+        G1Point memory b1,
+        G2Point memory b2,
+        G1Point memory c1,
+        G2Point memory c2
+    ) internal view returns (bool) {
         G1Point[] memory p1 = new G1Point[](3);
         G2Point[] memory p2 = new G2Point[](3);
         p1[0] = a1;
@@ -166,7 +188,16 @@ library BN254 {
     }
 
     /// Convenience method for a pairing check for four pairs.
-    function pairingProd4(G1Point memory a1, G2Point memory a2, G1Point memory b1, G2Point memory b2, G1Point memory c1, G2Point memory c2, G1Point memory d1, G2Point memory d2) internal view returns (bool) {
+    function pairingProd4(
+        G1Point memory a1,
+        G2Point memory a2,
+        G1Point memory b1,
+        G2Point memory b2,
+        G1Point memory c1,
+        G2Point memory c2,
+        G1Point memory d1,
+        G2Point memory d2
+    ) internal view returns (bool) {
         G1Point[] memory p1 = new G1Point[](4);
         G2Point[] memory p2 = new G2Point[](4);
         p1[0] = a1;
@@ -201,11 +232,7 @@ library BN254 {
     function fromLeBytesModOrder(bytes memory leBytes) internal pure returns (uint256 ret) {
         for (uint256 i = 0; i < leBytes.length; i++) {
             ret = mulmod(ret, 256, R_MOD);
-            ret = addmod(
-                ret,
-                uint256(uint8(leBytes[leBytes.length - 1 - i])),
-                R_MOD
-            );
+            ret = addmod(ret, uint256(uint8(leBytes[leBytes.length - 1 - i])), R_MOD);
         }
     }
 }
