@@ -1,3 +1,4 @@
+use ark_bn254::G1Projective;
 use ark_ed_on_bn254::EdwardsProjective;
 use ark_std::{rand::SeedableRng, UniformRand};
 use rand_chacha::ChaChaRng;
@@ -54,7 +55,7 @@ pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> 
 pub fn refresh_prover_params_public_key(
     params: &mut ProverParams,
     shuffle_pk: &EdwardsProjective,
-) -> Result<(), ZplonkError> {
+) -> Result<Vec<G1Projective>, ZplonkError> {
     use ark_bn254::Fr;
     use zplonk::{
         poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
@@ -114,6 +115,7 @@ pub fn refresh_prover_params_public_key(
             cm_shuffle_public_key_vec.push(cm)
         }
     }
+    let res: Vec<_> = cm_shuffle_public_key_vec.iter().map(|c| c.0).collect();
 
     params.prover_params.q_shuffle_public_key_polys = q_shuffle_public_key_polys;
     params.prover_params.q_shuffle_public_key_coset_evals = q_shuffle_public_key_coset_evals;
@@ -122,7 +124,7 @@ pub fn refresh_prover_params_public_key(
         .verifier_params
         .cm_shuffle_public_key_vec = cm_shuffle_public_key_vec;
 
-    Ok(())
+    Ok(res)
 }
 
 /// Parse the verifier parameters from bytes.
