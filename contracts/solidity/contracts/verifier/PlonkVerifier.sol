@@ -215,7 +215,15 @@ contract PlonkVerifier {
     bytes4 internal constant sig1 = 0x9e01fc03;
     bytes4 internal constant sig2 = 0x264f76ef;
 
-    function verify_proof(address vk1, address vk2) public view returns (bool) {
+    function verify_shuffle_proof(address vk1, address vk2) public view returns (bool) {
+        return verify_proof(vk1, vk2, true);
+    }
+
+    function verify_generic_proof(address vk1, address vk2) public view returns (bool) {
+        return verify_proof(vk1, vk2, false);
+    }
+
+    function verify_proof(address vk1, address vk2, bool shuffle_specified) private view returns (bool) {
         assembly {
             // The scalar field of BN254.
             let r := 21888242871839275222246405745257275088548364400416034343698204186575808495617
@@ -461,14 +469,16 @@ contract PlonkVerifier {
                 mstore(add(ptr, 0x100), mload(CM_W4_X_LOC))
                 mstore(add(ptr, 0x120), mload(CM_W4_Y_LOC))
 
-                mstore(add(ptr, 0x140), mload(CM_W0_SEL_X_LOC))
-                mstore(add(ptr, 0x160), mload(CM_W0_SEL_Y_LOC))
+                if shuffle_specified {
+                    mstore(add(ptr, 0x140), mload(CM_W0_SEL_X_LOC))
+                    mstore(add(ptr, 0x160), mload(CM_W0_SEL_Y_LOC))
 
-                mstore(add(ptr, 0x180), mload(CM_W1_SEL_X_LOC))
-                mstore(add(ptr, 0x1a0), mload(CM_W1_SEL_Y_LOC))
+                    mstore(add(ptr, 0x180), mload(CM_W1_SEL_X_LOC))
+                    mstore(add(ptr, 0x1a0), mload(CM_W1_SEL_Y_LOC))
 
-                mstore(add(ptr, 0x1c0), mload(CM_W2_SEL_X_LOC))
-                mstore(add(ptr, 0x1e0), mload(CM_W2_SEL_Y_LOC))
+                    mstore(add(ptr, 0x1c0), mload(CM_W2_SEL_X_LOC))
+                    mstore(add(ptr, 0x1e0), mload(CM_W2_SEL_Y_LOC))
+                }
 
                 // compute beta challenge.
                 let beta := mod(
@@ -526,13 +536,18 @@ contract PlonkVerifier {
                     mstore(add(mload(0x40), 0xe0), mload(S_POLY_EVAL_ZETA_1_LOC))
                     mstore(add(mload(0x40), 0x100), mload(S_POLY_EVAL_ZETA_2_LOC))
                     mstore(add(mload(0x40), 0x120), mload(S_POLY_EVAL_ZETA_3_LOC))
-                    mstore(add(mload(0x40), 0x140), mload(W_SEL_POLY_EVAL_ZETA_0_LOC))
-                    mstore(add(mload(0x40), 0x160), mload(W_SEL_POLY_EVAL_ZETA_1_LOC))
-                    mstore(add(mload(0x40), 0x180), mload(W_SEL_POLY_EVAL_ZETA_2_LOC))
+                    if shuffle_specified {
+                        mstore(add(mload(0x40), 0x140), mload(W_SEL_POLY_EVAL_ZETA_0_LOC))
+                        mstore(add(mload(0x40), 0x160), mload(W_SEL_POLY_EVAL_ZETA_1_LOC))
+                        mstore(add(mload(0x40), 0x180), mload(W_SEL_POLY_EVAL_ZETA_2_LOC))
+                    }
                     mstore(add(mload(0x40), 0x1a0), mload(PRK_3_EVAL_ZETA_LOC))
                     mstore(add(mload(0x40), 0x1c0), mload(PRK_4_EVAL_ZETA_LOC))
                     mstore(add(mload(0x40), 0x1e0), mload(Z_EVAL_ZETA_OMEGA_LOC))
-                    mstore(add(mload(0x40), 0x200), mload(Q_ECC_POLY_EVAL_ZETA_LOC))
+                    if shuffle_specified {
+                        // todo put it with W_SEL_POLY_EVAL_ZETA
+                        mstore(add(mload(0x40), 0x200), mload(Q_ECC_POLY_EVAL_ZETA_LOC))
+                    }
                     mstore(add(mload(0x40), 0x220), mload(W_POLY_EVAL_ZETA_OMEGA_0_LOC))
                     mstore(add(mload(0x40), 0x240), mload(W_POLY_EVAL_ZETA_OMEGA_1_LOC))
                     mstore(add(mload(0x40), 0x260), mload(W_POLY_EVAL_ZETA_OMEGA_2_LOC))
@@ -603,41 +618,6 @@ contract PlonkVerifier {
                         alpha,
                         21888242871839275222246405745257275088548364400416034343698204186575808495617
                     )
-                    let alpha_pow_10 := mulmod(
-                        alpha_pow_9,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_11 := mulmod(
-                        alpha_pow_10,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_12 := mulmod(
-                        alpha_pow_11,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_13 := mulmod(
-                        alpha_pow_12,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_14 := mulmod(
-                        alpha_pow_13,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_15 := mulmod(
-                        alpha_pow_14,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
-                    let alpha_pow_16 := mulmod(
-                        alpha_pow_15,
-                        alpha,
-                        21888242871839275222246405745257275088548364400416034343698204186575808495617
-                    )
                     mstore(ALPHA_POW_2_LOC, alpha_pow_2)
                     mstore(ALPHA_POW_3_LOC, alpha_pow_3)
                     mstore(ALPHA_POW_4_LOC, alpha_pow_4)
@@ -646,13 +626,51 @@ contract PlonkVerifier {
                     mstore(ALPHA_POW_7_LOC, alpha_pow_7)
                     mstore(ALPHA_POW_8_LOC, alpha_pow_8)
                     mstore(ALPHA_POW_9_LOC, alpha_pow_9)
-                    mstore(ALPHA_POW_10_LOC, alpha_pow_10)
-                    mstore(ALPHA_POW_11_LOC, alpha_pow_11)
-                    mstore(ALPHA_POW_12_LOC, alpha_pow_12)
-                    mstore(ALPHA_POW_13_LOC, alpha_pow_13)
-                    mstore(ALPHA_POW_14_LOC, alpha_pow_14)
-                    mstore(ALPHA_POW_15_LOC, alpha_pow_15)
-                    mstore(ALPHA_POW_16_LOC, alpha_pow_16)
+
+                    if shuffle_specified {
+                        let alpha_pow_10 := mulmod(
+                            alpha_pow_9,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_11 := mulmod(
+                            alpha_pow_10,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_12 := mulmod(
+                            alpha_pow_11,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_13 := mulmod(
+                            alpha_pow_12,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_14 := mulmod(
+                            alpha_pow_13,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_15 := mulmod(
+                            alpha_pow_14,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        let alpha_pow_16 := mulmod(
+                            alpha_pow_15,
+                            alpha,
+                            21888242871839275222246405745257275088548364400416034343698204186575808495617
+                        )
+                        mstore(ALPHA_POW_10_LOC, alpha_pow_10)
+                        mstore(ALPHA_POW_11_LOC, alpha_pow_11)
+                        mstore(ALPHA_POW_12_LOC, alpha_pow_12)
+                        mstore(ALPHA_POW_13_LOC, alpha_pow_13)
+                        mstore(ALPHA_POW_14_LOC, alpha_pow_14)
+                        mstore(ALPHA_POW_15_LOC, alpha_pow_15)
+                        mstore(ALPHA_POW_16_LOC, alpha_pow_16)
+                    }
                 }
             }
 
@@ -684,7 +702,6 @@ contract PlonkVerifier {
                 } lt(i, sub(pi_length, 1)) {
                     i := add(i, 1)
                 } {
-
                     let root_pow := load_pi_indice(sig1, vk1, i)
                     let denominator := addmod(zeta, sub(r, root_pow), r)
                     mstore(end_ptr, denominator)
@@ -936,7 +953,7 @@ contract PlonkVerifier {
                     }
                 }
 
-                {
+                if shuffle_specified {
                     let sel_00 := addmod(
                         mulmod(
                             addmod(1, sub(r, mload(W_SEL_POLY_EVAL_ZETA_0_LOC)), r),
@@ -986,7 +1003,7 @@ contract PlonkVerifier {
                     res := addmod(res, sub(r, term7), r)
                 }
 
-                {
+                if shuffle_specified {
                     let term8 := mulmod(
                         mload(ALPHA_POW_14_LOC),
                         addmod(
@@ -1012,7 +1029,7 @@ contract PlonkVerifier {
                     res := addmod(res, sub(r, term8), r)
                 }
 
-                {
+                if shuffle_specified {
                     let term9 := mulmod(
                         mload(ALPHA_POW_15_LOC),
                         addmod(
@@ -1038,7 +1055,7 @@ contract PlonkVerifier {
                     res := addmod(res, sub(r, term9), r)
                 }
 
-                {
+                if shuffle_specified {
                     let term10 := mulmod(
                         mulmod(mload(ALPHA_POW_16_LOC), mload(Q_ECC_POLY_EVAL_ZETA_LOC), r),
                         mulmod(
@@ -1221,7 +1238,7 @@ contract PlonkVerifier {
                     r_commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     let tmp_scalar_0 := mulmod(
                         mulmod(mload(W_POLY_EVAL_ZETA_0_LOC), mload(W_POLY_EVAL_ZETA_1_LOC), r),
                         mload(W_POLY_EVAL_ZETA_OMEGA_0_LOC),
@@ -1358,7 +1375,7 @@ contract PlonkVerifier {
                     r_commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     let tmp_scalar_0 := mulmod(
                         mulmod(sub(r, mload(W_POLY_EVAL_ZETA_0_LOC)), mload(W_POLY_EVAL_ZETA_1_LOC), r),
                         mload(W_POLY_EVAL_ZETA_OMEGA_1_LOC),
@@ -1492,7 +1509,7 @@ contract PlonkVerifier {
                     r_commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     let tmp_scalar_0 := mulmod(
                         mulmod(mload(W_POLY_EVAL_ZETA_2_LOC), mload(W_POLY_EVAL_ZETA_3_LOC), r),
                         mload(W_POLY_EVAL_ZETA_OMEGA_2_LOC),
@@ -1629,7 +1646,7 @@ contract PlonkVerifier {
                     r_commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     let tmp_scalar_0 := mulmod(
                         mulmod(sub(r, mload(W_POLY_EVAL_ZETA_2_LOC)), mload(W_POLY_EVAL_ZETA_3_LOC), r),
                         mload(W_POLY_EVAL_ZETA_4_LOC),
@@ -1876,7 +1893,7 @@ contract PlonkVerifier {
                     commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     multiplier := mulmod(multiplier, alpha, r)
                     eval_combined := addmod(eval_combined, mulmod(mload(Q_ECC_POLY_EVAL_ZETA_LOC), multiplier, r), r)
 
@@ -1886,7 +1903,7 @@ contract PlonkVerifier {
                     commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     multiplier := mulmod(multiplier, alpha, r)
                     eval_combined := addmod(eval_combined, mulmod(mload(W_SEL_POLY_EVAL_ZETA_0_LOC), multiplier, r), r)
 
@@ -1896,7 +1913,7 @@ contract PlonkVerifier {
                     commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     multiplier := mulmod(multiplier, alpha, r)
                     eval_combined := addmod(eval_combined, mulmod(mload(W_SEL_POLY_EVAL_ZETA_1_LOC), multiplier, r), r)
 
@@ -1906,7 +1923,7 @@ contract PlonkVerifier {
                     commitment_y := mload(add(mload(0x40), 0x20))
                 }
 
-                {
+                if shuffle_specified {
                     multiplier := mulmod(multiplier, alpha, r)
                     eval_combined := addmod(eval_combined, mulmod(mload(W_SEL_POLY_EVAL_ZETA_2_LOC), multiplier, r), r)
 

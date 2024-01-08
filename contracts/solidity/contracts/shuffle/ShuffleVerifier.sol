@@ -27,25 +27,24 @@ contract ShuffleVerifier is PlonkVerifier {
         pkc = _pkc;
     }
 
-
-    function verifyShuffle(uint256[] calldata newDeck, bytes calldata proof) public {
+    function verify(uint256[] calldata newDeck, bytes calldata proof) public {
         uint256[] memory pi = new uint256[](416);
         require(newDeck.length == 208, "PV01");
 
-        for(uint256 i = 0; i < deck.length; i++){
+        for (uint256 i = 0; i < deck.length; i++) {
             pi[i] = deck[i];
-            pi[i+208] = newDeck[i];
+            pi[i + 208] = newDeck[i];
         }
 
         uint256[] memory pc = new uint256[](24);
-        for(uint256 i = 0; i < pkc.length; i++){
+        for (uint256 i = 0; i < pkc.length; i++) {
             pc[i] = pkc[i];
         }
 
-        require(this.verify(proof, pi, pc), "PV00");
+        require(this.verify_shuffle(proof, pi, pc), "PV00");
     }
 
-    function verify(
+    function verify_shuffle(
         bytes calldata _proof,
         uint256[] calldata _publicKeyInput,
         uint256[] calldata _publicKeyCommitment
@@ -156,6 +155,6 @@ contract ShuffleVerifier is PlonkVerifier {
             mstore(CM_SHUFFLE_PUBLIC_KEY_11_Y_LOC, mod(calldataload(add(pk_ptr, 0x2e0)), r))
         }
 
-        return verify_proof(vk1, vk2);
+        return verify_shuffle_proof(vk1, vk2);
     }
 }
