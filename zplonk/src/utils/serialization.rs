@@ -1,4 +1,4 @@
-use ark_ec::CurveGroup;
+use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
 
@@ -40,10 +40,12 @@ where
 
 #[inline]
 pub fn point_to_uncompress_be<F: PrimeField, G: CurveGroup<BaseField = F>>(p: &G) -> Vec<u8> {
-    let mut bytes = vec![];
-    let _ = p.serialize_with_mode(&mut bytes, Compress::No);
-    bytes.reverse();
-    bytes
+    let affine = G::Affine::from(*p);
+    let (x, y) = affine.xy().unwrap_or((F::zero(), F::zero()));
+    let mut x_bytes = scalar_to_bytes_be(&x);
+    let y_bytes = scalar_to_bytes_be(&y);
+    x_bytes.extend(y_bytes);
+    x_bytes
 }
 
 #[inline]
@@ -51,18 +53,21 @@ pub fn point_from_uncompress_be<G: CurveGroup>(
     bytes: &[u8],
     len_check: bool,
 ) -> Result<G, ZplonkError> {
-    let mut be_bytes = if len_check {
-        let n = G::generator().uncompressed_size();
-        if bytes.len() < n {
+    let (mut x_bytes_be, mut y_bytes_be) = if len_check {
+        let m = G::generator().uncompressed_size();
+        if bytes.len() < m || m % 2 != 0 {
             return Err(ZplonkError::DeserializationError);
         }
-        bytes[..n].to_vec()
+        (bytes[0..m / 2].to_vec(), bytes[m / 2..].to_vec())
     } else {
-        bytes.to_vec()
+        let n = bytes.len() / 2;
+        (bytes[0..n].to_vec(), bytes[n..].to_vec())
     };
-    be_bytes.reverse();
+    x_bytes_be.reverse();
+    y_bytes_be.reverse();
+    x_bytes_be.extend(y_bytes_be);
 
-    G::deserialize_with_mode(be_bytes.as_slice(), Compress::No, Validate::Yes)
+    G::deserialize_with_mode(x_bytes_be.as_slice(), Compress::No, Validate::Yes)
         .map_err(|_| ZplonkError::DeserializationError)
 }
 

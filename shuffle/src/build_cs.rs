@@ -6,9 +6,7 @@ use zplonk::{
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     shuffle::{BabyJubjubShuffle, Permutation, Remark},
     turboplonk::{
-        constraint_system::{shuffle::CardVar, TurboCS},
-        indexer::PlonkProof,
-        prover::prover_with_lagrange,
+        constraint_system::shuffle::CardVar, indexer::PlonkProof, prover::prover_with_lagrange,
         verifier::verifier,
     },
     utils::transcript::Transcript,
@@ -19,6 +17,9 @@ use crate::{
     MaskedCard,
 };
 
+pub type ShuffleProof = PlonkProof<KZGCommitmentSchemeBN254>;
+pub type TurboCS = zplonk::turboplonk::constraint_system::TurboCS<Fr>;
+
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";
 
@@ -26,7 +27,7 @@ pub(crate) fn build_cs<R: CryptoRng + RngCore>(
     prng: &mut R,
     aggregate_public_key: &EdwardsProjective,
     input_cards: &[MaskedCard],
-) -> (TurboCS<Fr>, Vec<CardVar>) {
+) -> (TurboCS, Vec<CardVar>) {
     let n = input_cards.len();
     let mut cs = TurboCS::new();
     cs.load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(aggregate_public_key);
@@ -58,7 +59,7 @@ pub fn prove_shuffle<R: CryptoRng + RngCore>(
     aggregate_public_key: &EdwardsProjective,
     input_cards: &[MaskedCard],
     prover_params: &ProverParams,
-) -> Result<(PlonkProof<KZGCommitmentSchemeBN254>, Vec<MaskedCard>)> {
+) -> Result<(ShuffleProof, Vec<MaskedCard>)> {
     let n = input_cards.len();
     // FIXME check n eq prover_params
 
@@ -99,7 +100,7 @@ pub fn verify_shuffle(
     verifier_params: &VerifierParams,
     input_cards: &[MaskedCard],
     output_cards: &[MaskedCard],
-    proof: &PlonkProof<KZGCommitmentSchemeBN254>,
+    proof: &ShuffleProof,
 ) -> Result<()> {
     let n = input_cards.len();
     // FIXME check n eq verifier_params

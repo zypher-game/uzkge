@@ -533,6 +533,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
 impl PlonkProof<KZGCommitmentSchemeBN254> {
     pub fn to_bytes_be(&self) -> Vec<u8> {
         let mut bytes = vec![];
+
         for p in &self.cm_w_vec {
             bytes.append(&mut point_to_uncompress_be(&p.0));
         }
@@ -545,16 +546,23 @@ impl PlonkProof<KZGCommitmentSchemeBN254> {
         for p in &self.cm_t_vec {
             bytes.append(&mut point_to_uncompress_be(&p.0));
         }
+
         bytes.append(&mut point_to_uncompress_be(&self.cm_z.0));
+
         bytes.append(&mut scalar_to_bytes_be(&self.prk_3_poly_eval_zeta));
+
         bytes.append(&mut scalar_to_bytes_be(&self.prk_4_poly_eval_zeta));
+
         for s in &self.w_polys_eval_zeta {
             bytes.append(&mut scalar_to_bytes_be(s));
         }
+
         for s in &self.w_polys_eval_zeta_omega {
             bytes.append(&mut scalar_to_bytes_be(s));
         }
+
         bytes.append(&mut scalar_to_bytes_be(&self.z_eval_zeta_omega));
+
         for s in &self.s_polys_eval_zeta {
             bytes.append(&mut scalar_to_bytes_be(s));
         }
@@ -568,6 +576,7 @@ impl PlonkProof<KZGCommitmentSchemeBN254> {
         }
 
         bytes.append(&mut point_to_uncompress_be(&self.opening_witness_zeta.0));
+
         bytes.append(&mut point_to_uncompress_be(
             &self.opening_witness_zeta_omega.0,
         ));
@@ -581,11 +590,11 @@ impl PlonkProof<KZGCommitmentSchemeBN254> {
         let n_wire = CS::n_wires_per_gate();
 
         #[cfg(feature = "shuffle")]
-        let n_selector = CS::num_selectors();
+        let n_selector = CS::num_wire_selectors();
 
         let mut bytes_len = 0;
 
-        bytes_len += n_wire * n; // cm_w_vec,
+        bytes_len += n * n_wire; // cm_w_vec,
         #[cfg(feature = "shuffle")]
         {
             bytes_len += n * n_selector; // cm_w_sel_vec,
@@ -595,9 +604,9 @@ impl PlonkProof<KZGCommitmentSchemeBN254> {
         bytes_len += m; // prk_3_poly_eval_zeta,
         bytes_len += m; // prk_4_poly_eval_zeta,
         bytes_len += m * n_wire; // w_polys_eval_zeta,
-        bytes_len += m * n_wire; // w_polys_eval_zeta_omega,
+        bytes_len += m * 3; // w_polys_eval_zeta_omega,
         bytes_len += m; // z_eval_zeta_omega,
-        bytes_len += m * n_wire; // s_polys_eval_zeta,
+        bytes_len += m * (n_wire - 1); // s_polys_eval_zeta,
         #[cfg(feature = "shuffle")]
         {
             bytes_len += m; // q_ecc_poly_eval_zeta,
@@ -660,7 +669,7 @@ impl PlonkProof<KZGCommitmentSchemeBN254> {
         }
 
         let mut w_polys_eval_zeta_omega = vec![];
-        for _ in 0..n_wire {
+        for _ in 0..3 {
             w_polys_eval_zeta_omega.push(scalar_from_bytes_be(&bytes[p..p + m], false)?);
             p += m;
         }

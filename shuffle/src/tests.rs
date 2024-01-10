@@ -9,7 +9,7 @@ use crate::gen_params::{
 };
 
 use super::{
-    build_cs::{prove_shuffle, verify_shuffle},
+    build_cs::{prove_shuffle, verify_shuffle, ShuffleProof, TurboCS},
     {keygen::*, mask::*, reveal::*, *},
 };
 
@@ -226,6 +226,10 @@ fn test_poker() {
     // Alice, start shuffling.
     let (proof, alice_shuffle_deck) =
         prove_shuffle(&mut rng, &joint_pk, &deck, &prover_params).unwrap();
+
+    let bytes = proof.to_bytes_be();
+    let proof = ShuffleProof::from_bytes_be::<TurboCS>(&bytes).unwrap();
+
     verify_shuffle(&verifier_params, &deck, &alice_shuffle_deck, &proof).unwrap();
 
     // Bob, start shuffling.

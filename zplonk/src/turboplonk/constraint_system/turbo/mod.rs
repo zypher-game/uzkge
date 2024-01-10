@@ -22,7 +22,7 @@ pub const N_SHUFFLE_RELATED_SELECTORS: usize = 24;
 /// The selectors number in Turbo CS.
 pub const N_SELECTORS: usize = 8;
 
-// The wire selectors number in Turbo CS.
+/// The wire selectors number in Turbo CS.
 pub const N_WIRE_SELECTORS: usize = 3;
 
 /// Turbo PLONK Constraint System.
@@ -130,6 +130,10 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
 
     fn num_selectors() -> usize {
         N_SELECTORS
+    }
+
+    fn num_wire_selectors() -> usize {
+        N_WIRE_SELECTORS
     }
 
     fn get_edwards_a(&self) -> F {

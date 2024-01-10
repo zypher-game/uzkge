@@ -51,6 +51,9 @@ pub trait ConstraintSystem<F: PrimeField>: Sized {
     /// Return the number of selectors.
     fn num_selectors() -> usize;
 
+    /// Return the number of wires selectors;
+    fn num_wire_selectors() -> usize;
+
     /// Return the paramater a of twisted Edwards curve.
     fn get_edwards_a(&self) -> F;
 
