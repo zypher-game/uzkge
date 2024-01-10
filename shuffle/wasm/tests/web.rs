@@ -41,10 +41,6 @@ fn pass() {
 
     log_1(&"PROOF:".into());
     log_1(&proof.proof.into());
-    log_1(&"PKC:".into());
-    for p in proof.pkc {
-        log_1(&format!("\"{}\",", p).into());
-    }
     log_1(&"DECK1:".into());
     let deck1_v: Vec<MaskedCard> = serde_wasm_bindgen::from_value(first_deck).unwrap();
     for d in deck1_v {
@@ -60,5 +56,9 @@ fn pass() {
         log_1(&format!("\"{}\",", d.1).into());
         log_1(&format!("\"{}\",", d.2).into());
         log_1(&format!("\"{}\",", d.3).into());
+    }
+    log_1(&"PKC:".into());
+    for p in proof.pkc {
+        log_1(&format!("\"{}\",", p).into());
     }
 }

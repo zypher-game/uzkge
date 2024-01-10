@@ -1,7 +1,8 @@
 mod card_maps;
 mod utils;
 
-use ark_bn254::G1Projective;
+pub mod poker;
+
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ff::{BigInteger, One, PrimeField};
 use serde::{Deserialize, Serialize};
@@ -42,15 +43,6 @@ pub struct Keypair {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct MaskedCard(pub String, pub String, pub String, pub String);
 
-/// suite from 1..4
-/// value from 1..13
-/// if suite is 0, it will be joker, value is 53, 54
-#[derive(Serialize, Deserialize)]
-pub struct Card {
-    pub suite: i32,
-    pub value: i32,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct MaskedCardWithProof {
     /// MaskedCard
@@ -80,8 +72,8 @@ pub struct ShuffledCardsWithProof {
 /// uncompress public key to x, y
 #[wasm_bindgen]
 pub fn public_uncompress(public: String) -> Result<JsValue, JsValue> {
-    let pk = hex_to_point(&public)?;
-    let publicxy = point_to_uncompress(&pk);
+    let pk = hex_to_point::<EdwardsProjective>(&public)?;
+    let publicxy = point_to_uncompress(&pk, true);
     Ok(serde_wasm_bindgen::to_value(&publicxy)?)
 }
 
@@ -90,7 +82,7 @@ pub fn public_uncompress(public: String) -> Result<JsValue, JsValue> {
 pub fn public_compress(publics: JsValue) -> Result<String, JsValue> {
     let publicxy: (String, String) = serde_wasm_bindgen::from_value(publics)?;
     let pk = uncompress_to_point(&publicxy.0, &publicxy.1)?;
-    Ok(point_to_hex(&pk))
+    Ok(point_to_hex(&pk, true))
 }
 
 /// generate keypair
@@ -98,11 +90,11 @@ pub fn public_compress(publics: JsValue) -> Result<String, JsValue> {
 pub fn generate_key() -> Result<JsValue, JsValue> {
     let mut prng = default_prng();
     let keypair = CoreKeypair::generate(&mut prng);
-    let publicxy = point_to_uncompress(&keypair.public);
+    let publicxy = point_to_uncompress(&keypair.public, true);
 
     let ret = Keypair {
-        secret: scalar_to_hex(&keypair.secret),
-        public: point_to_hex(&keypair.public),
+        secret: scalar_to_hex(&keypair.secret, true),
+        public: point_to_hex(&keypair.public, true),
         publicxy,
     };
 
@@ -118,47 +110,33 @@ pub fn aggregate_keys(publics: JsValue) -> Result<String, JsValue> {
         pks.push(hex_to_point(&bytes)?);
     }
     let pk = core_aggregate_keys(&pks).map_err(error_to_jsvalue)?;
-    Ok(point_to_hex(&pk))
+    Ok(point_to_hex(&pk, true))
 }
 
 /// mask the card, return the masked card and masked proof
 #[wasm_bindgen]
-pub fn init_masked_cards(joint: String, has_joker: bool) -> Result<JsValue, JsValue> {
-    let mut prng = default_prng();
-    let joint_pk = hex_to_point(&joint)?;
-    let mut deck = vec![];
-
-    for suite in 1..5 {
-        for value in 1..14 {
-            let point = card_to_point(Card { suite, value });
-
-            let (masked_card, masked_proof) =
-                mask(&mut prng, &joint_pk, &point, &Fr::one()).map_err(error_to_jsvalue)?;
-
-            deck.push(MaskedCardWithProof {
-                card: masked_card_serialize(&masked_card),
-                proof: format!(
-                    "0x{}",
-                    hex::encode(&bincode::serialize(&masked_proof).map_err(error_to_jsvalue)?)
-                ),
-            });
-        }
+pub fn init_masked_cards(joint: String, num: i32) -> Result<JsValue, JsValue> {
+    if CARD_MAPS.len() < num as usize {
+        return Err(error_to_jsvalue("The number of cards exceeds the maximum"));
     }
 
-    if has_joker {
-        for value in [53, 54] {
-            let point = card_to_point(Card { suite: 0, value });
-            let (masked_card, masked_proof) =
-                mask(&mut prng, &joint_pk, &point, &Fr::one()).map_err(error_to_jsvalue)?;
+    let mut prng = default_prng();
+    let joint_pk = hex_to_point(&joint)?;
 
-            deck.push(MaskedCardWithProof {
-                card: masked_card_serialize(&masked_card),
-                proof: format!(
-                    "0x{}",
-                    hex::encode(&bincode::serialize(&masked_proof).map_err(error_to_jsvalue)?)
-                ),
-            });
-        }
+    let mut deck = vec![];
+    for n in 0..num {
+        let point = index_to_point(n);
+
+        let (masked_card, masked_proof) =
+            mask(&mut prng, &joint_pk, &point, &Fr::one()).map_err(error_to_jsvalue)?;
+
+        deck.push(MaskedCardWithProof {
+            card: masked_card_serialize(&masked_card),
+            proof: format!(
+                "0x{}",
+                hex::encode(&bincode::serialize(&masked_proof).map_err(error_to_jsvalue)?)
+            ),
+        });
     }
 
     Ok(serde_wasm_bindgen::to_value(&deck)?)
@@ -166,12 +144,10 @@ pub fn init_masked_cards(joint: String, has_joker: bool) -> Result<JsValue, JsVa
 
 /// mask the card, return the masked card and masked proof
 #[wasm_bindgen]
-pub fn mask_card(joint: String, card: JsValue) -> Result<JsValue, JsValue> {
-    let card: Card = serde_wasm_bindgen::from_value(card)?;
-
+pub fn mask_card(joint: String, index: i32) -> Result<JsValue, JsValue> {
     let mut prng = default_prng();
     let joint_pk = hex_to_point(&joint)?;
-    let point = card_to_point(card);
+    let point = index_to_point(index);
     let (masked_card, masked_proof) =
         mask(&mut prng, &joint_pk, &point, &Fr::one()).map_err(error_to_jsvalue)?;
 
@@ -190,15 +166,14 @@ pub fn mask_card(joint: String, card: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn verify_masked_card(
     joint: String,
-    card: JsValue,
+    index: i32,
     masked: JsValue,
     proof: String,
 ) -> Result<bool, JsValue> {
-    let card: Card = serde_wasm_bindgen::from_value(card)?;
     let masked: MaskedCard = serde_wasm_bindgen::from_value(masked)?;
 
     let joint_pk = hex_to_point(&joint)?;
-    let point = card_to_point(card);
+    let point = index_to_point(index);
     let masked = masked_card_deserialize(&masked)?;
 
     let hex = proof.trim_start_matches("0x");
@@ -214,32 +189,6 @@ pub fn init_prover_key() -> Result<(), JsValue> {
     //drop(PROVER_PARAMS.lock().map_err(error_to_jsvalue)?); TODO
     Ok(())
 }
-
-// /// Refresh the public key
-// #[wasm_bindgen]
-// pub fn refresh_public_key(joint_pk: String) -> Result<Vec<String>, JsValue> {
-//     let joint_pk = hex_to_point(&joint_pk)?;
-//     // let mut pp = PROVER_PARAMS.lock().map_err(error_to_jsvalue)?;
-//     // pp.refresh_public_key(&joint_pk).map_err(error_to_jsvalue)?;
-
-//     let mut cm_pk = vec![];
-
-//     for cm in pp
-//         .prover_params
-//         .verifier_params
-//         .cm_shuffle_public_key_vec
-//         .iter()
-//     {
-//         let tmp: G1Affine = cm.0.into();
-//         let (x, y) = tmp.xy().unwrap();
-//         let x: BigUint = x.into();
-//         cm_pk.push(x.to_str_radix(16));
-//         let y: BigUint = y.into();
-//         cm_pk.push(y.to_str_radix(16));
-//     }
-
-//     Ok(cm_pk)
-// }
 
 /// shuffle the cards and shuffled proof
 #[wasm_bindgen]
@@ -270,7 +219,7 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
 
     let mut pkc_string: Vec<_> = vec![];
     for p in pkc {
-        let (x, y) = base_point_to_card(p);
+        let (x, y) = point_to_uncompress(&p, true);
         pkc_string.push(x);
         pkc_string.push(y);
     }
@@ -294,7 +243,7 @@ pub fn verify_shuffled_cards(
 ) -> Result<bool, JsValue> {
     let deck1: Vec<MaskedCard> = serde_wasm_bindgen::from_value(deck1)?;
     let deck2: Vec<MaskedCard> = serde_wasm_bindgen::from_value(deck2)?;
-    return Ok(true); // TODO
+    // return Ok(true); // TODO
 
     let n = deck1.len();
     let joint_pk = hex_to_point(&joint)?;
@@ -337,7 +286,7 @@ pub fn reveal_card(sk: String, card: JsValue) -> Result<JsValue, JsValue> {
         reveal(&mut prng, &keypair, &masked).map_err(error_to_jsvalue)?;
 
     let ret = RevealedCardWithProof {
-        card: point_to_uncompress(&reveal_card),
+        card: point_to_uncompress(&reveal_card, true),
         proof: format!("0x{}", hex::encode(&reveal_proof.to_uncompress())),
     };
 
@@ -364,7 +313,7 @@ pub fn verify_revealed_card(pk: String, card: JsValue, reveal: JsValue) -> Resul
 
 /// unmask the card use others' reveals
 #[wasm_bindgen]
-pub fn unmask_card(sk: String, card: JsValue, reveals: JsValue) -> Result<JsValue, JsValue> {
+pub fn unmask_card(sk: String, card: JsValue, reveals: JsValue) -> Result<i32, JsValue> {
     let card: MaskedCard = serde_wasm_bindgen::from_value(card)?;
     let reveals: Vec<(String, String)> = serde_wasm_bindgen::from_value(reveals)?;
 
@@ -381,14 +330,12 @@ pub fn unmask_card(sk: String, card: JsValue, reveals: JsValue) -> Result<JsValu
     reveal_cards.push(reveal_card);
 
     let unmasked_card = unmask(&masked, &reveal_cards).map_err(error_to_jsvalue)?;
-    let ret = point_to_card(unmasked_card)?;
-
-    Ok(serde_wasm_bindgen::to_value(&ret)?)
+    point_to_index(unmasked_card)
 }
 
 /// decode masked to card use all reveals
 #[wasm_bindgen]
-pub fn decode_card(card: JsValue, reveals: JsValue) -> Result<JsValue, JsValue> {
+pub fn decode_point(card: JsValue, reveals: JsValue) -> Result<i32, JsValue> {
     let card: MaskedCard = serde_wasm_bindgen::from_value(card)?;
     let reveals: Vec<(String, String)> = serde_wasm_bindgen::from_value(reveals)?;
 
@@ -399,18 +346,10 @@ pub fn decode_card(card: JsValue, reveals: JsValue) -> Result<JsValue, JsValue> 
     }
 
     let unmasked_card = unmask(&masked, &reveal_cards).map_err(error_to_jsvalue)?;
-    let ret = point_to_card(unmasked_card)?;
-
-    Ok(serde_wasm_bindgen::to_value(&ret)?)
+    point_to_index(unmasked_card)
 }
 
-fn card_to_point(card: Card) -> EdwardsProjective {
-    let index = if card.value > 52 {
-        card.value - 1
-    } else {
-        (card.suite - 1) * 13 + (card.value - 1)
-    };
-
+fn index_to_point(index: i32) -> EdwardsProjective {
     let y_hex = CARD_MAPS[index as usize].trim_start_matches("0x");
     let y_bytes = hex::decode(y_hex).unwrap();
     let y = Fq::from_be_bytes_mod_order(&y_bytes);
@@ -419,9 +358,21 @@ fn card_to_point(card: Card) -> EdwardsProjective {
     affine.into()
 }
 
+fn point_to_index(point: EdwardsProjective) -> Result<i32, JsValue> {
+    let affine = EdwardsAffine::from(point);
+    let y_bytes = affine.y.into_bigint().to_bytes_be();
+    let bytes = format!("0x{}", hex::encode(&y_bytes));
+
+    if let Some(pos) = CARD_MAPS.iter().position(|y| y == &bytes) {
+        Ok(pos as i32)
+    } else {
+        Err(error_to_jsvalue("Point not map to  a card"))
+    }
+}
+
 fn masked_card_serialize(masked: &Masked) -> MaskedCard {
-    let (e1_x, e1_y) = point_to_uncompress(&masked.e1);
-    let (e2_x, e2_y) = point_to_uncompress(&masked.e2);
+    let (e1_x, e1_y) = point_to_uncompress(&masked.e1, true);
+    let (e2_x, e2_y) = point_to_uncompress(&masked.e2, true);
     MaskedCard(e2_x, e2_y, e1_x, e1_y)
 }
 
@@ -429,40 +380,4 @@ fn masked_card_deserialize(masked: &MaskedCard) -> Result<Masked, JsValue> {
     let e2 = uncompress_to_point(&masked.0, &masked.1)?;
     let e1 = uncompress_to_point(&masked.2, &masked.3)?;
     Ok(Masked { e1, e2 })
-}
-
-fn point_to_card(point: EdwardsProjective) -> Result<Card, JsValue> {
-    let affine = EdwardsAffine::from(point);
-    let y_bytes = affine.y.into_bigint().to_bytes_be();
-    let bytes = format!("0x{}", hex::encode(&y_bytes));
-
-    if let Some(pos) = CARD_MAPS.iter().position(|y| y == &bytes) {
-        if pos == 52 {
-            Ok(Card {
-                suite: 0,
-                value: 53,
-            })
-        } else if pos == 53 {
-            Ok(Card {
-                suite: 0,
-                value: 53,
-            })
-        } else {
-            let suite = (pos / 13 + 1) as i32;
-            let value = (pos % 13 + 1) as i32;
-            Ok(Card { suite, value })
-        }
-    } else {
-        Err(error_to_jsvalue("Point not map to  a card"))
-    }
-}
-
-fn base_point_to_card(point: G1Projective) -> (String, String) {
-    let affine = G1Projective::from(point);
-    let x_bytes = affine.x.into_bigint().to_bytes_be();
-    let y_bytes = affine.y.into_bigint().to_bytes_be();
-
-    let x_s = format!("0x{}", hex::encode(&x_bytes));
-    let y_s = format!("0x{}", hex::encode(&y_bytes));
-    (x_s, y_s)
 }

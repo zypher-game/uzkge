@@ -6,45 +6,50 @@ import "./VerifierKey.sol";
 import "./ExternalTranscript.sol";
 
 contract ShuffleVerifier is PlonkVerifier {
+    uint256 public constant PKC_LEN = 24;
+
     address vk1;
     address vk2;
-
-    constructor(address _vk1, address _vk2) {
-        vk1 = _vk1;
-        vk2 = _vk2;
-    }
+    uint256 deckNum;
 
     uint256[] private deck;
     uint256[] private pkc;
 
-    function setDeck(uint256[] calldata _deck) public {
-        require(_deck.length == 208, "PV03");
-        deck = _deck;
+    constructor(address _vk1, address _vk2, uint256 _deckNum) {
+        vk1 = _vk1;
+        vk2 = _vk2;
+        deckNum = _deckNum;
     }
 
     function setPkc(uint256[] calldata _pkc) public {
-        require(_pkc.length == 24, "PV02");
+        require(_pkc.length == PKC_LEN, "PV02");
         pkc = _pkc;
     }
 
-    function verify(uint256[] calldata newDeck, bytes calldata proof) public {
-        uint256[] memory pi = new uint256[](416);
-        require(newDeck.length == 208, "PV01");
+    function setDeck(uint256[] calldata _deck) public {
+        require(_deck.length == deckNum * 4, "PV03");
+        deck = _deck;
+    }
 
-        for (uint256 i = 0; i < deck.length; i++) {
+    function verify(uint256[] calldata newDeck, bytes calldata proof) public view {
+        uint256 deckLength = deckNum * 4;
+        require(newDeck.length == deckLength, "PV01");
+
+        uint256[] memory pi = new uint256[](deckLength * 2);
+        for (uint256 i = 0; i < deckLength; i++) {
             pi[i] = deck[i];
-            pi[i + 208] = newDeck[i];
+            pi[i + deckLength] = newDeck[i];
         }
 
-        uint256[] memory pc = new uint256[](24);
+        uint256[] memory pc = new uint256[](PKC_LEN);
         for (uint256 i = 0; i < pkc.length; i++) {
             pc[i] = pkc[i];
         }
 
-        require(this.verify_shuffle(proof, pi, pc), "PV00");
+        require(this.verifyShuffle(proof, pi, pc), "PV00");
     }
 
-    function verify_shuffle(
+    function verifyShuffle(
         bytes calldata _proof,
         uint256[] calldata _publicKeyInput,
         uint256[] calldata _publicKeyCommitment
@@ -155,6 +160,6 @@ contract ShuffleVerifier is PlonkVerifier {
             mstore(CM_SHUFFLE_PUBLIC_KEY_11_Y_LOC, mod(calldataload(add(pk_ptr, 0x2e0)), r))
         }
 
-        return verify_shuffle_proof(vk1, vk2);
+        return verifyShuffleProof(vk1, vk2);
     }
 }
