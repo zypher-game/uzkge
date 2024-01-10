@@ -4,23 +4,23 @@ use ark_std::{rand::SeedableRng, UniformRand};
 use rand_chacha::ChaChaRng;
 use zplonk::{
     errors::ZplonkError,
-    params::{
+    gen_params::{
         load_lagrange_params, load_srs_params, VerifierParamsSplitCommon,
-        VerifierParamsSplitSpecific,
+        VerifierParamsSplitSpecific, VERIFIER_COMMON_PARAMS,
     },
     turboplonk::{constraint_system::ConstraintSystem, indexer::indexer_with_lagrange},
 };
 
 use crate::{
     build_cs::build_cs,
-    parameters::{
-        VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54,
+    gen_params::{
+         VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54,
     },
     MaskedCard,
 };
 
 // re-export
-pub use zplonk::params::{ProverParams, VerifierParams};
+pub use zplonk::gen_params::{ProverParams, VerifierParams};
 
 /// Obtain the parameters for shuffle.
 pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> {

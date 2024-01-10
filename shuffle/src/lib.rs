@@ -11,7 +11,7 @@ pub mod reveal;
 pub mod build_cs;
 
 /// Module for generate prover & verifier params.
-pub mod parameters;
+pub mod gen_params;
 
 #[cfg(test)]
 mod tests;

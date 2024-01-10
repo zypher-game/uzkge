@@ -1,11 +1,14 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(non_camel_case_types)]
-#![cfg_attr(any(feature = "no_srs"), allow(unused))]
+#![cfg_attr(any(feature = "no_srs", feature = "no_vk"), allow(unused))]
 
 use ark_bn254::G1Projective;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use zplonk::{params::SRS, poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254};
+use zplonk::{
+    gen_params::SRS,
+    poly_commit::{kzg_poly_commitment::KZGCommitmentSchemeBN254, pcs::PolyComScheme},
+};
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -17,6 +20,9 @@ enum Actions {
     /// The completed SRS can be generated from https://github.com/sunhuachuang/export-setup-parameters
     CUT_SRS { directory: PathBuf },
 
+    /// Generate the common part of the verifier paramaters.
+    GEN_VK_COMMON { directory: PathBuf },
+
     /// Generates all necessary parameters
     ALL { directory: PathBuf },
 }
@@ -26,6 +32,8 @@ fn main() {
     let action = Actions::from_args();
     match action {
         CUT_SRS { directory } => cut_srs(directory),
+
+        GEN_VK_COMMON { directory } => gen_vk_common(directory),
 
         ALL { directory } => gen_all(directory),
     };
@@ -60,9 +68,23 @@ fn cut_srs(mut path: PathBuf) {
     save_to_file(&bytes, path);
 }
 
+// cargo run --release --features="gen" --bin gen-params gen-vk-common "./parameters"
+fn gen_vk_common(directory: PathBuf) {
+    let srs = SRS.unwrap();
+    let kzg_poly_commitment = KZGCommitmentSchemeBN254::from_unchecked_bytes(&srs).unwrap();
+    assert_eq!(kzg_poly_commitment.public_parameter_group_1.len(), 2060);
+
+    let common = kzg_poly_commitment.shrink_to_verifier_only().unwrap();
+    let common_ser = bincode::serialize(&common).unwrap();
+    let mut common_path = directory.clone();
+    common_path.push("vk-common.bin");
+    save_to_file(&common_ser, common_path);
+}
+
 // cargo run --release --features="gen" --bin gen-params all "./parameters"
 fn gen_all(directory: PathBuf) {
-    cut_srs(directory)
+    cut_srs(directory.clone());
+    gen_vk_common(directory);
 }
 
 fn save_to_file(params_ser: &[u8], out_filename: ark_std::path::PathBuf) {

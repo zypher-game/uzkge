@@ -12,9 +12,18 @@ use crate::{
     turboplonk::indexer::{PlonkProverParams, PlonkVerifierParams},
 };
 
+#[cfg(not(feature = "no_vk"))]
+/// The common part of the verifier parameters.
+pub static VERIFIER_COMMON_PARAMS: Option<&'static [u8]> =
+    Some(include_bytes!("../../parameters/vk-common.bin"));
+
+#[cfg(feature = "no_vk")]
+/// The common part of the verifier parameters.
+pub static VERIFIER_COMMON_PARAMS: Option<&'static [u8]> = None;
+
 #[cfg(not(feature = "no_srs"))]
 /// The SRS.
-pub static SRS: Option<&'static [u8]> = Some(include_bytes!("../parameters/srs-padding.bin"));
+pub static SRS: Option<&'static [u8]> = Some(include_bytes!("../../parameters/srs-padding.bin"));
 
 #[cfg(feature = "no_srs")]
 /// The SRS.
@@ -27,13 +36,14 @@ lazy_static! {
 }
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_4096: &'static [u8] = include_bytes!("../parameters/lagrange-srs-4096.bin");
+static LAGRANGE_BASE_4096: &'static [u8] = include_bytes!("../../parameters/lagrange-srs-4096.bin");
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_8192: &'static [u8] = include_bytes!("../parameters/lagrange-srs-8192.bin");
+static LAGRANGE_BASE_8192: &'static [u8] = include_bytes!("../../parameters/lagrange-srs-8192.bin");
 
 #[cfg(all(not(feature = "no_srs"), not(feature = "lightweight")))]
-static LAGRANGE_BASE_16384: &'static [u8] = include_bytes!("../parameters/lagrange-srs-16384.bin");
+static LAGRANGE_BASE_16384: &'static [u8] =
+    include_bytes!("../../parameters/lagrange-srs-16384.bin");
 
 #[cfg(not(feature = "no_srs"))]
 lazy_static! {

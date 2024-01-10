@@ -4,7 +4,7 @@ use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaChaRng;
 use std::collections::HashMap;
 
-use crate::parameters::{
+use crate::gen_params::{
     gen_shuffle_prover_params, get_shuffle_verifier_params, refresh_prover_params_public_key,
 };
 

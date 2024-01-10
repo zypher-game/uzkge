@@ -15,7 +15,7 @@ use zplonk::{
 };
 
 use crate::{
-    parameters::{ProverParams, VerifierParams},
+    gen_params::{ProverParams, VerifierParams},
     MaskedCard,
 };
 

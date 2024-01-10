@@ -5,7 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "gen-params"
-path = "src/gen_params.rs"
+path = "src/gen_params/setup.rs"
 required-features = ["gen"]
 
 [dependencies]
@@ -70,6 +70,7 @@ parallel = [
   "ark-poly/parallel"
 ]
 debug = []
+no_vk = []
 no_srs = []
 gen = ["parallel","structopt"]
 shuffle = []

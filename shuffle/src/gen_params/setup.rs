@@ -52,13 +52,7 @@ fn gen_shuffle_vk(num: usize, directory: PathBuf, full: bool) {
         full_path.push(format!("vk-{}.bin", num));
         save_to_file(&full_ser, full_path);
     } else {
-        let (common, special) = params.split().unwrap();
-
-        let common_ser = bincode::serialize(&common).unwrap();
-        let mut common_path = directory.clone();
-        common_path.push("vk-common.bin");
-        save_to_file(&common_ser, common_path);
-
+        let (_, special) = params.split().unwrap();
         let specials_ser = bincode::serialize(&special).unwrap();
         let mut specials_path: PathBuf = directory.clone();
         specials_path.push(format!("vk-specific-{}.bin", num));
