@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(non_camel_case_types)]
-#![cfg_attr(any(feature = "no_srs", feature = "no_vk"), allow(unused))]
+#![cfg_attr(any(feature = "no_vk"), allow(unused))]
 
 use ark_bn254::{Fr, G1Projective};
 use ark_ed_on_bn254::EdwardsProjective;

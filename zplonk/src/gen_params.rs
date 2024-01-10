@@ -1,16 +1,9 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(non_camel_case_types)]
-#![cfg_attr(any(feature = "no_srs", feature = "no_vk"), allow(unused))]
+#![cfg_attr(any(feature = "no_srs"), allow(unused))]
 
-use ark_bn254::{Fr, G1Projective};
-use ark_ed_on_bn254::EdwardsProjective;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
-use serde::Serialize;
-use std::{
-    collections::{BTreeMap, HashMap},
-    path::PathBuf,
-    sync::{Arc, Mutex},
-};
+use ark_bn254::G1Projective;
+use std::path::PathBuf;
 use structopt::StructOpt;
 use zplonk::{params::SRS, poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254};
 
@@ -38,7 +31,7 @@ fn main() {
     };
 }
 
-// cargo run --release --features="gen no_vk" --bin gen-params cut-srs "./parameters"
+// cargo run --release --features="gen" --bin gen-params cut-srs "./parameters"
 fn cut_srs(mut path: PathBuf) {
     let srs = SRS.unwrap();
     let KZGCommitmentSchemeBN254 {
@@ -67,7 +60,7 @@ fn cut_srs(mut path: PathBuf) {
     save_to_file(&bytes, path);
 }
 
-// cargo run --release --features="gen no_vk" --bin gen-params all "./parameters"
+// cargo run --release --features="gen" --bin gen-params all "./parameters"
 fn gen_all(directory: PathBuf) {
     cut_srs(directory)
 }

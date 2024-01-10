@@ -265,6 +265,9 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     let pi_coset_evals = pi.coset_fft_with_domain(&domain_m, &k[1]);
     let z_coset_evals = z.coset_fft_with_domain(&domain_m, &k[1]);
 
+    #[cfg(feature = "shuffle")]
+    let edwards_a: <PCS as PolyComScheme>::Field = cs.get_edwards_a();
+
     // Compute the evaluations of the quotient polynomial on the coset.
     let (beta, gamma) = challenges.get_beta_gamma().unwrap();
 
@@ -420,7 +423,6 @@ pub(super) fn t_poly<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
                 let alpha_pow_14 = alpha_pow_13.mul(alpha);
                 let alpha_pow_15 = alpha_pow_14.mul(alpha);
                 let alpha_pow_16 = alpha_pow_15.mul(alpha);
-                let edwards_a: <PCS as PolyComScheme>::Field = cs.get_edwards_a();
 
                 let w_sel0_eval_point = w_sel_polys_coset_evals[0][point];
                 let w_sel1_eval_point = w_sel_polys_coset_evals[1][point];
