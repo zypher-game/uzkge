@@ -2,6 +2,7 @@
 members = [
   "zplonk",
   "shuffle",
+  "shuffle/wasm",
   "match_making",
 ]
 resolver = "2"
@@ -11,6 +12,7 @@ opt-level = 3
 lto = "thin"
 incremental = true
 panic = "abort"
+#opt-level = "s"
 
 [profile.bench]
 opt-level = 3
