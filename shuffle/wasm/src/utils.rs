@@ -1,3 +1,4 @@
+use ark_bn254::Fr;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq};
 use ark_ff::{BigInteger, PrimeField};
@@ -10,7 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use wasm_bindgen::prelude::*;
 use zplonk::{
-    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254, turboplonk::indexer::PlonkProof,
+    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
+    turboplonk::{constraint_system::TurboCS, indexer::PlonkProof},
 };
 
 #[inline(always)]
@@ -99,84 +101,14 @@ pub fn uncompress_to_point(x_str: &str, y_str: &str) -> Result<EdwardsProjective
     Ok(affine.into())
 }
 
-pub fn export_proof(proof: &PlonkProof<KZGCommitmentSchemeBN254>) -> String {
-    let mut res = String::from("0x");
+pub fn shuffle_proof_from_hex(s: &str) -> Result<PlonkProof<KZGCommitmentSchemeBN254>, JsValue> {
+    let hex = s.trim_start_matches("0x");
+    let bytes = hex::decode(hex).map_err(error_to_jsvalue)?;
+    PlonkProof::<KZGCommitmentSchemeBN254>::from_bytes_be::<TurboCS<Fr>>(&bytes)
+        .map_err(error_to_jsvalue)
+}
 
-    for cm_q in proof.cm_w_vec.iter() {
-        let (x, y) = point_to_uncompress(&cm_q.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    for cm_w_sel in proof.cm_w_sel_vec.iter() {
-        let (x, y) = point_to_uncompress(&cm_w_sel.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    for cm_t in proof.cm_t_vec.iter() {
-        let (x, y) = point_to_uncompress(&cm_t.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    {
-        let (x, y) = point_to_uncompress(&proof.cm_z.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    {
-        let x = scalar_to_hex(&proof.prk_3_poly_eval_zeta, false);
-        res += &x;
-    }
-
-    {
-        let x = scalar_to_hex(&proof.prk_4_poly_eval_zeta, false);
-        res += &x;
-    }
-
-    for x in proof.w_polys_eval_zeta.iter() {
-        let x = scalar_to_hex(x, false);
-        res += &x;
-    }
-
-    for x in proof.w_polys_eval_zeta_omega.iter() {
-        let x = scalar_to_hex(x, false);
-        res += &x;
-    }
-
-    {
-        let x = scalar_to_hex(&proof.z_eval_zeta_omega, false);
-        res += &x;
-    }
-
-    for x in proof.s_polys_eval_zeta.iter() {
-        let x = scalar_to_hex(x, false);
-        res += &x;
-    }
-
-    {
-        let x = scalar_to_hex(&proof.q_ecc_poly_eval_zeta, false);
-        res += &x;
-    }
-
-    for x in proof.w_sel_polys_eval_zeta.iter() {
-        let x = scalar_to_hex(x, false);
-        res += &x;
-    }
-
-    {
-        let (x, y) = point_to_uncompress(&proof.opening_witness_zeta.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    {
-        let (x, y) = point_to_uncompress(&proof.opening_witness_zeta_omega.0, false);
-        res += &x;
-        res += &y;
-    }
-
-    res
+pub fn shuffle_proof_to_hex(proof: &PlonkProof<KZGCommitmentSchemeBN254>) -> String {
+    let bytes = proof.to_bytes_be();
+    format!("0x{}", hex::encode(bytes))
 }

@@ -19,8 +19,8 @@ use zshuffle::{
 
 use card_maps::CARD_MAPS;
 use utils::{
-    default_prng, error_to_jsvalue, export_proof, hex_to_point, hex_to_scalar, point_to_hex,
-    point_to_uncompress, scalar_to_hex, uncompress_to_point,
+    default_prng, error_to_jsvalue, hex_to_point, hex_to_scalar, point_to_hex, point_to_uncompress,
+    scalar_to_hex, shuffle_proof_from_hex, shuffle_proof_to_hex, uncompress_to_point,
 };
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -227,7 +227,7 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
     let ret = ShuffledCardsWithProof {
         cards: masked_cards,
         pkc: pkc_string,
-        proof: export_proof(&shuffled_proof),
+        proof: shuffle_proof_to_hex(&shuffled_proof),
     };
 
     Ok(serde_wasm_bindgen::to_value(&ret)?)
@@ -243,7 +243,6 @@ pub fn verify_shuffled_cards(
 ) -> Result<bool, JsValue> {
     let deck1: Vec<MaskedCard> = serde_wasm_bindgen::from_value(deck1)?;
     let deck2: Vec<MaskedCard> = serde_wasm_bindgen::from_value(deck2)?;
-    // return Ok(true); // TODO
 
     let n = deck1.len();
     let joint_pk = hex_to_point(&joint)?;
@@ -255,10 +254,7 @@ pub fn verify_shuffled_cards(
     for card in deck2 {
         masked_deck2.push(masked_card_deserialize(&card)?);
     }
-
-    let hex = proof.trim_start_matches("0x");
-    let shuffled_proof = bincode::deserialize(&hex::decode(hex).map_err(error_to_jsvalue)?)
-        .map_err(error_to_jsvalue)?;
+    let shuffled_proof = shuffle_proof_from_hex(&proof)?;
 
     let mut prover_params = gen_shuffle_prover_params(n).map_err(error_to_jsvalue)?;
     refresh_prover_params_public_key(&mut prover_params, &joint_pk).map_err(error_to_jsvalue)?;

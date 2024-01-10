@@ -128,7 +128,7 @@ impl<F: PrimeField> ConstraintSystem<F> for TurboCS<F> {
         N_WIRES_PER_GATE
     }
 
-    fn num_selectors(&self) -> usize {
+    fn num_selectors() -> usize {
         N_SELECTORS
     }
 
@@ -1325,7 +1325,7 @@ impl<F: PrimeField> TurboCS<F> {
             let w4_value = &witness[self.get_witness_index(3, cs_index)];
             let w_out_value = &witness[self.get_witness_index(4, cs_index)];
             let wire_vals = vec![w1_value, w2_value, w3_value, w4_value, w_out_value];
-            let sel_vals: Vec<&F> = (0..self.num_selectors())
+            let sel_vals: Vec<&F> = (0..Self::num_selectors())
                 .map(|i| &self.selectors[i][cs_index])
                 .collect();
             let eval_gate = Self::eval_gate_func(&wire_vals, &sel_vals, &public_online)?;

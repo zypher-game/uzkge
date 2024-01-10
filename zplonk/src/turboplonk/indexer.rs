@@ -1,5 +1,8 @@
+use ark_bn254::{Fr, G1Projective};
+use ark_ec::PrimeGroup;
 use ark_ff::{BigInteger, Field, One, PrimeField, Zero};
 use ark_poly::EvaluationDomain;
+use ark_serialize::CanonicalSerialize;
 use ark_std::{
     ops::*,
     rand::{CryptoRng, RngCore, SeedableRng},
@@ -9,9 +12,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::ZplonkError,
-    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
+    poly_commit::{
+        field_polynomial::FpPolynomial,
+        kzg_poly_commitment::{KZGCommitment, KZGCommitmentSchemeBN254},
+        pcs::PolyComScheme,
+    },
     utils::{
-        serialization::{ark_deserialize, ark_serialize},
+        serialization::{
+            ark_deserialize, ark_serialize, point_from_uncompress_be, point_to_uncompress_be,
+            scalar_from_bytes_be, scalar_to_bytes_be,
+        },
         shift_u8_vec, u64_limbs_from_bytes,
     },
 };
@@ -314,7 +324,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     }
 
     // Step 2: compute selector polynomials and commit them.
-    let mut q_coset_evals = vec![vec![]; cs.num_selectors()];
+    let mut q_coset_evals = vec![vec![]; CS::num_selectors()];
     let mut q_polys = vec![];
     let mut cm_q_vec = vec![];
     for (i, q_coset_eval) in q_coset_evals.iter_mut().enumerate() {
@@ -518,6 +528,194 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
         #[cfg(feature = "shuffle")]
         q_shuffle_public_key_coset_evals,
     })
+}
+
+impl PlonkProof<KZGCommitmentSchemeBN254> {
+    pub fn to_bytes_be(&self) -> Vec<u8> {
+        let mut bytes = vec![];
+        for p in &self.cm_w_vec {
+            bytes.append(&mut point_to_uncompress_be(&p.0));
+        }
+
+        #[cfg(feature = "shuffle")]
+        for p in &self.cm_w_sel_vec {
+            bytes.append(&mut point_to_uncompress_be(&p.0));
+        }
+
+        for p in &self.cm_t_vec {
+            bytes.append(&mut point_to_uncompress_be(&p.0));
+        }
+        bytes.append(&mut point_to_uncompress_be(&self.cm_z.0));
+        bytes.append(&mut scalar_to_bytes_be(&self.prk_3_poly_eval_zeta));
+        bytes.append(&mut scalar_to_bytes_be(&self.prk_4_poly_eval_zeta));
+        for s in &self.w_polys_eval_zeta {
+            bytes.append(&mut scalar_to_bytes_be(s));
+        }
+        for s in &self.w_polys_eval_zeta_omega {
+            bytes.append(&mut scalar_to_bytes_be(s));
+        }
+        bytes.append(&mut scalar_to_bytes_be(&self.z_eval_zeta_omega));
+        for s in &self.s_polys_eval_zeta {
+            bytes.append(&mut scalar_to_bytes_be(s));
+        }
+
+        #[cfg(feature = "shuffle")]
+        bytes.append(&mut scalar_to_bytes_be(&self.q_ecc_poly_eval_zeta));
+
+        #[cfg(feature = "shuffle")]
+        for s in &self.w_sel_polys_eval_zeta {
+            bytes.append(&mut scalar_to_bytes_be(s));
+        }
+
+        bytes.append(&mut point_to_uncompress_be(&self.opening_witness_zeta.0));
+        bytes.append(&mut point_to_uncompress_be(
+            &self.opening_witness_zeta_omega.0,
+        ));
+
+        bytes
+    }
+
+    pub fn from_bytes_be<CS: ConstraintSystem<Fr>>(bytes: &[u8]) -> Result<Self, ZplonkError> {
+        let n = G1Projective::generator().uncompressed_size();
+        let m = Fr::one().uncompressed_size();
+        let n_wire = CS::n_wires_per_gate();
+
+        #[cfg(feature = "shuffle")]
+        let n_selector = CS::num_selectors();
+
+        let mut bytes_len = 0;
+
+        bytes_len += n_wire * n; // cm_w_vec,
+        #[cfg(feature = "shuffle")]
+        {
+            bytes_len += n * n_selector; // cm_w_sel_vec,
+        }
+        bytes_len += n * n_wire; // cm_t_vec,
+        bytes_len += n; // cm_z,
+        bytes_len += m; // prk_3_poly_eval_zeta,
+        bytes_len += m; // prk_4_poly_eval_zeta,
+        bytes_len += m * n_wire; // w_polys_eval_zeta,
+        bytes_len += m * n_wire; // w_polys_eval_zeta_omega,
+        bytes_len += m; // z_eval_zeta_omega,
+        bytes_len += m * n_wire; // s_polys_eval_zeta,
+        #[cfg(feature = "shuffle")]
+        {
+            bytes_len += m; // q_ecc_poly_eval_zeta,
+        }
+        #[cfg(feature = "shuffle")]
+        {
+            bytes_len += m * n_selector; // w_sel_polys_eval_zeta,
+        }
+        bytes_len += n; // opening_witness_zeta,
+        bytes_len += n; // opening_witness_zeta_omega,
+
+        if bytes.len() < bytes_len {
+            return Err(ZplonkError::DeserializationError);
+        }
+
+        let mut p = 0;
+
+        let mut cm_w_vec = vec![];
+        for _ in 0..n_wire {
+            cm_w_vec.push(KZGCommitment(point_from_uncompress_be(
+                &bytes[p..p + n],
+                false,
+            )?));
+            p += n;
+        }
+
+        #[cfg(feature = "shuffle")]
+        let mut cm_w_sel_vec = vec![];
+        #[cfg(feature = "shuffle")]
+        for _ in 0..n_selector {
+            cm_w_sel_vec.push(KZGCommitment(point_from_uncompress_be(
+                &bytes[p..p + n],
+                false,
+            )?));
+            p += n;
+        }
+
+        let mut cm_t_vec = vec![];
+        for _ in 0..n_wire {
+            cm_t_vec.push(KZGCommitment(point_from_uncompress_be(
+                &bytes[p..p + n],
+                false,
+            )?));
+            p += n;
+        }
+
+        let cm_z = KZGCommitment(point_from_uncompress_be(&bytes[p..p + n], false)?);
+        p += n;
+
+        let prk_3_poly_eval_zeta = scalar_from_bytes_be(&bytes[p..p + m], false)?;
+        p += m;
+
+        let prk_4_poly_eval_zeta = scalar_from_bytes_be(&bytes[p..p + m], false)?;
+        p += m;
+
+        let mut w_polys_eval_zeta = vec![];
+        for _ in 0..n_wire {
+            w_polys_eval_zeta.push(scalar_from_bytes_be(&bytes[p..p + m], false)?);
+            p += m;
+        }
+
+        let mut w_polys_eval_zeta_omega = vec![];
+        for _ in 0..n_wire {
+            w_polys_eval_zeta_omega.push(scalar_from_bytes_be(&bytes[p..p + m], false)?);
+            p += m;
+        }
+
+        let z_eval_zeta_omega = scalar_from_bytes_be(&bytes[p..p + m], false)?;
+        p += m;
+
+        let mut s_polys_eval_zeta = vec![];
+        for _ in 0..n_wire - 1 {
+            s_polys_eval_zeta.push(scalar_from_bytes_be(&bytes[p..p + m], false)?);
+            p += m;
+        }
+
+        #[cfg(feature = "shuffle")]
+        let q_ecc_poly_eval_zeta = scalar_from_bytes_be(&bytes[p..p + m], false)?;
+        #[cfg(feature = "shuffle")]
+        {
+            p += m;
+        }
+
+        #[cfg(feature = "shuffle")]
+        let mut w_sel_polys_eval_zeta = vec![];
+        #[cfg(feature = "shuffle")]
+        for _ in 0..n_selector {
+            w_sel_polys_eval_zeta.push(scalar_from_bytes_be(&bytes[p..p + m], false)?);
+            p += m;
+        }
+
+        let opening_witness_zeta =
+            KZGCommitment(point_from_uncompress_be(&bytes[p..p + n], false)?);
+        p += n;
+
+        let opening_witness_zeta_omega =
+            KZGCommitment(point_from_uncompress_be(&bytes[p..p + n], false)?);
+
+        Ok(PlonkProof {
+            cm_w_vec,
+            #[cfg(feature = "shuffle")]
+            cm_w_sel_vec,
+            cm_t_vec,
+            cm_z,
+            prk_3_poly_eval_zeta,
+            prk_4_poly_eval_zeta,
+            w_polys_eval_zeta,
+            w_polys_eval_zeta_omega,
+            z_eval_zeta_omega,
+            s_polys_eval_zeta,
+            #[cfg(feature = "shuffle")]
+            q_ecc_poly_eval_zeta,
+            #[cfg(feature = "shuffle")]
+            w_sel_polys_eval_zeta,
+            opening_witness_zeta,
+            opening_witness_zeta_omega,
+        })
+    }
 }
 
 #[cfg(test)]
