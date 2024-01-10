@@ -6,7 +6,7 @@ use zplonk::{
     turboplonk::constraint_system::{TurboCS, VarIndex},
 };
 
-pub struct MatchMaking<const N: usize, F: PrimeField> {
+pub struct Matchmaking<const N: usize, F: PrimeField> {
     pub input_vars: Vec<VarIndex>,
 
     pub committed_input_var: VarIndex,
@@ -19,7 +19,7 @@ pub struct MatchMaking<const N: usize, F: PrimeField> {
     pub output_vars: Vec<VarIndex>,
 }
 
-impl<const N: usize, F: PrimeField> MatchMaking<N, F> {
+impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
     pub fn new(
         input_vars: &[VarIndex],
         committed_input_var: VarIndex,

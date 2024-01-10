@@ -1,4 +1,4 @@
-use crate::match_making::MatchMaking;
+use crate::matchmaking::Matchmaking;
 use ark_bn254::Fr;
 use ark_ff::UniformRand;
 use ark_std::test_rng;
@@ -8,7 +8,7 @@ use zplonk::{
 };
 
 #[test]
-fn test_match_making_constraint_system() {
+fn test_matchmaking_constraint_system() {
     let mut rng = test_rng();
     const N: usize = 50;
     let mut cs = TurboCS::<Fr>::new();
@@ -26,7 +26,7 @@ fn test_match_making_constraint_system() {
     let random_number = Fr::rand(&mut rng);
     let random_number_var = cs.new_variable(random_number);
 
-    let mut mmr = MatchMaking::<N, Fr>::new(
+    let mut mmr = Matchmaking::<N, Fr>::new(
         &input_vars,
         committed_input_var,
         committed_output_var,

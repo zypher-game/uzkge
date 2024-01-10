@@ -1,5 +1,5 @@
 /// Module for match making.
-pub mod match_making;
+pub mod matchmaking;
 
 #[cfg(test)]
 pub mod test;

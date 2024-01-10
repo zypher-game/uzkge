@@ -3,7 +3,7 @@ members = [
   "zplonk",
   "shuffle",
   "shuffle/wasm",
-  "match_making",
+  "matchmaking",
 ]
 resolver = "2"
 
