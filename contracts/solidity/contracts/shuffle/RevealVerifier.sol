@@ -6,8 +6,10 @@ import "../libraries/Transcript.sol";
 import "../verifier/ChaumPedersenDLVerifier.sol";
 
 struct MaskedCard {
-    EdOnBN254.Point e1;
-    EdOnBN254.Point e2;
+    uint256 e2X;
+    uint256 e2Y;
+    uint256 e1X;
+    uint256 e1Y;
 }
 
 contract RevealVerifier {
@@ -29,7 +31,7 @@ contract RevealVerifier {
         );
         uint256 r = uint256(bytes32(proofBytes[128:160]));
         ChuamPerdensenDLProof memory proof = ChuamPerdensenDLProof(a, b, r);
-        ChuamPerdensenDLParameters memory parameters = ChuamPerdensenDLParameters(masked.e1, EdOnBN254.generator());
+        ChuamPerdensenDLParameters memory parameters = ChuamPerdensenDLParameters(EdOnBN254.Point(masked.e1X, masked.e1Y), EdOnBN254.generator());
 
         return ChuamPerdensenDLVerifier.verify(parameters, "Revealing", reveal, pk, proof);
     }
@@ -42,6 +44,6 @@ contract RevealVerifier {
         for (uint i = 1; i < reveals.length; i++) {
             aggregate = EdOnBN254.add(aggregate, reveals[i]);
         }
-        return EdOnBN254.add(masked.e2, EdOnBN254.neg(aggregate));
+        return EdOnBN254.add(EdOnBN254.Point(masked.e2X, masked.e2Y), EdOnBN254.neg(aggregate));
     }
 }
