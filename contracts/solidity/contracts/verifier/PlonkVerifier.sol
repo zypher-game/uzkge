@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-contract PlonkVerifier {
+abstract contract PlonkVerifier {
     // The proof memory locations.
     uint256 internal constant CM_W0_X_LOC = 0x200 + 0x00;
     uint256 internal constant CM_W0_Y_LOC = 0x200 + 0x20;

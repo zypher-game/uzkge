@@ -1,14 +1,13 @@
 const { expect } = require("chai");
 //const { BigNumber } = require("ethers");
 
-describe("Plonk Verify Contract", function () {
-  it("shuffle verify must success", async function () {
+describe("Plonk 52 Verify Contract", function () {
+  it("shuffle 52 verify must success", async function () {
     const [owner, user] = await ethers.getSigners();
-    const vk1 = await ethers.deployContract("ShuffleVerifierKey1");
+    const vk1 = await ethers.deployContract("ShuffleVerifierKey1_52");
     const vk1_address = await vk1.getAddress();
-    const vk2 = await ethers.deployContract("ShuffleVerifierKey2");
+    const vk2 = await ethers.deployContract("ShuffleVerifierKey2_52");
     const vk2_address = await vk2.getAddress();
-    const verifier = await ethers.deployContract("ShuffleVerifier", [vk1_address, vk2_address]);
     const service = await ethers.deployContract("ShuffleService", [vk1_address, vk2_address, 52]);
 
     const proof = "0x01cca361f57459dffb89ca0322064ba0f165419c50749f8da4b2f6e4568486f616a6483fc425c7c266752871fe46161ce46f645646248d831a2763e9b3cd37c70aafd2b34bd4ec4221ae7dc0fe7a0b920bce392fe2deecb03ab2e211b190f8d003634ce37ef09df3441c929434a32b866e40065607954eb06e770f0d7a61bb2b167524711c92c951e663426f62f191ca5e10f351d68439ec4dbd62d3b46bbc7629a0f6d76162bd2a056eeeb133cb12d836981854222c240d9519e25f15dcff38177e3e5eb5a0ba646749117902e35ae48fd01f49defe80b986f33d7559b585ab276e9b1ebe45f60b6d12fff14de5c710ce9dd017e1859a2a143e8a6dfa85d62820e91114769f0d301e778551a94c78e55a479ec24fefe1e80c29da2f5b3f10a81104bfd27d5510e9ea506eaa1a7abadf6c98a48f1628f1efdc5861c61c069e55117fcfcda3f71ec284d874e72c80211f3b883404f4e70ffb1413bff1c87dd0cc2ab452a7c96da8e7e7ca858e4dfa1d72ebb78b4803dadd7834f1732dfbae853307b261662709402fa20050c653434d222639605634328b152c6d241ec4df6a8c04dd45b9001d0b19ef2a107e35f72ec7f39c84b3db7a258ff874ce52141f7bd92ececa2b1b00f91c53e36e1362def88610b1ca13b7b3560e8e8001d1206f4bdd2a812357ae1e8ea6427750facc4a30b2755c6597c5e9032c73df30173db5c96323a8fe621d9845652e0861d62b58da06f0833a5083a4e8c23c6a1633f30283dc116f6bcc605c36c7a16ffd7fb1662739d201ccdc89442b66fa092f60292b259d19d402082bc8eac61b1b150564af9abbe6de53cb90e6736870d8f2570f043f4916c2e6b2fb9b01ae8fc916fc6abd93748e42a0e51470f2a5e0e3307be4e93e8c1df2831ff3467706c57f1a1fbcd484e57cbb7f4a76b2b88e87b16d072701f418144ef0edd9b73e195f89e7286d24c5deecdb1929c77cc166e06d82d62e1c11b803c7dce2e4b64d5affcbc9c6ecb36cf9352c6f598ec6e145cfad8b01104daa652a0b37dc38cc3b509485dcb3275ee817eca12eb661e3f2f4dca78cdceaec747b1058c3907eb758bdbd656608f3a224503f43e1ffcc1eeb2130d6da9c7101e64d231cd86c01c92f7357536461aa925849606a9eb14c4f934b72d871360c0d9b6c21bd5f537c725897a8e6d9d1a697cf5f1a47a5210e43db3234cc259441c4e8d2038aedfc004eb8432788dfda2cefaa216e42e9323eed2efc2ad603996544c8db000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000509f937de3668880200b6191b438275b5133b73f36f091379191d089ad433710914d2d513fd1c5551857b3fb9f4d3616acfad6d4de2d475883ebc911a71e3d1214413f294d79f5fa3e0ea9f5bbbf7b49ce1e817d1699df4623c97f7bd2f630a30213258dce19acc0e239f897fc4029777e4c1366cbfdce73fc47a1242c9472519af2510b6af44cd81424072b6b074c478abec7a57a62a4292fa006e800cdf642b0e6eb5d5f9c43070f10b2f3b078b8c7a1d5d98124693ded9773c3c67f4be881370d51a6f7dc1048a4f2799ec3d2d7fe2f031af206d945dc228268c90b037ec00b64c90db8c56518b8fc6291a2306bf7fbfc19cf1d355a5ecb32220986f2ac611840822698b08d8ee5303d235cefb69b5a2cb22375a182c5c73f495da1152fa0847be29d0483cdce22dfcb4c2ebc8688ed5bd5c97fa1a4892871a0c32ffc0f2062ab709664ba244406169f5d8e0ddb4aba3e861c1dc6550761765da5e4ee3c410796f8b6e4398dcf6d17c486a9dcdf8b36ab3442b09744c6f02ca344c4ff29f2ce6b9842cc8268a0febbcfc3905964374a0cef37c150dca41b6b8b5c7cdfb6e007d32379e6cefd573528079032058cac26b872d093b7bd2c4c204ef5ebf9c8e2d0a3a6b7441eee64c602251f5428ee8270a51b10f088a85c9dd12bdff8d7ad40bac74648397dd1f539c9ac7b840a6b5245a242e0d81481827d24c32247cc8f2188e667196bfe1047d763b43a23d6e0d82826cc4fcd0cdfa395f75bea70309ac10750b3754eab18dfbc5b0ff1116f9d32b1011d67956af2c744a698b059d4b8a07d0a61fa80c9723acf864262cd44159350072954479786b7a14c81cf561e1f91e0e166d256c2c1dabed6a10c8b42dfbae2febc737ac916d9fc33b3fe9059c560a71dbde01acc3da057f7235c540ad2f0a9964c381be1f8d38fa9e13c171167d";
@@ -464,18 +463,14 @@ describe("Plonk Verify Contract", function () {
 
     const res1 = await service.setDeck(deck1);
     const { gasUsed: gasUsed1 } = await res1.wait();
-    console.log("Set deck gas used:", gasUsed1);
+    console.log("Set 52 deck gas used:", gasUsed1);
 
     const res2 = await service.setPkc(pkc);
     const { gasUsed: gasUsed2 } = await res2.wait();
-    console.log("Set pc gas used:", gasUsed2);
+    console.log("Set 52 pc gas used:", gasUsed2);
 
     const res3 = await service.verify(deck2, proof);
     const { gasUsed: gasUsed3 } = await res3.wait();
-    console.log("Shuffle verify gas used:", gasUsed3);
-
-    const pi = deck1.concat(deck2);
-    const is_ok = await verifier.verifyShuffle(proof, pi, pkc);
-    expect(is_ok).to.equal(true);
+    console.log("Shuffle 52 verify gas used:", gasUsed3);
   });
 });

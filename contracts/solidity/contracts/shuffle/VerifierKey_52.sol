@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-library VerifierKey {
+library VerifierKey_52 {
     function load(uint256 vk, uint256 pi) internal pure {
         assembly {
             // The commitments of the selectors (8).
@@ -95,7 +95,7 @@ library VerifierKey {
             mstore(add(vk, 0xba0), 1)
 
             // The domain's group generator with csSize.
-            mstore(add(vk, 0xbc0), 20619701001583904760601357484951574588621083236087856586626117568842480512645)
+            mstore(add(vk, 0xbc0), 0x2d965651cdd9e4811f4e51b80ddca8a8b4a93ee17420aae6adaa01c2617c6e85)
 
             // The size of constraint system.
             mstore(add(vk, 0xbe0), 16384)

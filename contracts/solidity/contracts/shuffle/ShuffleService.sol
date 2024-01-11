@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "./ShuffleVerifier.sol";
+import "./VerifierKey_20.sol";
+import "./VerifierKey_52.sol";
 
 contract ShuffleService is ShuffleVerifier {
     uint256 public constant PKC_LEN = 24;
@@ -16,18 +18,18 @@ contract ShuffleService is ShuffleVerifier {
     }
 
     function setPkc(uint256[] calldata _pkc) public {
-        require(_pkc.length == PKC_LEN, "PV02");
+        require(_pkc.length == PKC_LEN, "SS02");
         pkc = _pkc;
     }
 
     function setDeck(uint256[] calldata _deck) public {
-        require(_deck.length == deckNum * 4, "PV03");
+        require(_deck.length == deckNum * 4, "SS03");
         deck = _deck;
     }
 
     function verify(uint256[] calldata newDeck, bytes calldata proof) public {
         uint256 deckLength = deckNum * 4;
-        require(newDeck.length == deckLength, "PV01");
+        require(newDeck.length == deckLength, "SS01");
 
         uint256[] memory pi = new uint256[](deckLength * 2);
         for (uint256 i = 0; i < deckLength; i++) {
@@ -40,6 +42,15 @@ contract ShuffleService is ShuffleVerifier {
             pc[i] = pkc[i];
         }
 
-        require(this.verifyShuffle(proof, pi, pc), "PV00");
+        if (deckNum == 20) {
+            _verifyKey = VerifierKey_20.load;
+        } else if (deckNum == 52) {
+            _verifyKey = VerifierKey_52.load;
+        } else {
+            revert("SS04");
+        }
+
+
+        require(this.verifyShuffle(proof, pi, pc), "SS00");
     }
 }

@@ -2,25 +2,28 @@
 pragma solidity ^0.8.20;
 
 import "../verifier/PlonkVerifier.sol";
-import "./VerifierKey.sol";
 import "./ExternalTranscript.sol";
+import "./VerifierKey_20.sol";
 
-contract ShuffleVerifier is PlonkVerifier {
-    address vk1;
-    address vk2;
+abstract contract ShuffleVerifier is PlonkVerifier {
+    address _extraVk1;
+    address _extraVk2;
+    function (uint256, uint256) pure _verifyKey;
 
     constructor(address _vk1, address _vk2) {
-        vk1 = _vk1;
-        vk2 = _vk2;
+        _extraVk1 = _vk1;
+        _extraVk2 = _vk2;
     }
 
+    // Before call verifyShuffle need init: VerifierKey.load(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
     function verifyShuffle(
         bytes calldata _proof,
         uint256[] calldata _publicKeyInput,
         uint256[] calldata _publicKeyCommitment
     ) public view returns (bool) {
-        VerifierKey.load(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
-        ExternalTranscript.load(EXTERNAL_TRANSCRIPT_LENGTH_LOC);
+        _verifyKey(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
+        //VerifierKey_20.load();
+        ExternalTranscript.load(EXTERNAL_TRANSCRIPT_LENGTH_LOC, _publicKeyInput.length / 8);
 
         // The scalar field of BN254.
         uint256 r = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -125,6 +128,6 @@ contract ShuffleVerifier is PlonkVerifier {
             mstore(CM_SHUFFLE_PUBLIC_KEY_11_Y_LOC, mod(calldataload(add(pk_ptr, 0x2e0)), r))
         }
 
-        return verifyShuffleProof(vk1, vk2);
+        return verifyShuffleProof(_extraVk1, _extraVk2);
     }
 }

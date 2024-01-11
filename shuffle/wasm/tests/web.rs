@@ -22,7 +22,7 @@ fn pass() {
     let joint_values = serde_wasm_bindgen::to_value(&joint).unwrap();
     let joint_pk = aggregate_keys(joint_values).unwrap();
 
-    let init_deck = init_masked_cards(joint_pk.clone(), 52).unwrap();
+    let init_deck = init_masked_cards(joint_pk.clone(), 20).unwrap();
     let decks: Vec<MaskedCardWithProof> = serde_wasm_bindgen::from_value(init_deck).unwrap();
     let deck_cards: Vec<MaskedCard> = decks.iter().map(|v| v.card.clone()).collect();
     let first_deck = serde_wasm_bindgen::to_value(&deck_cards).unwrap();
