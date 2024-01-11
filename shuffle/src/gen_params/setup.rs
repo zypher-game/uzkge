@@ -12,7 +12,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use structopt::StructOpt;
-use zshuffle::parameters::get_shuffle_verifier_params;
+use zshuffle::gen_params::get_shuffle_verifier_params;
 
 #[derive(StructOpt, Debug)]
 #[structopt(

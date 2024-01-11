@@ -13,7 +13,6 @@ pub struct Matchmaking<const N: usize, F: PrimeField> {
     pub committed_ouput_var: VarIndex,
     pub committed_trace: AnemoiVLHTrace<F, 2, 14>,
 
-    pub random_number: F,
     pub random_number_var: VarIndex,
 
     pub output_vars: Vec<VarIndex>,
@@ -25,9 +24,9 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
         committed_input_var: VarIndex,
         committed_ouput_var: VarIndex,
         committed_trace: &AnemoiVLHTrace<F, 2, 14>,
-        random_number: &F,
         random_number_var: VarIndex,
     ) -> Self {
+        assert!(N > 2);
         assert_eq!(input_vars.len(), N);
 
         Self {
@@ -35,7 +34,6 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
             committed_input_var,
             committed_ouput_var,
             committed_trace: committed_trace.clone(),
-            random_number: *random_number,
             random_number_var,
             output_vars: Vec::new(),
         }
@@ -46,9 +44,9 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
         let one = F::one();
         let minus_one = one.neg();
 
-        let mut indexes = Vec::new();
-        let mut index_vars = Vec::new();
-        for i in 1..=N {
+        let mut indexes = vec![zero, one];
+        let mut index_vars = vec![cs.zero_var(), cs.one_var()];
+        for i in 2..N {
             let index = F::from(i as u64);
             let index_var = cs.new_variable(index);
             cs.insert_constant_gate(index_var, index);
@@ -63,7 +61,10 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
         );
 
         let stream_cipher_trace = P::eval_stream_cipher_with_trace(
-            &[self.committed_trace.input[0], self.random_number],
+            &[
+                self.committed_trace.input[0],
+                cs.witness[self.random_number_var],
+            ],
             N - 1,
         );
         let stream_cipher_trace_output_vars = stream_cipher_trace
@@ -85,19 +86,18 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
             let (quotient, remainder) = n.div_rem(&m);
             let quotient = F::from(quotient);
             let remainder = F::from(remainder);
-            let remainder_plus_one = remainder.add(one);
 
             let n_var = cs.new_variable(stream_cipher_trace.output[i - 1]);
             let quotient_var = cs.new_variable(quotient);
-            let remainder_plus_one_var = cs.new_variable(remainder_plus_one);
+            let remainder_var = cs.new_variable(remainder);
 
             cs.push_add_selectors(F::from((i + 1) as u64), one, zero, zero);
             cs.push_mul_selectors(zero, zero);
-            cs.push_constant_selector(minus_one);
+            cs.push_constant_selector(zero);
             cs.push_out_selector(one);
 
             cs.wiring[0].push(quotient_var);
-            cs.wiring[1].push(remainder_plus_one_var);
+            cs.wiring[1].push(remainder_var);
             cs.wiring[2].push(cs.zero_var());
             cs.wiring[3].push(cs.zero_var());
             cs.wiring[4].push(n_var);
@@ -107,7 +107,7 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
             let relative_indices = indexes
                 .iter()
                 .take(i + 1)
-                .map(|x| x.sub(&remainder_plus_one))
+                .map(|x| x.sub(&remainder))
                 .collect::<Vec<F>>();
 
             let mut bits: Vec<F> = Vec::new();
@@ -172,7 +172,7 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
 
                 cs.wiring[0].push(index_vars[i]);
                 cs.wiring[1].push(bits_vars[i]);
-                cs.wiring[2].push(remainder_plus_one_var);
+                cs.wiring[2].push(remainder_var);
                 cs.wiring[3].push(bits_vars[i]);
                 cs.wiring[4].push(cs.zero_var());
 

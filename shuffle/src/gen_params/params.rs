@@ -13,9 +13,7 @@ use zplonk::{
 
 use crate::{
     build_cs::build_cs,
-    gen_params::{
-         VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54,
-    },
+    gen_params::{VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54},
     MaskedCard,
 };
 
