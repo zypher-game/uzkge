@@ -19,8 +19,8 @@ use zplonk::{
 };
 use zshuffle::gen_params::get_shuffle_verifier_params;
 
-const SVK1: &str = include_str!("../../parameters/ShuffleVerifierKey1.sol");
-const SVK2: &str = include_str!("../../parameters/ShuffleVerifierKey2.sol");
+const SVK1: &str = include_str!("../../parameters/VerifierKeyExtra1.sol");
+const SVK2: &str = include_str!("../../parameters/VerifierKeyExtra2.sol");
 const VK: &str = include_str!("../../parameters/VerifierKey.sol");
 
 #[derive(StructOpt, Debug)]
@@ -135,11 +135,11 @@ fn gen_solidity_vk(num: usize, directory: PathBuf, full: bool) {
     let verifier_key = ();
 
     let mut svk1_path: PathBuf = directory.clone();
-    svk1_path.push(format!("ShuffleVerifierKey1_{}.sol", num));
+    svk1_path.push(format!("VerifierKeyExtra1_{}.sol", num));
     std::fs::write(svk1_path, rendered_svk1).unwrap();
 
     let mut svk2_path: PathBuf = directory.clone();
-    svk2_path.push(format!("ShuffleVerifierKey2_{}.sol", num));
+    svk2_path.push(format!("VerifierKeyExtra2_{}.sol", num));
     std::fs::write(svk2_path, rendered_svk2).unwrap();
 
     if full {

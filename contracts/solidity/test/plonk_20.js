@@ -4,9 +4,9 @@ const { expect } = require("chai");
 describe("Plonk 20 Verify Contract", function () {
   it("shuffle 20 verify must success", async function () {
     const [owner, user] = await ethers.getSigners();
-    const vk1 = await ethers.deployContract("ShuffleVerifierKey1_20");
+    const vk1 = await ethers.deployContract("VerifierKeyExtra1_20");
     const vk1_address = await vk1.getAddress();
-    const vk2 = await ethers.deployContract("ShuffleVerifierKey2_20");
+    const vk2 = await ethers.deployContract("VerifierKeyExtra2_20");
     const vk2_address = await vk2.getAddress();
     const service = await ethers.deployContract("ShuffleService", [vk1_address, vk2_address, 20]);
 

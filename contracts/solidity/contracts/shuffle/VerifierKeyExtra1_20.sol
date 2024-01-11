@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-contract ShuffleVerifierKey1_20 {
+contract VerifierKeyExtra1_20 {
     uint256[160] public PI_POLY_INDICES_LOC;
 
     constructor() {
