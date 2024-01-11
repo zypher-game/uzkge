@@ -15,14 +15,13 @@ abstract contract ShuffleVerifier is PlonkVerifier {
         _extraVk2 = _vk2;
     }
 
-    // Before call verifyShuffle need init: VerifierKey.load(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
+    // Before call verifyShuffle need init: _verifyKey = VerifierKey.load;
     function verifyShuffle(
         bytes calldata _proof,
         uint256[] calldata _publicKeyInput,
         uint256[] calldata _publicKeyCommitment
     ) public view returns (bool) {
         _verifyKey(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
-        //VerifierKey_20.load();
         ExternalTranscript.load(EXTERNAL_TRANSCRIPT_LENGTH_LOC, _publicKeyInput.length / 8);
 
         // The scalar field of BN254.
