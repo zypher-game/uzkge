@@ -13,6 +13,14 @@ struct MaskedCard {
 }
 
 contract RevealVerifier {
+    function aggregateKeys(EdOnBN254.Point[] memory pks) public view returns (EdOnBN254.Point memory) {
+        EdOnBN254.Point memory joint = pks[0];
+        for (uint i = 1; i < pks.length; i++) {
+            joint = EdOnBN254.add(joint, pks[i]);
+        }
+        return joint;
+    }
+
     function verifyReveal(
         EdOnBN254.Point memory pk,
         MaskedCard memory masked,

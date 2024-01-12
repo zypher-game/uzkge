@@ -22,6 +22,7 @@ pub fn card_to_index(value: JsValue) -> Result<i32, JsValue> {
     }
 }
 
+#[wasm_bindgen]
 pub fn index_to_card(index: i32) -> Result<JsValue, JsValue> {
     if index > 52 {
         return Err(error_to_jsvalue("Index not map to a card"));

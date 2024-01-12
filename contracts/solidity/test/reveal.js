@@ -1,6 +1,22 @@
 const { expect } = require("chai");
 
 describe("Reveal Verify Contract", function () {
+  it("aggregate keys must success", async function () {
+    const [owner] = await ethers.getSigners();
+    const revealVerifier = await ethers.deployContract("RevealVerifier");
+
+    const res1 = await revealVerifier.aggregateKeys([
+      { x: "0x1c1018979d2b1b19481da75668b69b5db43766689457507bf4e0951832edf114", y: "0x037186a98dcfe1b6a29fe4cb25dc38945b680b9350bf11c9c5be078dfa087995"},
+      { x: "0x00f713c48e8cda27d5dabb68fe5e92a9ad59dbc276b5a407a099192b52514e34", y: "0x286fef04eab062fa4054bfa784c3f416f11e3df91fca4eb75315dd099f2b5471"},
+      { x: "0x170b3f6073aa25291ec30fff6f09c1195045de8a1740fd2c86951520b147ceaf", y: "0x0c8f9f1a44634062ef6cec79a3c9129bcb8316babd709cc5ebdf17ad18de6135"},
+      { x: "0x069a99c86ae73b02d7ee4b4f8ece22cca57e668147efbb967e99ab00ca457404", y: "0x2a8a9d2db35110dbe4612c1c3923f8be057dbceeca9623feb5364b41c48a9855"}
+    ]);
+    // const { gasUsed } = await res1.wait(); // remove view from function
+    // console.log("gas used: ", gasUsed); // 42263
+    expect(ethers.toBeHex(res1[0])).to.equal("0x1752b4b41ccda158d6ff427c6be1c05aa1a94231fc22fdc59cd64c2a3c213152");
+    expect(ethers.toBeHex(res1[1])).to.equal("0x141404cf07d59feae8b3f344d7431dc4e1cbb0792e5dfe4710eb107af5ef8815");
+  });
+
   it("reveal verify must success", async function () {
     const [owner] = await ethers.getSigners();
     const revealVerifier = await ethers.deployContract("RevealVerifier");
@@ -17,7 +33,7 @@ describe("Reveal Verify Contract", function () {
       "0x169be63c3d815c43b43bbb7c30914a2af57ab107c899d4aa29a71cdc57d6add42a6150c959d82a63993b0c2480bab343fcd8eb282de2be770cf0cc36fda42d44169be63c3d815c43b43bbb7c30914a2af57ab107c899d4aa29a71cdc57d6add42a6150c959d82a63993b0c2480bab343fcd8eb282de2be770cf0cc36fda42d4405d1e3ea4fc09b67e6889856ff400bdd96ed7028c723e9458d49f56d0063f9f2"
     );
     // const { gasUsed } = await res1.wait(); // remove view from function
-    // console.log("gas used: ", gasUsed);
+    // console.log("gas used: ", gasUsed); // 7629888
     expect(res1).to.equal(true);
   });
 
@@ -40,7 +56,7 @@ describe("Reveal Verify Contract", function () {
       ],
     );
     // const { gasUsed } = await res2.wait(); // remove view from function
-    // console.log("gas used: ", gasUsed);
+    // console.log("gas used: ", gasUsed); // 49827
     expect(res2.y).to.equal("0x0e7e20b3cb30785b64cd6972e2ddf919db64d03d6cf01456243c5ef2fb766a65");
   });
 });

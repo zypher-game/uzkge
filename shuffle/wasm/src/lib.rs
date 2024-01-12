@@ -1,7 +1,8 @@
 mod card_maps;
 mod utils;
 
-pub mod poker;
+mod poker;
+pub use poker::*;
 
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ff::{BigInteger, One, PrimeField};
