@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
+// Generated file from zplonk/gen-params, DONOT edit!
 pragma solidity ^0.8.20;
 
 contract VerifierKeyExtra1_20 {
@@ -166,5 +167,6 @@ contract VerifierKeyExtra1_20 {
         PI_POLY_INDICES_LOC[157] = 0x15c18a96c61069ed3da3ed92e11711126147151855fa58abd5e6b4d8baa961c0;
         PI_POLY_INDICES_LOC[158] = 0x03d768801727f091239a0a53eb7565a3e8860290e2147893ce81ace529fa73ae;
         PI_POLY_INDICES_LOC[159] = 0x1fa80347e08c79348f8834872ce17074ea5dd133264aff8388c1a6341c07044b;
+        
     }
 }

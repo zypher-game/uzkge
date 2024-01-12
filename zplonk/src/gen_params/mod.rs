@@ -1,20 +1,19 @@
 use ark_bn254::{Fr, G1Projective};
-use ark_ff::Field;
-use ark_serialize::CanonicalSerialize;
-use ark_std::{collections::BTreeMap, One};
+use ark_std::collections::BTreeMap;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::ZplonkError,
-    poly_commit::field_polynomial::FpPolynomial,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     poly_commit::pcs::PolyComScheme,
     turboplonk::constraint_system::ConstraintSystem,
     turboplonk::constraint_system::TurboCS,
     turboplonk::indexer::{PlonkProverParams, PlonkVerifierParams},
-    utils::serialization::{point_to_uncompress_be, scalar_to_bytes_be},
 };
+
+//#[cfg(features = "gen")]
+pub mod solidity;
 
 #[cfg(not(feature = "no_vk"))]
 /// The common part of the verifier parameters.
@@ -119,114 +118,6 @@ impl VerifierParams {
                 verifier_params: self.verifier_params,
             },
         ))
-    }
-
-    //#[cfg(test)]
-    pub fn pretty_print(&self) {
-        let n = Fr::one().uncompressed_size() * 2;
-        println!(
-            "KZG pp1  : 0x{}",
-            hex::encode(point_to_uncompress_be(
-                &self.shrunk_vk.public_parameter_group_1[0]
-            ))
-        );
-        // println!(
-        //     "KZG pp2_0: {}",
-        //     hex::encode(point_to_uncompress_be(
-        //         &self.shrunk_vk.public_parameter_group_2[0].0
-        //     ))
-        // );
-        // println!(
-        //     "KZG pp2_1: {}",
-        //     hex::encode(point_to_uncompress_be(
-        //         &self.shrunk_vk.public_parameter_group_2[1].0
-        //     ))
-        // );
-        println!("CS: vars: {}", self.shrunk_cs.num_vars);
-        println!("CS: size: {}", self.shrunk_cs.size);
-        for c in self.verifier_params.cm_q_vec.iter() {
-            let s = hex::encode(point_to_uncompress_be(&c.0));
-            println!("VP: cm selectors: 0x{}", &s[..n]);
-            println!("VP: cm selectors: 0x{}", &s[n..]);
-        }
-        for c in self.verifier_params.cm_s_vec.iter() {
-            let s = hex::encode(point_to_uncompress_be(&c.0));
-            println!("VP: cm perm     : 0x{}", &s[..n]);
-            println!("VP: cm perm     : 0x{}", &s[n..]);
-        }
-
-        let s = hex::encode(point_to_uncompress_be(&self.verifier_params.cm_qb.0));
-        println!("VP: cm bool     : 0x{}", &s[..n]);
-        println!("VP: cm bool     : 0x{}", &s[n..]);
-
-        for c in self.verifier_params.cm_prk_vec.iter() {
-            let s = hex::encode(point_to_uncompress_be(&c.0));
-            println!("VP: cm prk      : 0x{}", &s[..n]);
-            println!("VP: cm prk      : 0x{}", &s[n..]);
-        }
-
-        #[cfg(feature = "shuffle")]
-        {
-            let s = hex::encode(point_to_uncompress_be(&self.verifier_params.cm_q_ecc.0));
-            println!("VP: cm ecc      : 0x{}", &s[..n]);
-            println!("VP: cm ecc      : 0x{}", &s[n..]);
-        }
-
-        #[cfg(feature = "shuffle")]
-        {
-            for c in self.verifier_params.cm_shuffle_generator_vec.iter() {
-                let s = hex::encode(point_to_uncompress_be(&c.0));
-                println!("VP: cm shuffle  : 0x{}", &s[..n]);
-                println!("VP: cm shuffle  : 0x{}", &s[n..]);
-            }
-        }
-
-        let s = hex::encode(scalar_to_bytes_be(&self.verifier_params.anemoi_generator));
-        println!("VP: anemoi g    : 0x{}", s);
-
-        let s = hex::encode(scalar_to_bytes_be(
-            &self.verifier_params.anemoi_generator_inv,
-        ));
-        println!("VP: anemoi g inv: 0x{}", s);
-
-        for c in self.verifier_params.k.iter() {
-            let s = hex::encode(scalar_to_bytes_be(c));
-            println!("VP: wires  (k)  : 0x{}", s);
-        }
-
-        #[cfg(feature = "shuffle")]
-        {
-            let s = hex::encode(scalar_to_bytes_be(&self.verifier_params.edwards_a));
-            println!("VP: edwards_a   : 0x{}", s);
-        }
-
-        println!("VP: cs size     : {}", self.verifier_params.cs_size);
-
-        println!(
-            "VP: pi size     : {}",
-            self.verifier_params.public_vars_constraint_indices.len()
-        );
-
-        let domain = FpPolynomial::<Fr>::evaluation_domain(self.verifier_params.cs_size).unwrap();
-        let root = domain.group_gen;
-        let s = hex::encode(scalar_to_bytes_be(&root));
-        println!("VP: group gen   : 0x{}", s);
-
-        for (i, c) in self
-            .verifier_params
-            .public_vars_constraint_indices
-            .iter()
-            .enumerate()
-        {
-            let p = root.pow(&[*c as u64]);
-            let s = hex::encode(scalar_to_bytes_be(&p));
-            println!("PI_POLY_INDICES_LOC[{}] = 0x{};", i, s);
-        }
-
-        for (i, c) in self.verifier_params.lagrange_constants.iter().enumerate() {
-            let s = hex::encode(scalar_to_bytes_be(c));
-            println!("PI_POLY_LAGRANGE_LOC[{}] = 0x{};", i, s);
-        }
     }
 }
 

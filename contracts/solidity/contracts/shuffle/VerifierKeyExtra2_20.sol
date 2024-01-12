@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
+// Generated file from zplonk/gen-params, DONOT edit!
 pragma solidity ^0.8.20;
 
 contract VerifierKeyExtra2_20 {
     uint256[160] public PI_POLY_LAGRANGE_LOC;
 
     constructor() {
-        // The constrain lagrange base by public constrain variables.
+        // The public constrain variables indices.
         PI_POLY_LAGRANGE_LOC[0] = 0x0361289d9dc2f35f2c79db061bc53b61584a2bead0f71c0b314a67ab43f969a3;
         PI_POLY_LAGRANGE_LOC[1] = 0x1fda1b0051addccd16155b9284f4bc25e319f9b22174200a20fc6d42d86e6029;
         PI_POLY_LAGRANGE_LOC[2] = 0x14f5e14b9d5f5fb853c2801d2e11ed9c76fd16e1ffc2bdce64f79cd5d0adc2e6;
@@ -166,5 +167,6 @@ contract VerifierKeyExtra2_20 {
         PI_POLY_LAGRANGE_LOC[157] = 0x2b1ab1f6f9fc93abc6fb58556485442408f44f51ddee87e6eb329d230f4baa97;
         PI_POLY_LAGRANGE_LOC[158] = 0x25437a5ebda8c8f3291f094ecdb7708115d3809cf7c90c1564a2465458809fa8;
         PI_POLY_LAGRANGE_LOC[159] = 0x236a5f26a2e3a84819f534856214c20eb0c920c29ac2e3dd4233d11a31ccc071;
+        
     }
 }
