@@ -37,9 +37,8 @@ version = "0.4"
 default-features = false
 features = ["derive"]
 
-[dev-dependencies]  
+[dev-dependencies]
 rand_core = { version = "0.6", features = ["getrandom"] }
-
 
 [features]
 default = []
@@ -56,4 +55,4 @@ parallel = [
   "zplonk/parallel"
 ]
 no_vk = []
-gen = ["parallel", "structopt"]
+gen = ["zplonk/gen", "parallel", "structopt"]

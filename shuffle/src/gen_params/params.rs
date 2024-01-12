@@ -48,7 +48,6 @@ pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> 
     })
 }
 
-#[cfg(feature = "shuffle")]
 /// Refresh the public key for shuffle.
 pub fn refresh_prover_params_public_key(
     params: &mut ProverParams,

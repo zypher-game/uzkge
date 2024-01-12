@@ -12,7 +12,7 @@ use crate::{
     turboplonk::indexer::{PlonkProverParams, PlonkVerifierParams},
 };
 
-//#[cfg(features = "gen")]
+#[cfg(feature = "gen")]
 pub mod solidity;
 
 #[cfg(not(feature = "no_vk"))]

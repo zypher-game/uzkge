@@ -9,7 +9,7 @@ path = "src/gen_params/setup.rs"
 required-features = ["gen"]
 
 [dependencies]
-zplonk = { path = "../zplonk" }
+zplonk = { path = "../zplonk", features = ["shuffle"] }
 bincode = "1.3"
 rand_chacha = "0.3"
 serde = { version = "1.0", features = ["derive"] }
@@ -47,7 +47,7 @@ default-features = false
 hex = "0.4"
 
 [features]
-default = ["shuffle"]
+default = []
 std = [
   "ark-ec/std",
   "ark-std/std",
@@ -64,4 +64,3 @@ parallel = [
 ]
 no_vk = []
 gen = ["zplonk/gen", "parallel", "structopt"]
-shuffle = ["zplonk/shuffle"]
