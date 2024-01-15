@@ -26,7 +26,7 @@ pub const N_SELECTORS: usize = 8;
 pub const N_WIRE_SELECTORS: usize = 3;
 
 /// Turbo PLONK Constraint System.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TurboCS<F: PrimeField> {
     /// the selectors of the circuit.
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]

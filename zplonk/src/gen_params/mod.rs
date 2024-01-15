@@ -64,7 +64,7 @@ lazy_static! {
     };
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 /// The verifier parameters.
 pub struct VerifierParams {
     /// The shrunk version of the polynomial commitment scheme.
@@ -91,7 +91,7 @@ pub struct VerifierParamsSplitSpecific {
     pub verifier_params: PlonkVerifierParams<KZGCommitmentSchemeBN254>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 /// The prover parameters.
 pub struct ProverParams {
     /// The full SRS for the polynomial commitment scheme.
@@ -127,6 +127,16 @@ impl From<ProverParams> for VerifierParams {
             shrunk_vk: params.pcs.shrink_to_verifier_only().unwrap(),
             shrunk_cs: params.cs.shrink_to_verifier_only(),
             verifier_params: params.prover_params.get_verifier_params(),
+        }
+    }
+}
+
+impl From<&ProverParams> for VerifierParams {
+    fn from(params: &ProverParams) -> Self {
+        VerifierParams {
+            shrunk_vk: params.pcs.shrink_to_verifier_only().unwrap(),
+            shrunk_cs: params.cs.shrink_to_verifier_only(),
+            verifier_params: params.prover_params.clone().get_verifier_params(),
         }
     }
 }

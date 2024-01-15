@@ -6,9 +6,14 @@ pub use poker::*;
 
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ff::{BigInteger, One, PrimeField};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, sync::Mutex};
 use wasm_bindgen::prelude::*;
-use zplonk::{chaum_pedersen::dl::ChaumPedersenDLProof, gen_params::VerifierParams};
+use zplonk::{
+    chaum_pedersen::dl::ChaumPedersenDLProof,
+    gen_params::{ProverParams, VerifierParams},
+};
 use zshuffle::{
     build_cs::{prove_shuffle, verify_shuffle},
     gen_params::{gen_shuffle_prover_params, params::refresh_prover_params_public_key},
@@ -29,6 +34,11 @@ use utils::{
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+static PARAMS: Lazy<Mutex<HashMap<usize, ProverParams>>> = Lazy::new(|| {
+    let m = HashMap::new();
+    Mutex::new(m)
+});
 
 #[derive(Serialize, Deserialize)]
 pub struct Keypair {
@@ -64,8 +74,6 @@ pub struct RevealedCardWithProof {
 pub struct ShuffledCardsWithProof {
     /// MaskedCard
     pub cards: Vec<MaskedCard>,
-    /// pk commitment for contract verify
-    pub pkc: Vec<String>,
     /// hex string
     pub proof: String,
 }
@@ -186,9 +194,48 @@ pub fn verify_masked_card(
 
 /// Initialize the prover key
 #[wasm_bindgen]
-pub fn init_prover_key() -> Result<(), JsValue> {
-    //drop(PROVER_PARAMS.lock().map_err(error_to_jsvalue)?); TODO
-    Ok(())
+pub fn init_prover_key(num: i32) {
+    let n = num as usize;
+
+    let mut params = PARAMS.lock().unwrap();
+    if params.get(&n).is_none() {
+        let pp = gen_shuffle_prover_params(n)
+            .map_err(error_to_jsvalue)
+            .unwrap();
+        params.insert(n, pp);
+    }
+    drop(params);
+}
+
+/// refresh joint public key when it changed.
+#[wasm_bindgen]
+pub fn refresh_joint_key(joint: String, num: i32) -> Result<Vec<String>, JsValue> {
+    let joint_pk = hex_to_point(&joint)?;
+    let n = num as usize;
+
+    let mut params = PARAMS.lock().unwrap();
+    let prover_params = if let Some(param) = params.get_mut(&n) {
+        param
+    } else {
+        let pp = gen_shuffle_prover_params(n)
+            .map_err(error_to_jsvalue)
+            .unwrap();
+        params.insert(n, pp);
+        params.get_mut(&n).unwrap()
+    };
+
+    let pkc =
+        refresh_prover_params_public_key(prover_params, &joint_pk).map_err(error_to_jsvalue)?;
+    drop(params);
+
+    let mut pkc_string: Vec<_> = vec![];
+    for p in pkc {
+        let (x, y) = point_to_uncompress(&p, true);
+        pkc_string.push(x);
+        pkc_string.push(y);
+    }
+
+    Ok(pkc_string)
 }
 
 /// shuffle the cards and shuffled proof
@@ -205,29 +252,23 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
         masked_deck.push(masked_card_deserialize(&card)?);
     }
 
-    let mut prover_params = gen_shuffle_prover_params(n).map_err(error_to_jsvalue)?;
-    let pkc = refresh_prover_params_public_key(&mut prover_params, &joint_pk)
-        .map_err(error_to_jsvalue)?;
+    let params = PARAMS.lock().unwrap();
+    let prover_params = params
+        .get(&n)
+        .expect("Missing PARAMS, need init & refresh pk");
 
     let (shuffled_proof, new_deck) =
         prove_shuffle(&mut prng, &joint_pk, &masked_deck, &prover_params)
             .map_err(error_to_jsvalue)?;
+    drop(params);
 
     let masked_cards: Vec<_> = new_deck
         .iter()
         .map(|card| masked_card_serialize(&card))
         .collect();
 
-    let mut pkc_string: Vec<_> = vec![];
-    for p in pkc {
-        let (x, y) = point_to_uncompress(&p, true);
-        pkc_string.push(x);
-        pkc_string.push(y);
-    }
-
     let ret = ShuffledCardsWithProof {
         cards: masked_cards,
-        pkc: pkc_string,
         proof: shuffle_proof_to_hex(&shuffled_proof),
     };
 
@@ -237,7 +278,6 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
 /// verify the shuffled cards
 #[wasm_bindgen]
 pub fn verify_shuffled_cards(
-    joint: String,
     deck1: JsValue,
     deck2: JsValue,
     proof: String,
@@ -246,7 +286,6 @@ pub fn verify_shuffled_cards(
     let deck2: Vec<MaskedCard> = serde_wasm_bindgen::from_value(deck2)?;
 
     let n = deck1.len();
-    let joint_pk = hex_to_point(&joint)?;
     let mut masked_deck1 = vec![];
     for card in deck1 {
         masked_deck1.push(masked_card_deserialize(&card)?);
@@ -257,8 +296,10 @@ pub fn verify_shuffled_cards(
     }
     let shuffled_proof = shuffle_proof_from_hex(&proof)?;
 
-    let mut prover_params = gen_shuffle_prover_params(n).map_err(error_to_jsvalue)?;
-    refresh_prover_params_public_key(&mut prover_params, &joint_pk).map_err(error_to_jsvalue)?;
+    let params = PARAMS.lock().unwrap();
+    let prover_params = params
+        .get(&n)
+        .expect("Missing PARAMS, need init & refresh pk");
     let verifier_params = VerifierParams::from(prover_params);
 
     Ok(verify_shuffle(

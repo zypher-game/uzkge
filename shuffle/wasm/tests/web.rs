@@ -7,8 +7,12 @@ use wasm_bindgen_test::*;
 use web_sys::console::log_1;
 use zshuffle_wasm::*;
 
+const CARD_NUM: i32 = 20;
+
 #[wasm_bindgen_test]
 fn pass() {
+    init_prover_key(CARD_NUM);
+
     let key1 = generate_key().unwrap();
     let key2 = generate_key().unwrap();
     let key3 = generate_key().unwrap();
@@ -22,7 +26,11 @@ fn pass() {
     let joint_values = serde_wasm_bindgen::to_value(&joint).unwrap();
     let joint_pk = aggregate_keys(joint_values).unwrap();
 
-    let init_deck = init_masked_cards(joint_pk.clone(), 20).unwrap();
+    // must do it before prov & verify.
+    // when joint pk changed, must do it again !!!
+    let pkc = refresh_joint_key(joint_pk.clone(), CARD_NUM).unwrap();
+
+    let init_deck = init_masked_cards(joint_pk.clone(), CARD_NUM).unwrap();
     let decks: Vec<MaskedCardWithProof> = serde_wasm_bindgen::from_value(init_deck).unwrap();
     let deck_cards: Vec<MaskedCard> = decks.iter().map(|v| v.card.clone()).collect();
     let first_deck = serde_wasm_bindgen::to_value(&deck_cards).unwrap();
@@ -30,13 +38,8 @@ fn pass() {
     let proof = shuffle_cards(joint_pk.clone(), first_deck.clone()).unwrap();
     let proof: ShuffledCardsWithProof = serde_wasm_bindgen::from_value(proof).unwrap();
     let cards = serde_wasm_bindgen::to_value(&proof.cards).unwrap();
-    let res = verify_shuffled_cards(
-        joint_pk.clone(),
-        first_deck.clone(),
-        cards.clone(),
-        proof.proof.clone(),
-    )
-    .unwrap();
+    let res =
+        verify_shuffled_cards(first_deck.clone(), cards.clone(), proof.proof.clone()).unwrap();
     assert_eq!(res, true);
 
     log_1(&"PROOF:".into());
@@ -58,7 +61,7 @@ fn pass() {
         log_1(&format!("\"{}\",", d.3).into());
     }
     log_1(&"PKC:".into());
-    for p in proof.pkc {
+    for p in pkc {
         log_1(&format!("\"{}\",", p).into());
     }
 }

@@ -73,7 +73,7 @@ pub struct PlonkProof<PCS: PolyComScheme> {
 }
 
 /// Plonk prover parameters.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlonkProverParams<PCS: PolyComScheme> {
     /// The polynomials of the selectors.
     pub q_polys: Vec<FpPolynomial<PCS::Field>>,
