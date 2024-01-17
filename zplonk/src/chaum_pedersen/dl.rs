@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 pub struct ChaumPedersenDLParameters {
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub g: EdwardsProjective,
@@ -24,7 +24,7 @@ pub struct ChaumPedersenDLParameters {
     pub h: EdwardsProjective,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 pub struct ChaumPedersenDLProof {
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub a: EdwardsProjective,

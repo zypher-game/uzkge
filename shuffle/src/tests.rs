@@ -217,9 +217,6 @@ fn test_poker() {
         deck.push(masked_card)
     }
 
-    let v2 = get_shuffle_verifier_params(20).unwrap();
-    v2.pretty_print();
-
     let mut prover_params = gen_shuffle_prover_params(N_CARDS).unwrap();
 
     refresh_prover_params_public_key(&mut prover_params, &joint_pk).unwrap();
