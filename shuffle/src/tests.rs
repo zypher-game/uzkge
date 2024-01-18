@@ -281,9 +281,11 @@ fn test_poker() {
         let d_card = &round[3];
 
         // reveal a_card
+        let (a_re_a, a_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, a_card);
         let (a_re_b, a_re_b_proof, b_pk) = bob.compute_reveal(&mut rng, a_card);
         let (a_re_c, a_re_c_proof, c_pk) = charlie.compute_reveal(&mut rng, a_card);
         let (a_re_d, a_re_d_proof, d_pk) = david.compute_reveal(&mut rng, a_card);
+        verify_reveal(&a_pk, a_card, &a_re_a, &a_re_a_proof).unwrap();
         verify_reveal(&b_pk, a_card, &a_re_b, &a_re_b_proof).unwrap();
         verify_reveal(&c_pk, a_card, &a_re_c, &a_re_c_proof).unwrap();
         verify_reveal(&d_pk, a_card, &a_re_d, &a_re_d_proof).unwrap();
@@ -293,9 +295,11 @@ fn test_poker() {
 
         // reveal b_card
         let (b_re_a, b_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, b_card);
+        let (b_re_b, b_re_b_proof, b_pk) = bob.compute_reveal(&mut rng, b_card);
         let (b_re_c, b_re_c_proof, c_pk) = charlie.compute_reveal(&mut rng, b_card);
         let (b_re_d, b_re_d_proof, d_pk) = david.compute_reveal(&mut rng, b_card);
         verify_reveal(&a_pk, b_card, &b_re_a, &b_re_a_proof).unwrap();
+        verify_reveal(&b_pk, b_card, &b_re_b, &b_re_b_proof).unwrap();
         verify_reveal(&c_pk, b_card, &b_re_c, &b_re_c_proof).unwrap();
         verify_reveal(&d_pk, b_card, &b_re_d, &b_re_d_proof).unwrap();
         let b_reveals = vec![b_re_a, b_re_c, b_re_d];
@@ -303,23 +307,27 @@ fn test_poker() {
         println!("Bob: {:?}", real_b_card);
 
         // reveal c_card
-        let (c_re_b, c_re_b_proof, b_pk) = bob.compute_reveal(&mut rng, c_card);
         let (c_re_a, c_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, c_card);
+        let (c_re_b, c_re_b_proof, b_pk) = bob.compute_reveal(&mut rng, c_card);
+        let (c_re_c, c_re_c_proof, c_pk) = charlie.compute_reveal(&mut rng, c_card);
         let (c_re_d, c_re_d_proof, d_pk) = david.compute_reveal(&mut rng, c_card);
-        verify_reveal(&b_pk, c_card, &c_re_b, &c_re_b_proof).unwrap();
         verify_reveal(&a_pk, c_card, &c_re_a, &c_re_a_proof).unwrap();
+        verify_reveal(&b_pk, c_card, &c_re_b, &c_re_b_proof).unwrap();
+        verify_reveal(&c_pk, c_card, &c_re_c, &c_re_c_proof).unwrap();
         verify_reveal(&d_pk, c_card, &c_re_d, &c_re_d_proof).unwrap();
         let c_reveals = vec![c_re_b, c_re_a, c_re_d];
         let real_c_card = charlie.unmask(&mut rng, c_reveals, &card_mapping, c_card);
         println!("Charlie: {:?}", real_c_card);
 
         // reveal d_card
+        let (d_re_a, d_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, d_card);
         let (d_re_b, d_re_b_proof, b_pk) = bob.compute_reveal(&mut rng, d_card);
         let (d_re_c, d_re_c_proof, c_pk) = charlie.compute_reveal(&mut rng, d_card);
-        let (d_re_a, d_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, d_card);
+        let (d_re_d, d_re_d_proof, d_pk) = david.compute_reveal(&mut rng, d_card);
+        verify_reveal(&a_pk, d_card, &d_re_a, &d_re_a_proof).unwrap();
         verify_reveal(&b_pk, d_card, &d_re_b, &d_re_b_proof).unwrap();
         verify_reveal(&c_pk, d_card, &d_re_c, &d_re_c_proof).unwrap();
-        verify_reveal(&a_pk, d_card, &d_re_a, &d_re_a_proof).unwrap();
+        verify_reveal(&d_pk, d_card, &d_re_d, &d_re_d_proof).unwrap();
         let d_reveals = vec![d_re_b, d_re_c, d_re_a];
         let real_d_card = david.unmask(&mut rng, d_reveals, &card_mapping, d_card);
         println!("David: {:?}", real_d_card);
