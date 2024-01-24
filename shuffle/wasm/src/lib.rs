@@ -43,11 +43,11 @@ static PARAMS: Lazy<Mutex<HashMap<usize, ProverParams>>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize)]
 pub struct Keypair {
     /// 0xHex (U256)
-    pub secret: String,
+    pub sk: String,
     /// 0xHex (U256)
-    pub public: String,
-    /// public uncompress x, y
-    pub publicxy: (String, String),
+    pub pk: String,
+    /// public key uncompress x, y
+    pub pkxy: (String, String),
 }
 
 /// e2.0, e2.1, e1.0, e1.1
@@ -82,8 +82,8 @@ pub struct ShuffledCardsWithProof {
 #[wasm_bindgen]
 pub fn public_uncompress(public: String) -> Result<JsValue, JsValue> {
     let pk = hex_to_point::<EdwardsProjective>(&public)?;
-    let publicxy = point_to_uncompress(&pk, true);
-    Ok(serde_wasm_bindgen::to_value(&publicxy)?)
+    let pkxy = point_to_uncompress(&pk, true);
+    Ok(serde_wasm_bindgen::to_value(&pkxy)?)
 }
 
 /// comporess (public_x, public_y) to public
@@ -99,12 +99,12 @@ pub fn public_compress(publics: JsValue) -> Result<String, JsValue> {
 pub fn generate_key() -> Result<JsValue, JsValue> {
     let mut prng = default_prng();
     let keypair = CoreKeypair::generate(&mut prng);
-    let publicxy = point_to_uncompress(&keypair.public, true);
+    let pkxy = point_to_uncompress(&keypair.public, true);
 
     let ret = Keypair {
-        secret: scalar_to_hex(&keypair.secret, true),
-        public: point_to_hex(&keypair.public, true),
-        publicxy,
+        sk: scalar_to_hex(&keypair.secret, true),
+        pk: point_to_hex(&keypair.public, true),
+        pkxy,
     };
 
     Ok(serde_wasm_bindgen::to_value(&ret)?)
