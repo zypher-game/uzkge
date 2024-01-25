@@ -1,4 +1,4 @@
-[![crate](https://img.shields.io/badge/crates.io-v0.1.0-green.svg)](https://crates.io/crates/zplonk) [![doc](https://img.shields.io/badge/docs.rs-v0.1.0-blue.svg)](https://docs.rs/zplonk)
+<!-- [![crate](https://img.shields.io/badge/crates.io-v0.1.0-green.svg)](https://crates.io/crates/zplonk) [![doc](https://img.shields.io/badge/docs.rs-v0.1.0-blue.svg)](https://docs.rs/zplonk) -->
 
 # zplonk
 App-specific TurboPlonK with various gadgets & primitives use arkworks.
