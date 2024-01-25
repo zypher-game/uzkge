@@ -12,7 +12,6 @@ opt-level = 3
 lto = "thin"
 incremental = true
 panic = "abort"
-#opt-level = "s"
 
 [profile.bench]
 opt-level = 3
