@@ -1,0 +1,72 @@
+[package]
+name = "zshuffle"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zypher Games <dev@zypher.game>"]
+readme = "README.md"
+description = "Encrypt and shuffle cards, resulting in a randomly ordered deck"
+repository = "https://github.com/zypher-game/uzkge"
+keywords = ["zkp", "shuffle", "game"]
+license = "GPL-3.0-only"
+
+[[bin]]
+name = "gen-params"
+path = "src/gen_params/setup.rs"
+required-features = ["gen"]
+
+[dependencies]
+zplonk = { path = "../plonk", features = ["shuffle"] }
+bincode = "1.3"
+rand_chacha = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+rayon = { version = "1.7", optional = true}
+structopt =  { version = "0.3", optional = true}
+
+[dependencies.ark-ec]
+version = "0.4"
+default-features = false
+
+[dependencies.ark-ff]
+version = "0.4"
+default-features = false
+features = ["asm"]
+
+[dependencies.ark-std]
+version = "0.4"
+default-features = false
+
+[dependencies.ark-serialize]
+version = "0.4"
+default-features = false
+features = ["derive"]
+
+[dependencies.ark-bn254]
+version = "0.4"
+default-features = false
+features = ["curve"]
+
+[dependencies.ark-ed-on-bn254]
+version = "0.4"
+default-features = false
+
+[dev-dependencies]
+hex = "0.4"
+
+[features]
+default = []
+std = [
+  "ark-ec/std",
+  "ark-std/std",
+  "ark-ff/std",
+  "ark-bn254/std",
+  "zplonk/std"
+]
+parallel = [
+  "rayon",
+  "ark-std/parallel",
+  "ark-ff/parallel",
+  "ark-ec/parallel",
+  "zplonk/parallel"
+]
+no_vk = []
+gen = ["zplonk/gen", "parallel", "structopt"]

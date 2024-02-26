@@ -1,0 +1,64 @@
+[package]
+name = "zmatchmaking"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zypher Games <dev@zypher.game>"]
+readme = "README.md"
+description = "Mathmaking for PvP games with provable fairness and randomness"
+repository = "https://github.com/zypher-game/uzkge"
+keywords = ["zkp", "matchmaking", "game"]
+license = "GPL-3.0-only"
+
+[[bin]]
+name = "gen-params"
+path = "src/gen_params/setup.rs"
+required-features = ["gen"]
+
+[dependencies]
+zplonk = { path = "../plonk" }
+num-bigint = "0.4.3"
+num-integer = "0.1.45"
+rand_chacha =  "0.3"
+bincode = "1.3"
+structopt =  { version = "0.3", optional = true}
+serde = { version = "1.0", features = ["derive"] }
+rayon = { version = "1.7", optional = true}
+
+[dependencies.ark-ff]
+version = "0.4"
+default-features = false
+features = ["asm"]
+
+[dependencies.ark-std]
+version = "0.4"
+default-features = false
+
+[dependencies.ark-bn254]
+version = "0.4"
+default-features = false
+features = ["curve"]
+
+[dependencies.ark-serialize]
+version = "0.4"
+default-features = false
+features = ["derive"]
+
+[dev-dependencies]
+rand_core = { version = "0.6", features = ["getrandom"] }
+
+[features]
+default = []
+std = [
+  "ark-std/std",
+  "ark-ff/std",
+  "ark-bn254/std",
+  "zplonk/std"
+]
+parallel = [
+  "rayon",
+  "ark-std/parallel",
+  "ark-ff/parallel",
+  "zplonk/parallel"
+]
+no_vk = []
+gen = ["zplonk/gen", "parallel", "structopt"]
