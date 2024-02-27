@@ -94,6 +94,7 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
             cs.push_add_selectors(F::from((i + 1) as u64), one, zero, zero);
             cs.push_mul_selectors(zero, zero);
             cs.push_constant_selector(zero);
+            cs.push_ecc_selector(zero);
             cs.push_out_selector(one);
 
             cs.wiring[0].push(quotient_var);
@@ -168,6 +169,7 @@ impl<const N: usize, F: PrimeField> Matchmaking<N, F> {
                 cs.push_add_selectors(zero, zero, zero, zero);
                 cs.push_mul_selectors(one, minus_one);
                 cs.push_constant_selector(zero);
+                cs.push_ecc_selector(zero);
                 cs.push_out_selector(zero);
 
                 cs.wiring[0].push(index_vars[i]);

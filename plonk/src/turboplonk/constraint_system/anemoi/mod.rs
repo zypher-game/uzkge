@@ -44,6 +44,7 @@ impl<F: PrimeField> TurboCS<F> {
         }
 
         self.push_mul_selectors(zero, zero);
+        self.push_ecc_selector(zero);
         self.push_out_selector(zero);
 
         self.wiring[0].push(input_var.0[0]); // a_0
@@ -60,6 +61,7 @@ impl<F: PrimeField> TurboCS<F> {
             self.push_add_selectors(zero, zero, zero, zero);
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(zero);
 
             self.wiring[0].push(intermediate_var.0[r - 1][0]); // a_i
@@ -82,6 +84,7 @@ impl<F: PrimeField> TurboCS<F> {
             );
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(one);
 
             self.wiring[0].push(intermediate_var.0[13][0]); // a_r
@@ -104,6 +107,7 @@ impl<F: PrimeField> TurboCS<F> {
             );
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(one);
 
             self.wiring[0].push(intermediate_var.0[13][0]); // a_r
@@ -126,6 +130,7 @@ impl<F: PrimeField> TurboCS<F> {
             );
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(one);
 
             self.wiring[0].push(intermediate_var.0[13][0]); // a_r
@@ -148,6 +153,7 @@ impl<F: PrimeField> TurboCS<F> {
             );
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(one);
 
             self.wiring[0].push(intermediate_var.0[13][0]); // a_r
@@ -172,6 +178,7 @@ impl<F: PrimeField> TurboCS<F> {
             );
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(one);
 
             self.wiring[0].push(intermediate_var.0[13][0]); // a_r

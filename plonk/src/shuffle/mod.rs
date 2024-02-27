@@ -3,23 +3,26 @@ mod permutation;
 mod remark;
 mod trace;
 
-pub use babyjubjub::BabyJubjubShuffle;
-pub use permutation::Permutation;
-pub use remark::Remark;
-pub use trace::RemarkTrace;
-
+use crate::utils::serialization::{ark_deserialize, ark_serialize};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::UniformRand;
 use ark_std::rand::{CryptoRng, RngCore};
+pub use babyjubjub::BabyJubjubShuffle;
+pub use permutation::Permutation;
+pub use remark::Remark;
+use serde::{Deserialize, Serialize};
+pub use trace::RemarkTrace;
 
 pub const N_SELECT_BITS: usize = 4;
 
 /// An ElGamal ciphertext
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default, Deserialize, Serialize)]
 pub struct Ciphertext<C: CurveGroup> {
     /// `e1` = `r * G`
+    #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub e1: C,
     /// `e2` = `M + r * pk`
+    #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub e2: C,
 }
 

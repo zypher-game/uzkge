@@ -1,12 +1,23 @@
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
+use serde::de::Visitor;
 
 use crate::errors::ZplonkError;
 
+#[cfg(not(feature = "serialize0"))]
 pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
     let mut bytes = vec![];
     let _ = a.serialize_with_mode(&mut bytes, Compress::Yes);
+    bytes
+}
+
+#[cfg(feature = "serialize0")]
+pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
+    let mut bytes = vec![];
+
+    let _ = a.serialize_with_mode(&mut bytes, Compress::No);
+
     bytes
 }
 
@@ -29,13 +40,38 @@ where
     s.serialize_bytes(&to_bytes(a))
 }
 
+#[cfg(not(feature = "deserialize0"))]
 pub fn ark_deserialize<'de, D, A: CanonicalDeserialize>(data: D) -> Result<A, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
     let s: Vec<u8> = serde::de::Deserialize::deserialize(data)?;
-    A::deserialize_with_mode(s.as_slice(), Compress::Yes, Validate::Yes)
+    A::deserialize_with_mode(s.as_slice(), Compress::No, Validate::No)
         .map_err(serde::de::Error::custom)
+}
+
+#[cfg(feature = "deserialize0")]
+pub fn ark_deserialize<'de, D, A: CanonicalDeserialize>(data: D) -> Result<A, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    let s: Vec<u8> = data.deserialize_bytes(BytesVisitor)?;
+    A::deserialize_with_mode(s.as_slice(), Compress::No, Validate::No)
+        .map_err(serde::de::Error::custom)
+}
+
+pub struct BytesVisitor;
+
+impl<'de> Visitor<'de> for BytesVisitor {
+    type Value = Vec<u8>;
+
+    fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> core::fmt::Result {
+        formatter.write_str("a valid object")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Vec<u8>, E> {
+        Ok(v.to_vec())
+    }
 }
 
 #[inline]
