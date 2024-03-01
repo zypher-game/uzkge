@@ -38,7 +38,7 @@ pub fn gen_shuffle_prover_params(n: usize) -> Result<ProverParams, ZplonkError> 
     };
 
     let prover_params =
-        indexer_with_lagrange(&cs, &pcs, lagrange_pcs.as_ref(), verifier_params).unwrap();
+        indexer_with_lagrange(&cs, &pcs, lagrange_pcs.as_ref(), None, verifier_params).unwrap();
 
     Ok(ProverParams {
         pcs,
