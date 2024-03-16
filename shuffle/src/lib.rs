@@ -17,10 +17,10 @@ pub mod gen_params;
 mod tests;
 
 use ark_ed_on_bn254::EdwardsProjective;
-use zplonk::chaum_pedersen::dl::ChaumPedersenDLProof;
+use uzkge::chaum_pedersen::dl::ChaumPedersenDLProof;
 
 /// re-export Ciphertext (a.k.a MaskedCard)
-pub use zplonk::shuffle::Ciphertext;
+pub use uzkge::shuffle::Ciphertext;
 
 /// An Card with value
 pub type Card = EdwardsProjective;

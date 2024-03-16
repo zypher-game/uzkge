@@ -10,7 +10,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Mutex};
 use wasm_bindgen::prelude::*;
-use zplonk::{
+use uzkge::{
     chaum_pedersen::dl::ChaumPedersenDLProof,
     gen_params::{ProverParams, VerifierParams},
 };

@@ -1,11 +1,11 @@
 use ark_bn254::Fr;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
 use ark_std::rand::{CryptoRng, RngCore};
-use zplonk::{
+use uzkge::{
     errors::Result,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     shuffle::{BabyJubjubShuffle, Permutation, Remark},
-    turboplonk::{
+    plonk::{
         constraint_system::shuffle::CardVar, indexer::PlonkProof, prover::prover_with_lagrange,
         verifier::verifier,
     },
@@ -18,7 +18,7 @@ use crate::{
 };
 
 pub type ShuffleProof = PlonkProof<KZGCommitmentSchemeBN254>;
-pub type TurboCS = zplonk::turboplonk::constraint_system::TurboCS<Fr>;
+pub type TurboCS = uzkge::plonk::constraint_system::TurboCS<Fr>;
 
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";

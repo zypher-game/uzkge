@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 use structopt::StructOpt;
-use zplonk::gen_params::solidity::gen_solidity_vk;
+use uzkge::gen_params::solidity::gen_solidity_vk;
 use zshuffle::gen_params::get_shuffle_verifier_params;
 
 #[derive(StructOpt, Debug)]

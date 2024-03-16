@@ -1,12 +1,12 @@
 use ark_bn254::Fr;
 use ark_ff::Zero;
-use zplonk::{
-    errors::ZplonkError,
+use uzkge::{
+    errors::UzkgeError,
     gen_params::{
         load_lagrange_params, load_srs_params, VerifierParamsSplitCommon,
         VerifierParamsSplitSpecific, VERIFIER_COMMON_PARAMS,
     },
-    turboplonk::{constraint_system::ConstraintSystem, indexer::indexer_with_lagrange},
+    plonk::{constraint_system::ConstraintSystem, indexer::indexer_with_lagrange},
 };
 
 use crate::{
@@ -15,10 +15,10 @@ use crate::{
 };
 
 // re-export
-pub use zplonk::gen_params::{ProverParams, VerifierParams};
+pub use uzkge::gen_params::{ProverParams, VerifierParams};
 
 /// Obtain the parameters for prover.
-pub fn gen_prover_params() -> Result<ProverParams, ZplonkError> {
+pub fn gen_prover_params() -> Result<ProverParams, UzkgeError> {
     let (cs, _) = build_cs(&[Fr::zero(); N], &Fr::zero(), &Fr::zero());
     let pcs = load_srs_params(cs.size())?;
     let lagrange_pcs = load_lagrange_params(cs.size());
@@ -41,7 +41,7 @@ pub fn gen_prover_params() -> Result<ProverParams, ZplonkError> {
 }
 
 /// Get the verifier parameters.
-pub fn get_verifier_params() -> Result<VerifierParams, ZplonkError> {
+pub fn get_verifier_params() -> Result<VerifierParams, UzkgeError> {
     match load_verifier_params() {
         Ok(vk) => Ok(vk),
         Err(_e) => Ok(VerifierParams::from(gen_prover_params()?)),
@@ -49,14 +49,14 @@ pub fn get_verifier_params() -> Result<VerifierParams, ZplonkError> {
 }
 
 /// Load the verifier parameters from prepare.
-pub fn load_verifier_params() -> Result<VerifierParams, ZplonkError> {
+pub fn load_verifier_params() -> Result<VerifierParams, UzkgeError> {
     match (VERIFIER_COMMON_PARAMS, VERIFIER_SPECIFIC_PARAMS) {
         (Some(c_bytes), Some(s_bytes)) => {
             let common: VerifierParamsSplitCommon =
-                bincode::deserialize(c_bytes).map_err(|_| ZplonkError::DeserializationError)?;
+                bincode::deserialize(c_bytes).map_err(|_| UzkgeError::DeserializationError)?;
 
             let special: VerifierParamsSplitSpecific =
-                bincode::deserialize(s_bytes).map_err(|_| ZplonkError::DeserializationError)?;
+                bincode::deserialize(s_bytes).map_err(|_| UzkgeError::DeserializationError)?;
 
             Ok(VerifierParams {
                 shrunk_vk: common.shrunk_pcs,
@@ -64,6 +64,6 @@ pub fn load_verifier_params() -> Result<VerifierParams, ZplonkError> {
                 verifier_params: special.verifier_params,
             })
         }
-        _ => Err(ZplonkError::MissingVerifierParamsError),
+        _ => Err(UzkgeError::MissingVerifierParamsError),
     }
 }

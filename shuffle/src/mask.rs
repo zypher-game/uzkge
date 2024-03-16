@@ -1,7 +1,7 @@
 use ark_ec::PrimeGroup;
 use ark_ed_on_bn254::{EdwardsProjective, Fr};
 use ark_std::rand::{CryptoRng, RngCore};
-use zplonk::{
+use uzkge::{
     chaum_pedersen::dl::{prove, verify, ChaumPedersenDLParameters, ChaumPedersenDLProof},
     errors::Result,
     utils::transcript::Transcript,

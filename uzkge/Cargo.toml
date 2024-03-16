@@ -1,12 +1,12 @@
 [package]
-name = "zshuffle"
+name = "uzkge"
 version = "0.1.0"
 edition = "2021"
 authors = ["Zypher Games <dev@zypher.game>"]
 readme = "README.md"
-description = "Encrypt and shuffle cards, resulting in a randomly ordered deck"
+description = "App-specific PlonK with various gadgets & primitives"
 repository = "https://github.com/zypher-game/uzkge"
-keywords = ["zkp", "shuffle", "game"]
+keywords = ["zkp", "plonk", "game"]
 license = "GPL-3.0-only"
 
 [[bin]]
@@ -15,12 +15,18 @@ path = "src/gen_params/setup.rs"
 required-features = ["gen"]
 
 [dependencies]
-uzkge = { path = "../uzkge", features = ["shuffle"] }
 bincode = "1.3"
+hex = "0.4"
+itertools = "0.12"
+lazy_static = "1.4"
+num-bigint = "0.4"
+num-integer = "0.1"
 rand_chacha = "0.3"
 serde = { version = "1.0", features = ["derive"] }
+sha3 = "0.10"
 rayon = { version = "1.7", optional = true}
 structopt =  { version = "0.3", optional = true}
+tera = { version = "1.19", optional = true }
 
 [dependencies.ark-ec]
 version = "0.4"
@@ -32,6 +38,10 @@ default-features = false
 features = ["asm"]
 
 [dependencies.ark-std]
+version = "0.4"
+default-features = false
+
+[dependencies.ark-poly]
 version = "0.4"
 default-features = false
 
@@ -50,7 +60,7 @@ version = "0.4"
 default-features = false
 
 [dev-dependencies]
-hex = "0.4"
+rand_core = { version = "0.6", features = ["getrandom"] }
 
 [features]
 default = []
@@ -58,15 +68,24 @@ std = [
   "ark-ec/std",
   "ark-std/std",
   "ark-ff/std",
-  "ark-bn254/std",
-  "uzkge/std"
+  "ark-bn254/std"
 ]
 parallel = [
   "rayon",
   "ark-std/parallel",
   "ark-ff/parallel",
   "ark-ec/parallel",
-  "uzkge/parallel"
+  "ark-poly/parallel"
 ]
+debug = []
 no_vk = []
-gen = ["uzkge/gen", "parallel", "structopt"]
+no_srs = []
+shuffle = []
+anemoi = []
+lightweight = []
+gen = [
+  "parallel",
+  "shuffle",
+  "structopt",
+  "tera"
+]

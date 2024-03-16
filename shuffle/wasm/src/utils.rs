@@ -10,9 +10,9 @@ use rand_chacha::{
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use wasm_bindgen::prelude::*;
-use zplonk::{
+use uzkge::{
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
-    turboplonk::{constraint_system::TurboCS, indexer::PlonkProof},
+    plonk::{constraint_system::TurboCS, indexer::PlonkProof},
 };
 
 #[inline(always)]

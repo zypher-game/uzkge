@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-// Generated file from zplonk/gen-params, DONOT edit!
+// Generated file from uzkge/gen-params, DONOT edit!
 pragma solidity ^0.8.20;
 
 library VerifierKey_20 {

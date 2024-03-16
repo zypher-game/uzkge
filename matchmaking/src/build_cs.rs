@@ -1,10 +1,10 @@
 use ark_bn254::Fr;
 use ark_std::rand::{CryptoRng, RngCore};
-use zplonk::{
+use uzkge::{
     anemoi::{AnemoiJive, AnemoiJive254},
     errors::Result,
     poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
-    turboplonk::{
+    plonk::{
         constraint_system::VarIndex, indexer::PlonkProof, prover::prover_with_lagrange,
         verifier::verifier,
     },
@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub type Proof = PlonkProof<KZGCommitmentSchemeBN254>;
-pub type TurboCS = zplonk::turboplonk::constraint_system::TurboCS<Fr>;
+pub type TurboCS = uzkge::plonk::constraint_system::TurboCS<Fr>;
 
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk Matchmaking Proof";
 const N_TRANSCRIPT: &[u8] = b"Number inputs";

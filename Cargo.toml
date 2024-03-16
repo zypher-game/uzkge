@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "plonk",
+  "uzkge",
   "shuffle",
   "shuffle/wasm",
   "matchmaking",

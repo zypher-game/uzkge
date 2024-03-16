@@ -1,9 +1,9 @@
 use ark_ff::PrimeField;
 use num_bigint::BigUint;
 use num_integer::Integer;
-use zplonk::{
+use uzkge::{
     anemoi::{AnemoiJive, AnemoiVLHTrace},
-    turboplonk::constraint_system::{TurboCS, VarIndex},
+    plonk::constraint_system::{TurboCS, VarIndex},
 };
 
 pub struct Matchmaking<const N: usize, F: PrimeField> {

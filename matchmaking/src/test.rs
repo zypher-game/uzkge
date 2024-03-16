@@ -5,7 +5,7 @@ use crate::{
 use ark_bn254::Fr;
 use ark_ff::UniformRand;
 use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
-use zplonk::anemoi::{AnemoiJive, AnemoiJive254};
+use uzkge::anemoi::{AnemoiJive, AnemoiJive254};
 
 #[test]
 fn test_matchmaking() {

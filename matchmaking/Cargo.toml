@@ -15,7 +15,7 @@ path = "src/gen_params/setup.rs"
 required-features = ["gen"]
 
 [dependencies]
-zplonk = { path = "../plonk" }
+uzkge = { path = "../uzkge" }
 num-bigint = "0.4.3"
 num-integer = "0.1.45"
 rand_chacha =  "0.3"
@@ -52,13 +52,13 @@ std = [
   "ark-std/std",
   "ark-ff/std",
   "ark-bn254/std",
-  "zplonk/std"
+  "uzkge/std"
 ]
 parallel = [
   "rayon",
   "ark-std/parallel",
   "ark-ff/parallel",
-  "zplonk/parallel"
+  "uzkge/parallel"
 ]
 no_vk = []
-gen = ["zplonk/gen", "parallel", "structopt"]
+gen = ["uzkge/gen", "parallel", "structopt"]

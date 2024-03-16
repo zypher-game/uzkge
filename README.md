@@ -2,7 +2,7 @@
 Universal Zero Knowledge Game Engine
 
 ## Components
-- [zplonk](./plonk): App-specific PlonK with various gadgets & primitives
+- [uzkge](./uzkge): App-specific PlonK with various gadgets & primitives
 - [zshuffle](./shuffle): Encrypt and shuffle cards, resulting in a randomly ordered deck
 - [zmatchmaking](./matchmaking): Mathmaking for PvP games with provable fairness and randomness
 - [verifier (solidity)](./contracts/solidity): Common verifiers for all EVM chains

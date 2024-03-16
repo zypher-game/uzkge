@@ -2,7 +2,7 @@ use ark_ec::PrimeGroup;
 use ark_ed_on_bn254::{EdwardsProjective, Fr};
 use ark_ff::UniformRand;
 use ark_std::rand::{CryptoRng, RngCore};
-use zplonk::errors::Result;
+use uzkge::errors::Result;
 
 pub type PublicKey = EdwardsProjective;
 
