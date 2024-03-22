@@ -1430,12 +1430,12 @@ mod test {
     use rand_chacha::ChaChaRng;
 
     use crate::{
-        poly_commit::kzg_poly_commitment::{KZGCommitmentScheme, KZGCommitmentSchemeBN254},
         plonk::{
             constraint_system::TurboCS,
             helpers::{z_poly, PlonkChallenges},
             indexer::indexer,
         },
+        poly_commit::kzg_poly_commitment::{KZGCommitmentScheme, KZGCommitmentSchemeBN254},
     };
 
     #[test]

@@ -6,8 +6,8 @@ use ark_ff::PrimeField;
 use ark_std::ops::Index;
 
 use crate::{
-    shuffle::{Ciphertext, N_SELECT_BITS},
     plonk::constraint_system::{TurboCS, VarIndex},
+    shuffle::{Ciphertext, N_SELECT_BITS},
 };
 
 #[derive(Debug, Clone, Default)]

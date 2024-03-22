@@ -1,5 +1,7 @@
 use ark_bn254::G1Projective;
 use ark_ed_on_bn254::EdwardsProjective;
+use ark_groth16::ProvingKey;
+use ark_serialize::CanonicalDeserialize;
 use ark_std::{rand::SeedableRng, UniformRand};
 use rand_chacha::ChaChaRng;
 use uzkge::{
@@ -13,7 +15,7 @@ use uzkge::{
 
 use crate::{
     build_cs::build_cs,
-    gen_params::{VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54},
+    gen_params::{GROTH16_PK_52, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54},
     MaskedCard,
 };
 
@@ -79,8 +81,7 @@ pub fn refresh_prover_params_public_key(
     };
 
     let domain = FpPolynomial::evaluation_domain(n).ok_or(UzkgeError::ParameterError)?;
-    let domain_m =
-        FpPolynomial::quotient_evaluation_domain(m).ok_or(UzkgeError::ParameterError)?;
+    let domain_m = FpPolynomial::quotient_evaluation_domain(m).ok_or(UzkgeError::ParameterError)?;
 
     let q_shuffle_public_key_evals = params.cs.compute_shuffle_public_key_selectors();
 
@@ -158,6 +159,18 @@ pub fn load_shuffle_verifier_params(n: usize) -> Result<VerifierParams, UzkgeErr
                 shrunk_cs: special.shrunk_cs,
                 verifier_params: special.verifier_params,
             })
+        }
+        _ => Err(UzkgeError::MissingVerifierParamsError),
+    }
+}
+
+/// Load the Groth16 prover parameters.
+pub fn load_groth16_pk(_n: usize) -> Result<ProvingKey<ark_bn254::Bn254>, UzkgeError> {
+    match GROTH16_PK_52 {
+        Some(bytes) => {
+            let pk = CanonicalDeserialize::deserialize_compressed_unchecked(bytes)
+                .map_err(|_| UzkgeError::DeserializationError)?;
+            Ok(pk)
         }
         _ => Err(UzkgeError::MissingVerifierParamsError),
     }

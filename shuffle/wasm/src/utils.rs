@@ -9,11 +9,11 @@ use rand_chacha::{
 };
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use wasm_bindgen::prelude::*;
 use uzkge::{
-    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     plonk::{constraint_system::TurboCS, indexer::PlonkProof},
+    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
 };
+use wasm_bindgen::prelude::*;
 
 #[inline(always)]
 pub(crate) fn error_to_jsvalue<T: Display>(e: T) -> JsValue {

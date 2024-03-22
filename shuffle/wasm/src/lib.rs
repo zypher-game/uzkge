@@ -2,6 +2,7 @@ mod card_maps;
 mod utils;
 
 mod poker;
+use ark_ec::AffineRepr;
 pub use poker::*;
 
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
@@ -9,18 +10,21 @@ use ark_ff::{BigInteger, One, PrimeField};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Mutex};
-use wasm_bindgen::prelude::*;
 use uzkge::{
     chaum_pedersen::dl::ChaumPedersenDLProof,
     gen_params::{ProverParams, VerifierParams},
 };
+use wasm_bindgen::prelude::*;
 use zshuffle::{
     build_cs::{prove_shuffle, verify_shuffle},
-    gen_params::{gen_shuffle_prover_params, params::refresh_prover_params_public_key},
+    gen_params::{
+        gen_shuffle_prover_params, load_groth16_pk, params::refresh_prover_params_public_key,
+    },
     keygen::{aggregate_keys as core_aggregate_keys, Keypair as CoreKeypair},
     mask::*,
     reveal::*,
-    MaskedCard as Masked,
+    reveal_with_snark::RevealCircuit,
+    Groth16, MaskedCard as Masked, ProvingKey, SNARK,
 };
 
 use card_maps::CARD_MAPS;
@@ -39,6 +43,14 @@ static PARAMS: Lazy<Mutex<HashMap<usize, ProverParams>>> = Lazy::new(|| {
     let m = HashMap::new();
     Mutex::new(m)
 });
+
+const GROTH16_N:usize = 52;
+
+static GROTH16_PARAMS: Lazy<Mutex<HashMap<usize, ProvingKey<ark_bn254::Bn254>>>> =
+    Lazy::new(|| {
+        let m = HashMap::new();
+        Mutex::new(m)
+    });
 
 #[derive(Serialize, Deserialize)]
 pub struct Keypair {
@@ -68,6 +80,14 @@ pub struct RevealedCardWithProof {
     pub card: (String, String),
     /// hex string
     pub proof: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RevealedCardWithSnarkProof {
+    pub card: (String, String),
+    pub challenge: String,
+    pub proof: Vec<String>,
+    pub snark_proof: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -205,6 +225,13 @@ pub fn init_prover_key(num: i32) {
         params.insert(n, pp);
     }
     drop(params);
+
+    let mut params = GROTH16_PARAMS.lock().unwrap();
+    if params.get(&GROTH16_N).is_none() {
+        let pp = load_groth16_pk(n).map_err(error_to_jsvalue).unwrap();
+        params.insert(GROTH16_N, pp);
+    }
+    drop(params);
 }
 
 /// refresh joint public key when it changed.
@@ -326,6 +353,57 @@ pub fn reveal_card(sk: String, card: JsValue) -> Result<JsValue, JsValue> {
     let ret = RevealedCardWithProof {
         card: point_to_uncompress(&reveal_card, true),
         proof: format!("0x{}", hex::encode(&reveal_proof.to_uncompress())),
+    };
+
+    Ok(serde_wasm_bindgen::to_value(&ret)?)
+}
+
+/// compute masked to revealed card with a snark proof
+#[wasm_bindgen]
+pub fn reveal_card_with_snark(sk: String, card: JsValue) -> Result<JsValue, JsValue> {
+    let card: MaskedCard = serde_wasm_bindgen::from_value(card)?;
+
+    let mut prng = default_prng();
+    let keypair = CoreKeypair::from_secret(hex_to_scalar(&sk)?);
+    let masked = masked_card_deserialize(&card)?;
+
+    let (reveal_card, reveal_proof) =
+        reveal(&mut prng, &keypair, &masked).map_err(error_to_jsvalue)?;
+
+    let params = GROTH16_PARAMS.lock().unwrap();
+    let prover_params = params
+        .get(&GROTH16_N)
+        .expect("Missing PARAMS, need init & refresh pk");
+
+    let circuit = RevealCircuit::new(&keypair.public, &masked, &reveal_card, &reveal_proof);
+    let challenge = scalar_to_hex(&circuit.reveal.challenge, true);
+    let proof = Groth16::<ark_bn254::Bn254>::prove(&prover_params, circuit, &mut prng).unwrap();
+    drop(params);
+
+    let a = proof.a.xy().unwrap();
+    let b = proof.b.xy().unwrap();
+    let c = proof.c.xy().unwrap();
+
+    let snark_proof = vec![
+        scalar_to_hex(&a.0, true),
+        scalar_to_hex(&a.1, true),
+        scalar_to_hex(&b.0.c1, true),
+        scalar_to_hex(&b.0.c0, true),
+        scalar_to_hex(&b.1.c1, true),
+        scalar_to_hex(&b.1.c0, true),
+        scalar_to_hex(&c.0, true),
+        scalar_to_hex(&c.1, true),
+    ];
+
+    let a = point_to_uncompress(&reveal_proof.a, true);
+    let b = point_to_uncompress(&reveal_proof.b, true);
+    let proof = vec![a.0, a.1, b.0, b.1, scalar_to_hex(&reveal_proof.r, true)];
+
+    let ret = RevealedCardWithSnarkProof {
+        card: point_to_uncompress(&reveal_card, true),
+        challenge,
+        proof,
+        snark_proof,
     };
 
     Ok(serde_wasm_bindgen::to_value(&ret)?)

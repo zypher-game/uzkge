@@ -77,10 +77,7 @@ pub fn scalar_to_bytes_be<F: PrimeField>(scalar: &F) -> Vec<u8> {
 }
 
 #[inline]
-pub fn scalar_from_bytes_be<F: PrimeField>(
-    bytes: &[u8],
-    len_check: bool,
-) -> Result<F, UzkgeError> {
+pub fn scalar_from_bytes_be<F: PrimeField>(bytes: &[u8], len_check: bool) -> Result<F, UzkgeError> {
     let checked_bytes = if len_check {
         let n = F::one().uncompressed_size();
         if bytes.len() < n {

@@ -423,6 +423,5 @@ contract VerifierKeyExtra1_52 {
         PI_POLY_INDICES_LOC[413] = 0x104f84d3cb463438fc7df1ac7f84a4b62aa2b9d0e0926183e41e92fbe86c8bc8;
         PI_POLY_INDICES_LOC[414] = 0x2aba1d7068aa01777a52a5dd33fdddc7ba9f13cd6863eb7ba0b5a13a7da90639;
         PI_POLY_INDICES_LOC[415] = 0x28f1eddfe71e5a6c6eff794bbfdc23c754e609f60b75cd68cb1687113b615645;
-        
     }
 }

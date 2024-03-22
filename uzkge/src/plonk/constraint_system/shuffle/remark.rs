@@ -2,8 +2,8 @@ use ark_ff::PrimeField;
 use itertools::Itertools;
 
 use crate::{
-    shuffle::RemarkTrace,
     plonk::constraint_system::{turbo::N_WIRE_SELECTORS, TurboCS},
+    shuffle::RemarkTrace,
 };
 
 use super::CardVar;
@@ -98,8 +98,8 @@ mod test {
     use rand_chacha::ChaChaRng;
 
     use crate::{
-        shuffle::{BabyJubjubShuffle, Ciphertext, Remark},
         plonk::constraint_system::TurboCS,
+        shuffle::{BabyJubjubShuffle, Ciphertext, Remark},
     };
 
     #[test]

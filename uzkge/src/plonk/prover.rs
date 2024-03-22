@@ -6,11 +6,11 @@ use ark_std::{
 
 use crate::{
     errors::UzkgeError,
-    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
     plonk::helpers::{
         first_lagrange_poly, hide_polynomial, pi_poly, r_poly, split_t_and_commit, t_poly, z_poly,
         PlonkChallenges,
     },
+    poly_commit::{field_polynomial::FpPolynomial, pcs::PolyComScheme},
     utils::transcript::Transcript,
 };
 

@@ -1,7 +1,7 @@
 use ark_ff::PrimeField;
 use itertools::Itertools;
 
-use crate::{shuffle::Permutation, plonk::constraint_system::TurboCS};
+use crate::{plonk::constraint_system::TurboCS, shuffle::Permutation};
 
 use super::CardVar;
 

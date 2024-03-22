@@ -21,6 +21,10 @@ rand_chacha = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 rayon = { version = "1.7", optional = true}
 structopt =  { version = "0.3", optional = true}
+ark-groth16 = { version = "0.4", default-features = false }
+ark-r1cs-std = { version = "0.4", default-features = false }
+ark-relations = { version = "0.4", default-features = false }
+ark-snark = { version = "0.4", default-features = false }
 
 [dependencies.ark-ec]
 version = "0.4"
@@ -47,7 +51,7 @@ features = ["curve"]
 
 [dependencies.ark-ed-on-bn254]
 version = "0.4"
-default-features = false
+features = ["r1cs"]
 
 [dev-dependencies]
 hex = "0.4"
@@ -59,14 +63,16 @@ std = [
   "ark-std/std",
   "ark-ff/std",
   "ark-bn254/std",
-  "uzkge/std"
+  "uzkge/std",
+  "ark-groth16/std"
 ]
 parallel = [
   "rayon",
   "ark-std/parallel",
   "ark-ff/parallel",
   "ark-ec/parallel",
-  "uzkge/parallel"
+  "uzkge/parallel",
+  "ark-groth16/parallel"
 ]
 no_vk = []
 gen = ["uzkge/gen", "parallel", "structopt"]

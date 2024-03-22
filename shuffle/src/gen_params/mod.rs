@@ -20,3 +20,7 @@ pub static VERIFIER_SPECIFIC_PARAMS_54: Option<&'static [u8]> =
 #[cfg(feature = "no_vk")]
 /// The specific part of the verifier parameters.
 pub static VERIFIER_SPECIFIC_PARAMS_54: Option<&'static [u8]> = None;
+
+/// The Groth16 prover key.
+pub static GROTH16_PK_52: Option<&'static [u8]> =
+    Some(include_bytes!("../../parameters/groth16_pk.bin"));

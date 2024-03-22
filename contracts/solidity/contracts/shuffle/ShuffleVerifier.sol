@@ -8,7 +8,7 @@ import "./VerifierKey_20.sol";
 abstract contract ShuffleVerifier is PlonkVerifier {
     address _extraVk1;
     address _extraVk2;
-    function (uint256, uint256) pure _verifyKey;
+    function(uint256, uint256) pure _verifyKey;
 
     constructor(address _vk1, address _vk2) {
         _extraVk1 = _vk1;

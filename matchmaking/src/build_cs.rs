@@ -3,11 +3,11 @@ use ark_std::rand::{CryptoRng, RngCore};
 use uzkge::{
     anemoi::{AnemoiJive, AnemoiJive254},
     errors::Result,
-    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     plonk::{
         constraint_system::VarIndex, indexer::PlonkProof, prover::prover_with_lagrange,
         verifier::verifier,
     },
+    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
     utils::transcript::Transcript,
 };
 

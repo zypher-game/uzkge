@@ -50,7 +50,6 @@ contract ShuffleService is ShuffleVerifier {
             revert("SS04");
         }
 
-
         require(this.verifyShuffle(proof, pi, pc), "SS00");
     }
 }

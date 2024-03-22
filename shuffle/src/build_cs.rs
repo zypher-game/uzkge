@@ -3,12 +3,12 @@ use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
 use ark_std::rand::{CryptoRng, RngCore};
 use uzkge::{
     errors::Result,
-    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
-    shuffle::{BabyJubjubShuffle, Permutation, Remark},
     plonk::{
         constraint_system::shuffle::CardVar, indexer::PlonkProof, prover::prover_with_lagrange,
         verifier::verifier,
     },
+    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
+    shuffle::{BabyJubjubShuffle, Permutation, Remark},
     utils::transcript::Transcript,
 };
 

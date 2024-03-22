@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     errors::UzkgeError,
-    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
-    poly_commit::pcs::PolyComScheme,
     plonk::constraint_system::ConstraintSystem,
     plonk::constraint_system::TurboCS,
     plonk::indexer::{PlonkProverParams, PlonkVerifierParams},
+    poly_commit::kzg_poly_commitment::KZGCommitmentSchemeBN254,
+    poly_commit::pcs::PolyComScheme,
 };
 
 #[cfg(feature = "gen")]

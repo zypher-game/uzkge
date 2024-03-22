@@ -1,5 +1,8 @@
+use ark_ec::CurveGroup;
 use ark_ed_on_bn254::{EdwardsAffine, Fr};
 use ark_ff::{BigInteger, One, PrimeField, UniformRand};
+use ark_groth16::Groth16;
+use ark_snark::SNARK;
 use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaChaRng;
 use std::collections::HashMap;
@@ -7,6 +10,8 @@ use std::collections::HashMap;
 use crate::gen_params::{
     gen_shuffle_prover_params, get_shuffle_verifier_params, refresh_prover_params_public_key,
 };
+
+use self::{gen_params::load_groth16_pk, reveal_with_snark::RevealCircuit};
 
 use super::{
     build_cs::{prove_shuffle, verify_shuffle, ShuffleProof, TurboCS},
@@ -273,6 +278,10 @@ fn test_poker() {
     charlie.set_deck(&last_deck);
     david.set_deck(&last_deck);
 
+    let groth16_pk = load_groth16_pk(N_CARDS).unwrap();
+    let groth16_vk = groth16_pk.vk.clone();
+    let groth16_pvk = Groth16::<ark_bn254::Bn254>::process_vk(&groth16_vk).unwrap();
+
     // Distribute and reveal
     for round in last_deck.chunks(4) {
         let a_card = &round[0];
@@ -292,6 +301,29 @@ fn test_poker() {
         let a_reveals = vec![a_re_b, a_re_c, a_re_d];
         let real_a_card = alice.unmask(&mut rng, a_reveals, &card_mapping, a_card);
         println!("Alice: {:?}", real_a_card);
+
+        {
+            // verify reveal with groth16
+            let circuit = RevealCircuit::new(&d_pk, a_card, &a_re_d, &a_re_d_proof);
+            let proof =
+                Groth16::<ark_bn254::Bn254>::prove(&groth16_pk, circuit.clone(), &mut rng).unwrap();
+            assert!(Groth16::<ark_bn254::Bn254>::verify_with_processed_vk(
+                &groth16_pvk,
+                &[
+                    a_card.e1.into_affine().x,
+                    a_card.e1.into_affine().y,
+                    a_re_d.into_affine().x,
+                    a_re_d.into_affine().y,
+                    d_pk.into_affine().x,
+                    d_pk.into_affine().y,
+                    ark_bn254::Fr::from_le_bytes_mod_order(
+                        &circuit.clone().reveal.challenge.into_bigint().to_bytes_le()
+                    )
+                ],
+                &proof
+            )
+            .unwrap());
+        }
 
         // reveal b_card
         let (b_re_a, b_re_a_proof, a_pk) = alice.compute_reveal(&mut rng, b_card);

@@ -78,7 +78,7 @@ library VerifierKey_52 {
             mstore(add(vk, 0xba0), 0x0000000000000000000000000000000000000000000000000000000000000001)
             mstore(add(vk, 0xbc0), 0x2d965651cdd9e4811f4e51b80ddca8a8b4a93ee17420aae6adaa01c2617c6e85)
             mstore(add(vk, 0xbe0), 16384)
-            
+
             /// public inputs length
             mstore(add(pi, 0x0), 416)
         }

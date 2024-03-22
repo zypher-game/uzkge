@@ -8,8 +8,8 @@ use ark_std::collections::HashMap;
 use crate::{
     anemoi::{AnemoiJive, N_ANEMOI_ROUNDS},
     errors::UzkgeError,
-    shuffle::Remark,
     plonk::constraint_system::{ConstraintSystem, CsIndex, VarIndex},
+    shuffle::Remark,
     utils::serialization::{ark_deserialize, ark_serialize},
 };
 
