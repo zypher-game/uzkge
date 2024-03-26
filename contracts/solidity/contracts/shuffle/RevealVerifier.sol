@@ -49,49 +49,9 @@ contract RevealVerifier is Groth16Verifier {
     }
 
     function verifyRevealWithSnark(
-        uint256[7] calldata _pi, // _pi = [mask.e1.x, mask.e1.y, reveal.x, reveal.y, pk.x, pk.y, challenge]
-        uint256[5] calldata _proof,
+        uint256[6] calldata _pi, // _pi = [mask.e1.x, mask.e1.y, reveal.x, reveal.y, pk.x, pk.y]
         uint256[8] calldata _zkproof // _zkproof = [a, b, c]
     ) public view returns (bool) {
-        assembly {
-            mstore(mload(0x40), 0x52657665616c696e67)
-            mstore(add(mload(0x40), 0x20), 0x444c)
-            mstore(add(mload(0x40), 0x40), calldataload(_pi))
-            mstore(add(mload(0x40), 0x60), calldataload(add(_pi, 0x20)))
-            mstore(
-                add(mload(0x40), 0x80),
-                19698561148652590122159747500897617769866003486955115824547446575314762165298
-            )
-            mstore(
-                add(mload(0x40), 0xa0),
-                19298250018296453272277890825869354524455968081175474282777126169995084727839
-            )
-            mstore(add(mload(0x40), 0xc0), calldataload(add(_pi, 0x40)))
-            mstore(add(mload(0x40), 0xe0), calldataload(add(_pi, 0x60)))
-            mstore(add(mload(0x40), 0x100), calldataload(add(_pi, 0x80)))
-            mstore(add(mload(0x40), 0x120), calldataload(add(_pi, 0xa0)))
-            mstore(add(mload(0x40), 0x140), calldataload(_proof))
-            mstore(add(mload(0x40), 0x160), calldataload(add(_proof, 0x20)))
-            mstore(add(mload(0x40), 0x180), calldataload(add(_proof, 0x40)))
-            mstore(add(mload(0x40), 0x1a0), calldataload(add(_proof, 0x60)))
-            let r := mod(
-                keccak256(mload(0x40), 0x1c0),
-                2736030358979909402780800718157159386076813972158567259200215660948447373041
-            )
-            switch eq(r, calldataload(add(_pi, 0xc0)))
-            case 0 {
-                mstore(0, 0)
-                return(0, 0x20)
-            }
-            case 1 {
-
-            }
-            default {
-                mstore(0, 0)
-                return(0, 0x20)
-            }
-        }
-
         return verifyProof(_zkproof, _pi);
     }
 

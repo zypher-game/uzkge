@@ -304,7 +304,7 @@ fn test_poker() {
 
         {
             // verify reveal with groth16
-            let circuit = RevealCircuit::new(&d_pk, a_card, &a_re_d, &a_re_d_proof);
+            let circuit = RevealCircuit::new(&david.keypair.secret, a_card, &a_re_d);
             let proof =
                 Groth16::<ark_bn254::Bn254>::prove(&groth16_pk, circuit.clone(), &mut rng).unwrap();
             assert!(Groth16::<ark_bn254::Bn254>::verify_with_processed_vk(
@@ -316,9 +316,6 @@ fn test_poker() {
                     a_re_d.into_affine().y,
                     d_pk.into_affine().x,
                     d_pk.into_affine().y,
-                    ark_bn254::Fr::from_le_bytes_mod_order(
-                        &circuit.clone().reveal.challenge.into_bigint().to_bytes_le()
-                    )
                 ],
                 &proof
             )

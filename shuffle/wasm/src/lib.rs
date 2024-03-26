@@ -44,7 +44,7 @@ static PARAMS: Lazy<Mutex<HashMap<usize, ProverParams>>> = Lazy::new(|| {
     Mutex::new(m)
 });
 
-const GROTH16_N:usize = 52;
+const GROTH16_N: usize = 52;
 
 static GROTH16_PARAMS: Lazy<Mutex<HashMap<usize, ProvingKey<ark_bn254::Bn254>>>> =
     Lazy::new(|| {
@@ -85,8 +85,6 @@ pub struct RevealedCardWithProof {
 #[derive(Serialize, Deserialize)]
 pub struct RevealedCardWithSnarkProof {
     pub card: (String, String),
-    pub challenge: String,
-    pub proof: Vec<String>,
     pub snark_proof: Vec<String>,
 }
 
@@ -228,7 +226,7 @@ pub fn init_prover_key(num: i32) {
 
     let mut params = GROTH16_PARAMS.lock().unwrap();
     if params.get(&GROTH16_N).is_none() {
-        let pp = load_groth16_pk(n).map_err(error_to_jsvalue).unwrap();
+        let pp = load_groth16_pk(GROTH16_N).map_err(error_to_jsvalue).unwrap();
         params.insert(GROTH16_N, pp);
     }
     drop(params);
@@ -367,16 +365,14 @@ pub fn reveal_card_with_snark(sk: String, card: JsValue) -> Result<JsValue, JsVa
     let keypair = CoreKeypair::from_secret(hex_to_scalar(&sk)?);
     let masked = masked_card_deserialize(&card)?;
 
-    let (reveal_card, reveal_proof) =
-        reveal(&mut prng, &keypair, &masked).map_err(error_to_jsvalue)?;
+    let reveal_card = masked.e1 * keypair.secret;
 
     let params = GROTH16_PARAMS.lock().unwrap();
     let prover_params = params
         .get(&GROTH16_N)
         .expect("Missing PARAMS, need init & refresh pk");
 
-    let circuit = RevealCircuit::new(&keypair.public, &masked, &reveal_card, &reveal_proof);
-    let challenge = scalar_to_hex(&circuit.reveal.challenge, true);
+    let circuit = RevealCircuit::new(&keypair.secret, &masked, &reveal_card);
     let proof = Groth16::<ark_bn254::Bn254>::prove(&prover_params, circuit, &mut prng).unwrap();
     drop(params);
 
@@ -395,14 +391,8 @@ pub fn reveal_card_with_snark(sk: String, card: JsValue) -> Result<JsValue, JsVa
         scalar_to_hex(&c.1, true),
     ];
 
-    let a = point_to_uncompress(&reveal_proof.a, true);
-    let b = point_to_uncompress(&reveal_proof.b, true);
-    let proof = vec![a.0, a.1, b.0, b.1, scalar_to_hex(&reveal_proof.r, true)];
-
     let ret = RevealedCardWithSnarkProof {
         card: point_to_uncompress(&reveal_card, true),
-        challenge,
-        proof,
         snark_proof,
     };
 
