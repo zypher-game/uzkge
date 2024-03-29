@@ -223,7 +223,12 @@ pub fn init_prover_key(num: i32) {
         params.insert(n, pp);
     }
     drop(params);
+}
 
+
+/// Initialize the reveal key
+#[wasm_bindgen]
+pub fn init_reveal_key() {
     let mut params = GROTH16_PARAMS.lock().unwrap();
     if params.get(&GROTH16_N).is_none() {
         let pp = load_groth16_pk(GROTH16_N).map_err(error_to_jsvalue).unwrap();
