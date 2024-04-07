@@ -3,10 +3,10 @@
 pragma solidity ^0.8.20;
 
 contract VerifierKeyExtra2_52 {
-    uint256[416] public PI_POLY_LAGRANGE_LOC;
-
-    constructor() {
+    function PI_POLY_LAGRANGE_LOC() public returns (uint256[416] memory) {
         // The public constrain variables indices.
+        uint256[416] memory PI_POLY_LAGRANGE_LOC;
+        
         PI_POLY_LAGRANGE_LOC[0] = 0x21fa6fd3d6c579dc04b25d6a9090749502e9bec8b3022db2b54312c10dfa6ef8;
         PI_POLY_LAGRANGE_LOC[1] = 0x12ba7d199b257a69c128103f3720bd0ef881ddc0abe14cc836fd09293db5d8f5;
         PI_POLY_LAGRANGE_LOC[2] = 0x21193fcf391181e2cd242ea58d7384f239dd1c6cf91ee96449ea452cfcb6810c;
@@ -423,5 +423,7 @@ contract VerifierKeyExtra2_52 {
         PI_POLY_LAGRANGE_LOC[413] = 0x277c18c00ecc8aa6db2670d90f9c670b950604b10994b0020c528db96061a1b3;
         PI_POLY_LAGRANGE_LOC[414] = 0x2bb078aab3860b9b2fbe80f9e646b0d9309626c31cf9466b1212d425dea836a5;
         PI_POLY_LAGRANGE_LOC[415] = 0x1f8e4b1e876d64141dabb332816841fa6d100c114996a3c92d9245e66e462d86;
+
+        return PI_POLY_LAGRANGE_LOC;
     }
 }
