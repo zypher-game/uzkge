@@ -1,7 +1,10 @@
 use ark_bn254::Fr;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
-use ark_std::rand::{CryptoRng, RngCore};
+use ark_std::{
+    rand::{CryptoRng, RngCore},
+};
 use uzkge::{
+    anemoi::{AnemoiJive, AnemoiJive254},
     errors::Result,
     plonk::{
         constraint_system::shuffle::CardVar, indexer::PlonkProof, prover::prover_with_lagrange,
@@ -23,6 +26,8 @@ pub type TurboCS = uzkge::plonk::constraint_system::TurboCS<Fr>;
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";
 
+const N_CARDS_PUBLIC: usize = 17;
+
 pub(crate) fn build_cs<R: CryptoRng + RngCore>(
     prng: &mut R,
     aggregate_public_key: &EdwardsProjective,
@@ -30,24 +35,66 @@ pub(crate) fn build_cs<R: CryptoRng + RngCore>(
 ) -> (TurboCS, Vec<CardVar>) {
     let n = input_cards.len();
     let mut cs = TurboCS::new();
+    cs.load_anemoi_parameters::<AnemoiJive254>();
     cs.load_shuffle_remark_parameters::<_, BabyJubjubShuffle>(aggregate_public_key);
 
     let mut remark_card_vars = Vec::with_capacity(n);
+    let mut input_card_vars = Vec::with_capacity(n);
 
     for input in input_cards.iter() {
         let bits = BabyJubjubShuffle::sample_random_scalar_bits(prng);
         let trace = BabyJubjubShuffle::eval_remark_with_trace(input, &bits, &aggregate_public_key);
         let input_var = cs.new_card_variable(input);
-        cs.prepare_pi_card_variable(&input_var);
         let output_var = cs.eval_card_remark(&trace, &input_var);
+        input_card_vars.push(input_var);
         remark_card_vars.push(output_var);
     }
 
+    // only public 17 input cards.
+    input_card_vars
+        .iter()
+        .take(N_CARDS_PUBLIC)
+        .for_each(|c| cs.prepare_pi_card_variable(c));
+
+    // only hash the last 35 input cards.
+    let last_input_cards = input_cards
+        .iter()
+        .skip(N_CARDS_PUBLIC)
+        .flat_map(|x| x.flatten())
+        .collect::<Vec<_>>();
+    let last_input_card_vars = input_card_vars
+        .iter()
+        .skip(N_CARDS_PUBLIC)
+        .flat_map(|x| x.get_raw())
+        .collect::<Vec<_>>();
+
+    let trace = AnemoiJive254::eval_variable_length_hash_with_trace(&last_input_cards);
+    let anemoi_out_var = cs.new_variable(trace.output);
+    cs.anemoi_variable_length_hash::<AnemoiJive254>(&trace, &last_input_card_vars, anemoi_out_var);
+    cs.prepare_pi_variable(anemoi_out_var);
+
     let permutation = Permutation::rand(prng, n);
     let shuffle_card_vars = cs.shuffle_card(&remark_card_vars, &permutation);
+    // public all output cards.
     for card_var in shuffle_card_vars.iter() {
         cs.prepare_pi_card_variable(card_var);
     }
+
+    // only hash the last 35 output cards.
+    let last_output_card_vars = shuffle_card_vars
+        .iter()
+        .skip(N_CARDS_PUBLIC)
+        .flat_map(|x| x.get_raw())
+        .collect::<Vec<_>>();
+    let last_output_cards = last_output_card_vars
+        .iter()
+        .map(|x| cs.witness[*x])
+        .collect::<Vec<_>>();
+
+    let trace = AnemoiJive254::eval_variable_length_hash_with_trace(&last_output_cards);
+    let anemoi_out_var = cs.new_variable(trace.output);
+    cs.anemoi_variable_length_hash::<AnemoiJive254>(&trace, &last_output_card_vars, anemoi_out_var);
+    cs.prepare_pi_variable(anemoi_out_var);
 
     cs.pad();
 
@@ -110,13 +157,31 @@ pub fn verify_shuffle(
 
     let mut online_inputs = vec![];
 
-    for card in input_cards.iter() {
+    for card in input_cards.iter().take(N_CARDS_PUBLIC) {
         online_inputs.extend_from_slice(&card.flatten());
     }
+
+    let hash = AnemoiJive254::eval_variable_length_hash(
+        &input_cards
+            .iter()
+            .skip(N_CARDS_PUBLIC)
+            .flat_map(|x| x.flatten())
+            .collect::<Vec<_>>(),
+    );
+    online_inputs.push(hash);
 
     for card in output_cards.iter() {
         online_inputs.extend_from_slice(&card.flatten());
     }
+
+    let hash = AnemoiJive254::eval_variable_length_hash(
+        &output_cards
+            .iter()
+            .skip(N_CARDS_PUBLIC)
+            .flat_map(|x| x.flatten())
+            .collect::<Vec<_>>(),
+    );
+    online_inputs.push(hash);
 
     Ok(verifier(
         &mut transcript,

@@ -15,7 +15,7 @@ use uzkge::{
 
 use crate::{
     build_cs::build_cs,
-    gen_params::{GROTH16_PK_52, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54},
+    gen_params::{GROTH16_PK_52, VERIFIER_SPECIFIC_PARAMS_52},
     MaskedCard,
 };
 
@@ -142,7 +142,6 @@ pub fn get_shuffle_verifier_params(n: usize) -> Result<VerifierParams, UzkgeErro
 pub fn load_shuffle_verifier_params(n: usize) -> Result<VerifierParams, UzkgeError> {
     let specific = match n {
         52 => VERIFIER_SPECIFIC_PARAMS_52,
-        54 => VERIFIER_SPECIFIC_PARAMS_54,
         _ => return Err(UzkgeError::DeserializationError),
     };
 
