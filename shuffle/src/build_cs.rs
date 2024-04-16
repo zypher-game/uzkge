@@ -1,8 +1,6 @@
 use ark_bn254::Fr;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective};
-use ark_std::{
-    rand::{CryptoRng, RngCore},
-};
+use ark_std::rand::{CryptoRng, RngCore};
 use uzkge::{
     anemoi::{AnemoiJive, AnemoiJive254},
     errors::Result,
@@ -26,7 +24,7 @@ pub type TurboCS = uzkge::plonk::constraint_system::TurboCS<Fr>;
 const PLONK_PROOF_TRANSCRIPT: &[u8] = b"Plonk shuffle Proof";
 const N_CARDS_TRANSCRIPT: &[u8] = b"Number of cards";
 
-const N_CARDS_PUBLIC: usize = 17;
+pub const N_CARDS_PUBLIC: usize = 17;
 
 pub(crate) fn build_cs<R: CryptoRng + RngCore>(
     prng: &mut R,
@@ -50,7 +48,7 @@ pub(crate) fn build_cs<R: CryptoRng + RngCore>(
         remark_card_vars.push(output_var);
     }
 
-    // only public 17 input cards.
+    // only public the first 17 input cards.
     input_card_vars
         .iter()
         .take(N_CARDS_PUBLIC)

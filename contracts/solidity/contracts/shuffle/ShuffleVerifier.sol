@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import "../verifier/PlonkVerifier.sol";
 import "./ExternalTranscript.sol";
-import "./VerifierKey_20.sol";
 
 abstract contract ShuffleVerifier is PlonkVerifier {
     address _extraVk1;
@@ -22,7 +21,7 @@ abstract contract ShuffleVerifier is PlonkVerifier {
         uint256[] calldata _publicKeyCommitment
     ) public view returns (bool) {
         _verifyKey(CM_Q0_X_LOC, PI_POLY_RELATED_LOC);
-        ExternalTranscript.load(EXTERNAL_TRANSCRIPT_LENGTH_LOC, _publicKeyInput.length / 8);
+        ExternalTranscript.load(EXTERNAL_TRANSCRIPT_LENGTH_LOC, 52);
 
         // The scalar field of BN254.
         uint256 r = 21888242871839275222246405745257275088548364400416034343698204186575808495617;

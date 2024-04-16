@@ -11,12 +11,13 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Mutex};
 use uzkge::{
+    anemoi::{AnemoiJive, AnemoiJive254},
     chaum_pedersen::dl::ChaumPedersenDLProof,
     gen_params::{ProverParams, VerifierParams},
 };
 use wasm_bindgen::prelude::*;
 use zshuffle::{
-    build_cs::{prove_shuffle, verify_shuffle},
+    build_cs::{prove_shuffle, verify_shuffle, N_CARDS_PUBLIC},
     gen_params::{
         gen_shuffle_prover_params, load_groth16_pk, params::refresh_prover_params_public_key,
     },
@@ -75,6 +76,13 @@ pub struct MaskedCardWithProof {
 }
 
 #[derive(Serialize, Deserialize)]
+struct MaskedCardWithDigest {
+    pub mask_card_with_proof: Vec<MaskedCardWithProof>,
+    // the digest for the last 35 cards.
+    pub digest: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct RevealedCardWithProof {
     /// MaskedCard
     pub card: (String, String),
@@ -92,6 +100,8 @@ pub struct RevealedCardWithSnarkProof {
 pub struct ShuffledCardsWithProof {
     /// MaskedCard
     pub cards: Vec<MaskedCard>,
+    // hex string
+    pub card_digest: String,
     /// hex string
     pub proof: String,
 }
@@ -150,23 +160,40 @@ pub fn init_masked_cards(joint: String, num: i32) -> Result<JsValue, JsValue> {
     let mut prng = default_prng();
     let joint_pk = hex_to_point(&joint)?;
 
-    let mut deck = vec![];
+    let mut masked_cards = vec![];
+    let mut deck_with_proofs = vec![];
+
     for n in 0..num {
         let point = index_to_point(n);
 
         let (masked_card, masked_proof) =
             mask(&mut prng, &joint_pk, &point, &Fr::one()).map_err(error_to_jsvalue)?;
 
-        deck.push(MaskedCardWithProof {
+        deck_with_proofs.push(MaskedCardWithProof {
             card: masked_card_serialize(&masked_card),
             proof: format!(
                 "0x{}",
                 hex::encode(&bincode::serialize(&masked_proof).map_err(error_to_jsvalue)?)
             ),
         });
+
+        masked_cards.push(masked_card);
     }
 
-    Ok(serde_wasm_bindgen::to_value(&deck)?)
+    let hash = AnemoiJive254::eval_variable_length_hash(
+        &masked_cards
+            .iter()
+            .skip(N_CARDS_PUBLIC)
+            .flat_map(|x| x.flatten())
+            .collect::<Vec<_>>(),
+    );
+
+    let deck_with_digest = MaskedCardWithDigest {
+        mask_card_with_proof: deck_with_proofs,
+        digest: scalar_to_hex(&hash, true),
+    };
+
+    Ok(serde_wasm_bindgen::to_value(&deck_with_digest)?)
 }
 
 /// mask the card, return the masked card and masked proof
@@ -293,6 +320,14 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
             .map_err(error_to_jsvalue)?;
     drop(params);
 
+    let hash = AnemoiJive254::eval_variable_length_hash(
+        &new_deck
+            .iter()
+            .skip(N_CARDS_PUBLIC)
+            .flat_map(|x| x.flatten())
+            .collect::<Vec<_>>(),
+    );
+
     let masked_cards: Vec<_> = new_deck
         .iter()
         .map(|card| masked_card_serialize(&card))
@@ -300,6 +335,7 @@ pub fn shuffle_cards(joint: String, deck: JsValue) -> Result<JsValue, JsValue> {
 
     let ret = ShuffledCardsWithProof {
         cards: masked_cards,
+        card_digest: scalar_to_hex(&hash, true),
         proof: shuffle_proof_to_hex(&shuffled_proof),
     };
 
