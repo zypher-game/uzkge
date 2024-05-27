@@ -1,4 +1,4 @@
-<!-- [![crate](https://img.shields.io/badge/crates.io-v0.1.0-green.svg)](https://crates.io/crates/uzkge) [![doc](https://img.shields.io/badge/docs.rs-v0.1.0-blue.svg)](https://docs.rs/uzkge) -->
+<!-- [![crate](https://img.shields.io/badge/crates.io-v0.1.1-green.svg)](https://crates.io/crates/uzkge) [![doc](https://img.shields.io/badge/docs.rs-v0.1.1-blue.svg)](https://docs.rs/uzkge) -->
 
 # uzkge
 App-specific PlonK with various gadgets & primitives use arkworks.

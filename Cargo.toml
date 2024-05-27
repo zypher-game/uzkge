@@ -7,6 +7,61 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version = "0.1.1"
+edition = "2021"
+authors = ["Zypher <dev@zypher.network>"]
+readme = "README.md"
+homepage = "https://zypher.network"
+repository = "https://github.com/zypher-game/uzkge"
+categories = ["cryptography"]
+keywords = ["zkp", "plonk", "game"]
+description = "App-specific PlonK with various gadgets & primitives"
+license = "GPL-3.0-only"
+
+[workspace.dependencies]
+uzkge = { version = "0.1", path = "./uzkge", default-features = false }
+zshuffle = { version = "0.1", path = "./shuffle", default-features = false }
+zshuffle-wasm = { version = "0.1", path = "./shuffle/wasm", default-features = false }
+zmatchmaking = { version = "0.1", path = "./matchmaking", default-features = false }
+
+ark-ec = { version = "0.4", default-features = false, package = "ark-ec-zypher" }
+ark-ff = { version = "0.4", default-features = false, features = ["asm"], package = "ark-ff-zypher" }
+ark-poly = { version = "0.4", default-features = false, package = "ark-poly-zypher" }
+ark-serialize = { version = "0.4", default-features = false, features = ["derive"], package = "ark-serialize-zypher" }
+ark-std = { version = "0.4", default-features = false, package = "ark-std-zypher" }
+ark-bn254 = { version = "0.4", default-features = false, features = ["curve"], package = "ark-bn254-zypher" }
+ark-ed-on-bn254 = { version = "0.4", default-features = false, package = "ark-ed-on-bn254-zypher" }
+ark-relations = { version = "0.4", default-features = false, package = "ark-relations-zypher" }
+ark-r1cs-std = { version = "0.4", default-features = false, package = "ark-r1cs-std-zypher" }
+ark-snark = { version = "0.4", default-features = false, package = "ark-snark-zypher" }
+ark-groth16 = { version = "0.4", default-features = false, package = "ark-groth16-zypher" }
+
+bincode = "1.3"
+hex = "0.4"
+itertools = "0.12"
+lazy_static = "1.4"
+num-bigint = "0.4"
+num-integer = "0.1"
+once_cell = "1.19"
+rand_chacha = "0.3"
+rand_core = "0.6"
+rayon = "1.7"
+serde = { version = "1.0", features = ["derive"] }
+serde_bytes = "0.11"
+sha3 = "0.10"
+structopt =  "0.3"
+tera = "1.19"
+thiserror = "1.0"
+
+# wasm
+getrandom = { version = "0.2", features = ["js"] }
+serde-wasm-bindgen = "0.4"
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+wasm-bindgen-test = "0.3"
+web-sys = { version = "0.3", features = ["console"] }
+
 [profile.release]
 opt-level = 3
 lto = "thin"
@@ -35,15 +90,3 @@ lto = "off"
 incremental = true
 debug-assertions = true
 debug = true
-
-[patch.crates-io]
-ark-ff = { git = "https://github.com/arkworks-rs/algebra" }
-ark-ec = { git = "https://github.com/arkworks-rs/algebra" }
-ark-poly = { git = "https://github.com/arkworks-rs/algebra" }
-ark-serialize = { git = "https://github.com/arkworks-rs/algebra" }
-ark-bn254 = { git = "https://github.com/arkworks-rs/algebra" }
-ark-ed-on-bn254 = { git = "https://github.com/arkworks-rs/algebra" }
-ark-groth16 = { git = "https://github.com/arkworks-rs/groth16"  }
-ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std" }
-ark-relations = { git = "https://github.com/arkworks-rs/snark" }
-ark-std = { git = "https://github.com/arkworks-rs/std" }

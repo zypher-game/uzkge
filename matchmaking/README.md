@@ -1,3 +1,5 @@
+<!-- [![crate](https://img.shields.io/badge/crates.io-v0.1.1-green.svg)](https://crates.io/crates/zmatchmaking) [![doc](https://img.shields.io/badge/docs.rs-v0.1.1-blue.svg)](https://docs.rs/zmatchmaking) -->
+
 # zmatchmaking
 Mathmaking for PvP games with provable fairness and randomness
 
