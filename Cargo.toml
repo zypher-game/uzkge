@@ -4,6 +4,7 @@ members = [
   "shuffle",
   "shuffle/wasm",
   "matchmaking",
+  "c-uzkge",
 ]
 resolver = "2"
 
