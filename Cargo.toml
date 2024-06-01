@@ -5,6 +5,7 @@ members = [
   "shuffle/wasm",
   "matchmaking",
   "c-uzkge",
+  "wasm",
 ]
 resolver = "2"
 
@@ -54,6 +55,7 @@ sha3 = "0.10"
 structopt =  "0.3"
 tera = "1.19"
 thiserror = "1.0"
+ethabi = "18.0.0"
 
 # wasm
 getrandom = { version = "0.2", features = ["js"] }
