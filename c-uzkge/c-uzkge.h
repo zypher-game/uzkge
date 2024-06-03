@@ -30,8 +30,12 @@ int32_t __generate_shuffle_proof(struct Bytes rng_seed,
                                  const struct CardParam *inputs_param,
                                  uint32_t inputs_len,
                                  uint32_t n_cards,
-                                 uint8_t *ret_val,
-                                 uint32_t ret_len);
+                                 uint8_t *out_verifier_params,
+                                 uint32_t *out_verifier_params_len,
+                                 uint8_t *out_outputs,
+                                 uint32_t *out_outputs_len,
+                                 uint8_t *out_proof,
+                                 uint32_t *out_proof_len);
 
 int32_t __verify_shuffle(struct Bytes verifier_params,
                          const struct CardParam *inputs_param,
@@ -42,14 +46,15 @@ int32_t __verify_shuffle(struct Bytes verifier_params,
 
 int32_t __verifier_matchmaking_params(uint8_t *ret_val, uint32_t ret_len);
 
-int32_t __generate_matchmaking_proof(struct Bytes verifier_params,
-                                     struct Bytes rng_seed,
+int32_t __generate_matchmaking_proof(struct Bytes rng_seed,
                                      const struct Bytes *inputs_param,
                                      uint32_t inputs_len,
                                      struct Bytes committed_seed,
                                      struct Bytes random_number,
-                                     uint8_t *ret_val,
-                                     uint32_t ret_len);
+                                     uint8_t *out_outputs,
+                                     uint32_t *out_outputs_len,
+                                     uint8_t *out_proof,
+                                     uint32_t *out_proof_len);
 
 int32_t __verify_matchmaking(struct Bytes verifier_params,
                              const struct Bytes *inputs_param,

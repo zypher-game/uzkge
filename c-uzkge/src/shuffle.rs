@@ -4,7 +4,6 @@ use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq};
 use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::{CanonicalDeserialize, Compress, Validate};
 use core::slice;
-use ethabi::Token;
 use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
 use uzkge::gen_params::VerifierParams;
 use zshuffle::{
@@ -59,8 +58,12 @@ pub extern "C" fn __generate_shuffle_proof(
     inputs_param: *const CardParam,
     inputs_len: u32,
     n_cards: u32,
-    ret_val: *mut u8,
-    ret_len: u32,
+    out_verifier_params: *mut u8,
+    out_verifier_params_len: *mut u32,
+    out_outputs: *mut u8,
+    out_outputs_len: *mut u32,
+    out_proof: *mut u8,
+    out_proof_len: *mut u32,
 ) -> i32 {
     let inputs_cards = {
         let mut inputs = Vec::new();
@@ -85,67 +88,69 @@ pub extern "C" fn __generate_shuffle_proof(
     };
     let mut rng = ChaChaRng::from_seed(seed);
 
-    let mut prover_params = gen_shuffle_prover_params(n_cards as usize).unwrap();
+    let mut prover_params = match gen_shuffle_prover_params(n_cards as usize) {
+        Ok(v) => v,
+        Err(_e) => return -5,
+    };
 
-    refresh_prover_params_public_key(&mut prover_params, &pk).unwrap();
+    if let Err(_e) = refresh_prover_params_public_key(&mut prover_params, &pk) {
+        return -6;
+    }
 
-    let mut verifier_params = get_shuffle_verifier_params(n_cards as usize).unwrap();
+    let mut verifier_params = match get_shuffle_verifier_params(n_cards as usize) {
+        Ok(v) => v,
+        Err(_e) => return -7,
+    };
     verifier_params.verifier_params = prover_params.prover_params.verifier_params.clone();
 
     // Alice, start shuffling.
-    let (proof, output_cards) =
-        prove_shuffle(&mut rng, &pk, &inputs_cards, &prover_params).unwrap();
+    let (proof, outputs_cards) = match prove_shuffle(&mut rng, &pk, &inputs_cards, &prover_params) {
+        Ok(v) => v,
+        Err(_e) => return -8,
+    };
 
     let proof = proof.to_bytes_be();
 
-    let verifier_params = bincode::serialize(&verifier_params).unwrap();
-    let deck = {
-        let mut ret = Vec::new();
-        for it in inputs_cards.iter() {
-            let mut tmp = Vec::new();
-
-            let (x, y) = point_to_uncompress(&it.e1);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-
-            let (x, y) = point_to_uncompress(&it.e2);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-            ret.push(Token::Array(tmp))
-        }
-        ret
+    let verifier_params = match bincode::serialize(&verifier_params) {
+        Ok(v) => v,
+        Err(_e) => return -9,
     };
 
-    let alice_shuffle_deck = {
-        let mut ret = Vec::new();
-        for it in output_cards.iter() {
-            let mut tmp = Vec::new();
-
-            let (x, y) = point_to_uncompress(&it.e1);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-
-            let (x, y) = point_to_uncompress(&it.e2);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-            ret.push(Token::Array(tmp))
-        }
-        ret
-    };
-
-    let data = ethabi::encode(&[
-        Token::Bytes(verifier_params),
-        Token::Array(deck),
-        Token::Array(alice_shuffle_deck),
-        Token::Bytes(proof),
-    ]);
-    let len = ret_len as usize;
-    if len < data.len() {
-        return -6;
+    if unsafe { *out_verifier_params_len } < verifier_params.len() as u32 {
+        return -10;
     }
-    let ret = unsafe { slice::from_raw_parts_mut(ret_val, len) };
-    ret[..data.len()].copy_from_slice(&data);
-    data.len() as i32
+    let out_verifier_params = unsafe {
+        slice::from_raw_parts_mut(out_verifier_params, (*out_verifier_params_len) as usize)
+    };
+    out_verifier_params[..verifier_params.len()].copy_from_slice(&verifier_params);
+    unsafe { *out_verifier_params_len = verifier_params.len() as u32 };
+
+    if unsafe { (*out_outputs_len) * 4 * 32 } < (outputs_cards.len() * 4 * 32) as u32 {
+        return -11;
+    }
+
+    let out_outputs =
+        unsafe { slice::from_raw_parts_mut(out_outputs, ((*out_outputs_len) * 4 * 32) as usize) };
+
+    for (index, outputs) in outputs_cards.iter().enumerate() {
+        let (x, y) = point_to_uncompress(&outputs.e1);
+        out_outputs[index * 128..index * 128 + 32].copy_from_slice(&x);
+        out_outputs[index * 128 + 32..index * 128 + 64].copy_from_slice(&y);
+
+        let (x, y) = point_to_uncompress(&outputs.e2);
+        out_outputs[index * 128 + 64..index * 128 + 96].copy_from_slice(&x);
+        out_outputs[index * 128 + 96..index * 128 + 128].copy_from_slice(&y);
+    }
+    unsafe { *out_outputs_len = outputs_cards.len() as u32 };
+
+    if unsafe { *out_proof_len } < proof.len() as u32 {
+        return -12;
+    }
+    let out_proof = unsafe { slice::from_raw_parts_mut(out_proof, (*out_proof_len) as usize) };
+    out_proof[..proof.len()].copy_from_slice(&proof);
+    unsafe { *out_proof_len = proof.len() as u32 };
+
+    0
 }
 
 #[no_mangle]
@@ -210,7 +215,6 @@ mod tests {
 
     use alloc::vec::Vec;
     use ark_ff::{One, UniformRand};
-    use ethabi::ParamType;
     use rand_chacha::{
         rand_core::{CryptoRng, RngCore, SeedableRng},
         ChaChaRng,
@@ -324,7 +328,6 @@ mod tests {
         let keys = [Keypair::generate(&mut rng).public].to_vec();
         let joint_pk = aggregate_keys(&keys).unwrap();
         let pk = joint_pk.to_bytes();
-        println!("{:?}", pk);
 
         let mut deck = Vec::new();
         for card in card_mapping.keys() {
@@ -369,7 +372,15 @@ mod tests {
             });
         }
 
-        let mut ret = [0u8; 81920];
+        let mut out_verifier_params = [0u8; 102400];
+        let mut out_verifier_params_len = out_verifier_params.len() as u32;
+
+        let mut out_outputs = [0u8; 60 * 4 * 32];
+        let mut out_outputs_len = 60;
+
+        let mut out_proof = [0u8; 20480];
+        let mut out_proof_len = out_proof.len() as u32;
+
         let res = __generate_shuffle_proof(
             Bytes {
                 len: rng_seed.len() as u32,
@@ -382,118 +393,49 @@ mod tests {
             inputs.as_ptr(),
             inputs.len() as u32,
             52,
-            ret.as_mut_ptr(),
-            ret.len() as u32,
+            out_verifier_params.as_mut_ptr(),
+            &mut out_verifier_params_len,
+            out_outputs.as_mut_ptr(),
+            &mut out_outputs_len,
+            out_proof.as_mut_ptr(),
+            &mut out_proof_len,
         );
-        assert!(res > 0, "res = {}", res);
-
-        let data = ret[..res as usize].to_vec();
-
-        let tokens = ethabi::decode(
-            &[
-                ParamType::Bytes,
-                ParamType::Array(Box::new(ParamType::Array(Box::new(ParamType::Bytes)))),
-                ParamType::Array(Box::new(ParamType::Array(Box::new(ParamType::Bytes)))),
-                ParamType::Bytes,
-            ],
-            &data,
-        )
-        .unwrap();
-        let verifier_params = tokens.first().unwrap().clone().into_bytes().unwrap();
-
-        let input_bytes = tokens
-            .get(1)
-            .unwrap()
-            .clone()
-            .into_array()
-            .unwrap()
-            .iter()
-            .map(|v| {
-                let cards = v.clone().into_array().unwrap();
-                vec![
-                    cards.first().unwrap().clone().into_bytes().unwrap(),
-                    cards.get(1).unwrap().clone().into_bytes().unwrap(),
-                    cards.get(2).unwrap().clone().into_bytes().unwrap(),
-                    cards.get(3).unwrap().clone().into_bytes().unwrap(),
-                ]
-            })
-            .collect::<Vec<_>>();
-
-        let mut inputs = Vec::new();
-        for it in input_bytes.iter() {
-            inputs.push(CardParam {
-                x1: Bytes {
-                    len: it.first().unwrap().len() as u32,
-                    data: it.first().unwrap().as_ptr(),
-                },
-                y1: Bytes {
-                    len: it.get(1).unwrap().len() as u32,
-                    data: it.get(1).unwrap().as_ptr(),
-                },
-                x2: Bytes {
-                    len: it.get(2).unwrap().len() as u32,
-                    data: it.get(2).unwrap().as_ptr(),
-                },
-                y2: Bytes {
-                    len: it.get(3).unwrap().len() as u32,
-                    data: it.get(3).unwrap().as_ptr(),
-                },
-            });
-        }
-        let output_bytes = tokens
-            .get(2)
-            .unwrap()
-            .clone()
-            .into_array()
-            .unwrap()
-            .iter()
-            .map(|v| {
-                let cards = v.clone().into_array().unwrap();
-                vec![
-                    cards.first().unwrap().clone().into_bytes().unwrap(),
-                    cards.get(1).unwrap().clone().into_bytes().unwrap(),
-                    cards.get(2).unwrap().clone().into_bytes().unwrap(),
-                    cards.get(3).unwrap().clone().into_bytes().unwrap(),
-                ]
-            })
-            .collect::<Vec<_>>();
+        assert_eq!(res, 0);
 
         let mut outputs = Vec::new();
-        for it in output_bytes.iter() {
+        for i in 0..out_outputs_len as usize {
             outputs.push(CardParam {
                 x1: Bytes {
-                    len: it.first().unwrap().len() as u32,
-                    data: it.first().unwrap().as_ptr(),
+                    len: 32,
+                    data: unsafe { out_outputs.as_ptr().byte_add(i * 128) },
                 },
                 y1: Bytes {
-                    len: it.get(1).unwrap().len() as u32,
-                    data: it.get(1).unwrap().as_ptr(),
+                    len: 32,
+                    data: unsafe { out_outputs.as_ptr().byte_add(i * 128 + 32) },
                 },
                 x2: Bytes {
-                    len: it.get(2).unwrap().len() as u32,
-                    data: it.get(2).unwrap().as_ptr(),
+                    len: 32,
+                    data: unsafe { out_outputs.as_ptr().byte_add(i * 128 + 64) },
                 },
                 y2: Bytes {
-                    len: it.get(3).unwrap().len() as u32,
-                    data: it.get(3).unwrap().as_ptr(),
+                    len: 32,
+                    data: unsafe { out_outputs.as_ptr().byte_add(i * 128 + 96) },
                 },
             });
         }
-
-        let proof = tokens.get(3).unwrap().clone().into_bytes().unwrap();
 
         let res = __verify_shuffle(
             Bytes {
-                len: verifier_params.len() as u32,
-                data: verifier_params.as_ptr(),
+                len: out_verifier_params_len,
+                data: out_verifier_params.as_ptr(),
             },
             inputs.as_ptr(),
             inputs.len() as u32,
             outputs.as_ptr(),
-            outputs.len() as u32,
+            out_outputs_len,
             Bytes {
-                len: proof.len() as u32,
-                data: proof.as_ptr(),
+                len: out_proof_len,
+                data: out_proof.as_ptr(),
             },
         );
         assert_eq!(res, 0);

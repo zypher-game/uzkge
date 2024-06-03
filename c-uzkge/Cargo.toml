@@ -7,7 +7,6 @@ edition = "2021"
 crate-type = ["rlib", "cdylib", "staticlib"]
 
 [dependencies]
-ethabi.workspace = true
 bincode.workspace = true
 ark-ec.workspace = true
 ark-ff.workspace = true
@@ -18,5 +17,3 @@ uzkge = { workspace = true, features = ["shuffle"] }
 zmatchmaking = { workspace = true }
 zshuffle = { workspace = true }
 rand_chacha = { workspace = true }
-
-[dev-dependencies]

@@ -3,12 +3,8 @@ use core::slice;
 use alloc::vec::Vec;
 use ark_bn254::Fr;
 use ark_ff::{BigInteger, PrimeField};
-use ethabi::Token;
 use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
-use uzkge::{
-    anemoi::{AnemoiJive, AnemoiJive254},
-    gen_params::VerifierParams,
-};
+use uzkge::gen_params::VerifierParams;
 use zmatchmaking::{
     build_cs::{prove_matchmaking, verify_matchmaking, Proof},
     gen_params::{gen_prover_params, get_verifier_params},
@@ -41,14 +37,15 @@ pub extern "C" fn __verifier_matchmaking_params(ret_val: *mut u8, ret_len: u32) 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn __generate_matchmaking_proof(
-    verifier_params: Bytes,
     rng_seed: Bytes,
     inputs_param: *const Bytes,
     inputs_len: u32,
     committed_seed: Bytes,
     random_number: Bytes,
-    ret_val: *mut u8,
-    ret_len: u32,
+    out_outputs: *mut u8,
+    out_outputs_len: *mut u32,
+    out_proof: *mut u8,
+    out_proof_len: *mut u32,
 ) -> i32 {
     let inputs = {
         let mut inputs = Vec::new();
@@ -72,7 +69,6 @@ pub extern "C" fn __generate_matchmaking_proof(
         let data = committed_seed.to_slice();
         Fr::from_be_bytes_mod_order(data)
     };
-    let committment = AnemoiJive254::eval_variable_length_hash(&[committed_seed]);
 
     let random_number = {
         let data = random_number.to_slice();
@@ -97,32 +93,27 @@ pub extern "C" fn __generate_matchmaking_proof(
         Ok(v) => v,
         Err(_) => return -5,
     };
-    let data = ethabi::encode(&[
-        Token::Bytes(verifier_params.to_slice().to_vec()),
-        Token::Array(
-            inputs
-                .iter()
-                .map(|v| Token::Bytes(v.into_bigint().to_bytes_be()))
-                .collect::<Vec<_>>(),
-        ),
-        Token::Array(
-            outputs
-                .iter()
-                .map(|v| Token::Bytes(v.into_bigint().to_bytes_be()))
-                .collect::<Vec<_>>(),
-        ),
-        Token::Bytes(committment.into_bigint().to_bytes_be()),
-        Token::Bytes(random_number.into_bigint().to_bytes_be()),
-        Token::Bytes(proof),
-    ]);
-    let len = ret_len as usize;
 
-    if len < data.len() {
+    if unsafe { *out_outputs_len } < outputs.len() as u32 {
         return -6;
     }
-    let ret = unsafe { slice::from_raw_parts_mut(ret_val, len) };
-    ret[..data.len()].copy_from_slice(&data);
-    data.len() as i32
+
+    let out_outputs =
+        unsafe { slice::from_raw_parts_mut(out_outputs, ((*out_outputs_len) * 32) as usize) };
+    for (index, output) in outputs.iter().enumerate() {
+        let byte = output.into_bigint().to_bytes_be();
+        out_outputs[index * 32..(index + 1) * 32].copy_from_slice(&byte);
+    }
+    unsafe { *out_outputs_len = outputs.len() as u32 };
+
+    if unsafe { *out_proof_len } < proof.len() as u32 {
+        return -7;
+    }
+    let out_proof = unsafe { slice::from_raw_parts_mut(out_proof, (*out_proof_len) as usize) };
+    unsafe { *out_proof_len = proof.len() as u32 };
+    out_proof[..proof.len()].copy_from_slice(&proof);
+
+    0
 }
 
 #[no_mangle]
@@ -203,8 +194,8 @@ mod tests {
     use alloc::vec::Vec;
     use ark_bn254::Fr;
     use ark_ff::{BigInteger, PrimeField, UniformRand};
-    use ethabi::ParamType;
     use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
+    use uzkge::anemoi::{AnemoiJive, AnemoiJive254};
     use zmatchmaking::build_cs::N;
 
     use crate::{
@@ -226,7 +217,8 @@ mod tests {
         let rng_seed = [0u8; 32];
 
         let mut rng = ChaChaRng::from_seed(rng_seed);
-        let committed_seed = Fr::rand(&mut rng).into_bigint().to_bytes_be();
+        let committed_seed = Fr::rand(&mut rng);
+        let committed_seed_bytes = committed_seed.into_bigint().to_bytes_be();
         let random_number = Fr::rand(&mut rng).into_bigint().to_bytes_be();
 
         let inputs = (1..=N)
@@ -244,12 +236,13 @@ mod tests {
                 data: it.as_ptr(),
             })
         }
-        let mut ret = [0u8; 20480];
+        let mut out_outputs = [0u8; 50 * 32];
+        let mut out_outputs_len = 50;
+
+        let mut out_proof = [0u8; 20480];
+        let mut out_proof_len = out_proof.len() as u32;
+
         let res = __generate_matchmaking_proof(
-            Bytes {
-                len: verifier_params.len() as u32,
-                data: verifier_params.as_ptr(),
-            },
             Bytes {
                 len: rng_seed.len() as u32,
                 data: rng_seed.as_ptr(),
@@ -257,42 +250,19 @@ mod tests {
             inputs.as_ptr(),
             inputs.len() as u32,
             Bytes {
-                len: committed_seed.len() as u32,
-                data: committed_seed.as_ptr(),
+                len: committed_seed_bytes.len() as u32,
+                data: committed_seed_bytes.as_ptr(),
             },
             Bytes {
                 len: random_number.len() as u32,
                 data: random_number.as_ptr(),
             },
-            ret.as_mut_ptr(),
-            ret.len() as u32,
+            out_outputs.as_mut_ptr(),
+            &mut out_outputs_len,
+            out_proof.as_mut_ptr(),
+            &mut out_proof_len,
         );
-        assert!(res > 0, "res = {}", res);
-        let data = ret[..res as usize].to_vec();
-
-        let tokens = ethabi::decode(
-            &[
-                ParamType::Bytes,
-                ParamType::Array(Box::new(ParamType::Bytes)),
-                ParamType::Array(Box::new(ParamType::Bytes)),
-                ParamType::Bytes,
-                ParamType::Bytes,
-                ParamType::Bytes,
-            ],
-            &data,
-        )
-        .unwrap();
-        let verifier_params = tokens.first().unwrap().clone().into_bytes().unwrap();
-
-        let input_bytes = tokens
-            .get(1)
-            .unwrap()
-            .clone()
-            .into_array()
-            .unwrap()
-            .iter()
-            .map(|v| v.clone().into_bytes().unwrap())
-            .collect::<Vec<_>>();
+        assert_eq!(res, 0);
 
         let mut inputs = Vec::new();
         for it in input_bytes.iter() {
@@ -301,27 +271,25 @@ mod tests {
                 data: it.as_ptr(),
             })
         }
-        let output_bytes = tokens
-            .get(2)
-            .unwrap()
-            .clone()
-            .into_array()
-            .unwrap()
-            .iter()
-            .map(|v| v.clone().into_bytes().unwrap())
-            .collect::<Vec<_>>();
-
         let mut outputs = Vec::new();
-        for it in output_bytes.iter() {
+        for it in input_bytes.iter() {
             outputs.push(Bytes {
                 len: it.len() as u32,
                 data: it.as_ptr(),
             })
         }
 
-        let committment = tokens.get(3).unwrap().clone().into_bytes().unwrap();
-        let random_number = tokens.get(4).unwrap().clone().into_bytes().unwrap();
-        let proof = tokens.get(5).unwrap().clone().into_bytes().unwrap();
+        let mut outputs = Vec::new();
+        for i in 0..out_outputs_len as usize {
+            outputs.push(Bytes {
+                len: 32,
+                data: unsafe { out_outputs.as_ptr().byte_add(i * 32) },
+            })
+        }
+
+        let committment = AnemoiJive254::eval_variable_length_hash(&[committed_seed])
+            .into_bigint()
+            .to_bytes_be();
 
         let res = __verify_matchmaking(
             Bytes {
@@ -341,8 +309,8 @@ mod tests {
                 data: random_number.as_ptr(),
             },
             Bytes {
-                len: proof.len() as u32,
-                data: proof.as_ptr(),
+                len: out_proof_len,
+                data: out_proof.as_ptr(),
             },
         );
         assert_eq!(res, 0);
