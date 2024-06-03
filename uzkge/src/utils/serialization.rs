@@ -4,12 +4,21 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate
 
 use crate::errors::UzkgeError;
 
+#[cfg(not(feature = "serialize0"))]
 pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
     let mut bytes = vec![];
     let _ = a.serialize_with_mode(&mut bytes, Compress::Yes);
     bytes
 }
 
+#[cfg(feature = "serialize0")]
+pub fn to_bytes<A: CanonicalSerialize>(a: &A) -> Vec<u8> {
+    let mut bytes = vec![];
+    let _ = a.serialize_with_mode(&mut bytes, Compress::No);
+    bytes
+}
+
+#[cfg(not(feature = "deserialize0"))]
 pub fn from_bytes<A: Default + CanonicalSerialize + CanonicalDeserialize>(
     bytes: &[u8],
 ) -> Result<A, UzkgeError> {
@@ -29,12 +38,23 @@ where
     s.serialize_bytes(&to_bytes(a))
 }
 
+#[cfg(not(feature = "deserialize0"))]
 pub fn ark_deserialize<'de, D, A: CanonicalDeserialize>(data: D) -> Result<A, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
     let s: Vec<u8> = serde::de::Deserialize::deserialize(data)?;
-    A::deserialize_with_mode(s.as_slice(), Compress::Yes, Validate::Yes)
+    A::deserialize_with_mode(s.as_slice(), Compress::Yes, Validate::No)
+        .map_err(serde::de::Error::custom)
+}
+
+#[cfg(feature = "deserialize0")]
+pub fn ark_deserialize<'de, D, A: CanonicalDeserialize>(data: D) -> Result<A, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+{
+    let s: Vec<u8> = serde::de::Deserialize::deserialize(data)?;
+    A::deserialize_with_mode(s.as_slice(), Compress::No, Validate::No)
         .map_err(serde::de::Error::custom)
 }
 

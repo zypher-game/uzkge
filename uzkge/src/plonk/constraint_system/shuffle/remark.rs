@@ -38,6 +38,7 @@ impl<F: PrimeField> TurboCS<F> {
             self.push_add_selectors(zero, zero, zero, zero);
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(zero);
 
             self.wiring[0].push(input_var.get_first_x()); // input_0
@@ -54,6 +55,7 @@ impl<F: PrimeField> TurboCS<F> {
             self.push_add_selectors(zero, zero, zero, zero);
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(zero);
 
             self.wiring[0].push(intermediate_value_vars[r][0]); // pk_x_r
@@ -70,6 +72,7 @@ impl<F: PrimeField> TurboCS<F> {
             self.push_add_selectors(zero, zero, zero, zero);
             self.push_mul_selectors(zero, zero);
             self.push_constant_selector(zero);
+            self.push_ecc_selector(zero);
             self.push_out_selector(zero);
 
             self.wiring[0].push(intermediate_value_vars[trace.n_round - 1][0]); // pk_x_{r+1}

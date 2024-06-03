@@ -241,7 +241,7 @@ pub fn indexer<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field>>(
     cs: &CS,
     pcs: &PCS,
 ) -> Result<PlonkProverParams<PCS>, UzkgeError> {
-    indexer_with_lagrange(cs, pcs, None, None)
+    indexer_with_lagrange(cs, pcs, None, None, None)
 }
 
 /// The Plonk indexer that leverages Lagrange bases
@@ -249,6 +249,7 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     cs: &CS,
     pcs: &PCS,
     lagrange_pcs: Option<&PCS>,
+    permutation: Option<Vec<usize>>,
     verifier_params: Option<PlonkVerifierParams<PCS>>,
 ) -> Result<PlonkProverParams<PCS>, UzkgeError> {
     let no_verifier = verifier_params.is_none();
@@ -298,7 +299,11 @@ pub fn indexer_with_lagrange<PCS: PolyComScheme, CS: ConstraintSystem<PCS::Field
     };
 
     // Step 1: compute permutation polynomials and commit them.
-    let raw_perm = cs.compute_permutation();
+    let raw_perm = if let Some(perm) = permutation {
+        perm
+    } else {
+        cs.compute_permutation()
+    };
     let mut encoded_perm = Vec::with_capacity(n_wires_per_gate * n);
     for i in 0..n_wires_per_gate {
         encoded_perm.extend(encode_perm_to_group(

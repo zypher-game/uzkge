@@ -1,4 +1,5 @@
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
+use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{
     ops::Mul,
@@ -8,6 +9,7 @@ use ark_std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    anemoi::AnemoiJive,
     errors::{Result, UzkgeError},
     poly_commit::pcs::ToBytes,
     utils::{
@@ -16,7 +18,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, Default)]
 pub struct ChaumPedersenDLParameters {
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub g: EdwardsProjective,
@@ -24,7 +26,7 @@ pub struct ChaumPedersenDLParameters {
     pub h: EdwardsProjective,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, Default)]
 pub struct ChaumPedersenDLProof {
     #[serde(serialize_with = "ark_serialize", deserialize_with = "ark_deserialize")]
     pub a: EdwardsProjective,
@@ -106,6 +108,60 @@ pub fn prove<R: CryptoRng + RngCore>(
     Ok(ChaumPedersenDLProof { a, b, r })
 }
 
+// The zk-friendly prove algorithm.
+pub fn prove0<R: CryptoRng + RngCore, H: AnemoiJive<ark_bn254::Fr, 2, 14>>(
+    prng: &mut R,
+    parameters: &ChaumPedersenDLParameters,
+    witness: &Fr,
+    c1: &EdwardsProjective,
+    c2: &EdwardsProjective,
+) -> Result<ChaumPedersenDLProof> {
+    let new_c1 = parameters.g.mul(witness);
+    let new_c2 = parameters.h.mul(witness);
+    assert_eq!(new_c1, *c1);
+    assert_eq!(new_c2, *c2);
+
+    // 1. init
+    let mut input = vec![];
+    let (x, y) = parameters.g.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = parameters.h.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = c1.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = c2.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    // 2. random a omega
+    let omega = Fr::rand(prng);
+
+    let a = parameters.g.mul(&omega);
+    let b = parameters.h.mul(&omega);
+
+    let (x, y) = a.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = b.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let output = H::eval_variable_length_hash(&input);
+
+    let c: Fr = Fr::from_be_bytes_mod_order(&output.into_bigint().to_bytes_be());
+
+    let r = omega + c * witness;
+
+    Ok(ChaumPedersenDLProof { a, b, r })
+}
+
 pub fn verify(
     parameters: &ChaumPedersenDLParameters,
     transcript: &mut Transcript,
@@ -124,6 +180,54 @@ pub fn verify(
     transcript.append_message(b"append commitment", &proof.b.to_transcript_bytes());
 
     let c: Fr = transcript.get_challenge_field_elem(b"Chaum Pedersen C");
+
+    if parameters.g.mul(&proof.r) != proof.a + c1.mul(&c) {
+        return Err(UzkgeError::VerificationError);
+    }
+
+    if parameters.h.mul(&proof.r) != proof.b + c2.mul(&c) {
+        return Err(UzkgeError::VerificationError);
+    }
+
+    Ok(())
+}
+
+// The zk-friendly verify algorithm.
+pub fn verify0<H: AnemoiJive<ark_bn254::Fr, 2, 14>>(
+    parameters: &ChaumPedersenDLParameters,
+    c1: &EdwardsProjective,
+    c2: &EdwardsProjective,
+    proof: &ChaumPedersenDLProof,
+) -> Result<()> {
+    // init
+    let mut input = vec![];
+    let (x, y) = parameters.g.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = parameters.h.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = c1.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = c2.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = proof.a.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let (x, y) = proof.b.into_affine().xy().unwrap_or_default();
+    input.push(x);
+    input.push(y);
+
+    let output = H::eval_variable_length_hash(&input);
+
+    let c: Fr = Fr::from_be_bytes_mod_order(&output.into_bigint().to_bytes_be());
 
     if parameters.g.mul(&proof.r) != proof.a + c1.mul(&c) {
         return Err(UzkgeError::VerificationError);

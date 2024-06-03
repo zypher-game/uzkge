@@ -132,6 +132,7 @@ impl<F: PrimeField> TurboCS<F> {
                             self.push_add_selectors(zero, zero, zero, zero);
                             self.push_mul_selectors(one, one);
                             self.push_constant_selector(zero);
+                            self.push_ecc_selector(zero);
                             self.push_out_selector(one);
 
                             self.wiring[0].push(var.0[0]);
@@ -152,6 +153,7 @@ impl<F: PrimeField> TurboCS<F> {
                             self.push_add_selectors(zero, zero, zero, zero);
                             self.push_mul_selectors(one, one);
                             self.push_constant_selector(zero);
+                            self.push_ecc_selector(zero);
                             self.push_out_selector(one);
 
                             self.wiring[0].push(var.0[0]);

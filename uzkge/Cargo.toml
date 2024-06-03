@@ -66,3 +66,5 @@ gen = [
   "structopt",
   "tera"
 ]
+serialize0 = []
+deserialize0 = []

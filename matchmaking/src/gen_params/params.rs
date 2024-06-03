@@ -30,7 +30,7 @@ pub fn gen_prover_params() -> Result<ProverParams, UzkgeError> {
     };
 
     let prover_params =
-        indexer_with_lagrange(&cs, &pcs, lagrange_pcs.as_ref(), verifier_params).unwrap();
+        indexer_with_lagrange(&cs, &pcs, lagrange_pcs.as_ref(), None, verifier_params).unwrap();
 
     Ok(ProverParams {
         pcs,

@@ -70,6 +70,7 @@ fn gen_shuffle_vk(num: usize, directory: PathBuf, full: bool) {
 
 // cargo run --release --features="gen no_vk" --bin gen-params all "./parameters"
 fn gen_all(directory: PathBuf) {
+    gen_shuffle_vk(48, directory.clone(), false);
     gen_shuffle_vk(52, directory.clone(), false);
     gen_shuffle_vk(54, directory.clone(), false);
 }

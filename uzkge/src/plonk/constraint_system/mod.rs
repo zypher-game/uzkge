@@ -7,6 +7,9 @@ pub mod anemoi;
 /// Module for shuffle.
 pub mod shuffle;
 
+/// Module for ECC.
+pub mod ecc;
+
 use ark_ff::PrimeField;
 
 use crate::errors::UzkgeError;
