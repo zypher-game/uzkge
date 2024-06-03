@@ -1,13 +1,10 @@
 use alloc::{format, string::String, vec::Vec};
 use ark_bn254::Fr;
 use ark_ff::{BigInteger, PrimeField};
-use ethabi::Token;
 use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
-use uzkge::{
-    anemoi::{AnemoiJive, AnemoiJive254},
-    gen_params::VerifierParams,
-};
-use wasm_bindgen::prelude::wasm_bindgen;
+use serde::{Deserialize, Serialize};
+use uzkge::gen_params::VerifierParams;
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use zmatchmaking::{
     build_cs::{prove_matchmaking, verify_matchmaking, Proof},
     gen_params::{gen_prover_params, get_verifier_params},
@@ -20,23 +17,19 @@ pub fn verifier_matchmaking_params() -> String {
     format!("0x{}", hex::encode(bincode::serialize(&param).unwrap()))
 }
 
+#[derive(Serialize, Deserialize)]
+struct MatchmakingProofReturn {
+    outputs: Vec<String>,
+    proof: String,
+}
+
 #[wasm_bindgen]
 pub fn generate_matchmaking_proof(
-    verifier_params: String,
     rng_seed: String,
     inputs: Vec<String>,
     committed_seed: String,
     random_number: String,
-) -> String {
-    let verifier_params = {
-        hex::decode(
-            verifier_params
-                .strip_prefix("0x")
-                .unwrap_or(&verifier_params),
-        )
-        .expect("hex decode verifier_params error")
-    };
-
+) -> JsValue {
     let rng_seed = {
         hex::decode(rng_seed.strip_prefix("0x").unwrap_or(&rng_seed))
             .expect("hex decode rng_seed error")
@@ -59,8 +52,6 @@ pub fn generate_matchmaking_proof(
         Fr::from_be_bytes_mod_order(&data)
     };
 
-    let committment = AnemoiJive254::eval_variable_length_hash(&[committed_seed]);
-
     let random_number = {
         let data = hex::decode(random_number.strip_prefix("0x").unwrap_or(&random_number))
             .expect("hex decode random_number error");
@@ -78,25 +69,15 @@ pub fn generate_matchmaking_proof(
 
     let proof = bincode::serialize(&proof).unwrap();
 
-    let data = ethabi::encode(&[
-        Token::Bytes(verifier_params),
-        Token::Array(
-            input_param
-                .iter()
-                .map(|v| Token::Bytes(v.into_bigint().to_bytes_be()))
-                .collect::<Vec<_>>(),
-        ),
-        Token::Array(
-            outputs
-                .iter()
-                .map(|v| Token::Bytes(v.into_bigint().to_bytes_be()))
-                .collect::<Vec<_>>(),
-        ),
-        Token::Bytes(committment.into_bigint().to_bytes_be()),
-        Token::Bytes(random_number.into_bigint().to_bytes_be()),
-        Token::Bytes(proof),
-    ]);
-    format!("0x{}", hex::encode(data))
+    let ret = MatchmakingProofReturn {
+        outputs: outputs
+            .iter()
+            .map(|v| format!("0x{}", hex::encode(v.into_bigint().to_bytes_be())))
+            .collect::<Vec<_>>(),
+        proof: format!("0x{}", hex::encode(proof)),
+    };
+
+    serde_wasm_bindgen::to_value(&ret).unwrap()
 }
 
 #[wasm_bindgen]

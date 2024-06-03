@@ -27,5 +27,5 @@ hex.workspace = true
 wasm-bindgen.workspace = true
 serde-wasm-bindgen.workspace = true
 rand_chacha = { workspace = true }
-ethabi.workspace = true
 getrandom = { version = "0.2", features = ["js"] }
+serde.workspace = true

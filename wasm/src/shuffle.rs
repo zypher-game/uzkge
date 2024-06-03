@@ -3,8 +3,8 @@ use ark_ec::{AffineRepr, CurveGroup};
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq};
 use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::{CanonicalDeserialize, Compress, Validate};
-use ethabi::Token;
 use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
+use serde::{Deserialize, Serialize};
 use uzkge::gen_params::VerifierParams;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use zshuffle::{
@@ -41,13 +41,20 @@ pub fn point_to_uncompress<F: PrimeField, G: CurveGroup<BaseField = F>>(
     (x.into_bigint().to_bytes_be(), y.into_bigint().to_bytes_be())
 }
 
+#[derive(Serialize, Deserialize)]
+struct ShuffleProofReturn {
+    verifier_params: String,
+    outputs: Vec<Vec<String>>,
+    proof: String,
+}
+
 #[wasm_bindgen]
 pub fn generate_shuffle_proof(
     rng_seed: String,
     pk: String,
     inputs: Vec<JsValue>,
     n_cards: u32,
-) -> String {
+) -> JsValue {
     let rng_seed = {
         hex::decode(rng_seed.strip_prefix("0x").unwrap_or(&rng_seed))
             .expect("hex decode rng_seed error")
@@ -89,22 +96,6 @@ pub fn generate_shuffle_proof(
     let proof = proof.to_bytes_be();
 
     let verifier_params = bincode::serialize(&verifier_params).unwrap();
-    let deck = {
-        let mut ret = Vec::new();
-        for it in inputs_cards.iter() {
-            let mut tmp = Vec::new();
-
-            let (x, y) = point_to_uncompress(&it.e1);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-
-            let (x, y) = point_to_uncompress(&it.e2);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-            ret.push(Token::Array(tmp))
-        }
-        ret
-    };
 
     let alice_shuffle_deck = {
         let mut ret = Vec::new();
@@ -112,24 +103,22 @@ pub fn generate_shuffle_proof(
             let mut tmp = Vec::new();
 
             let (x, y) = point_to_uncompress(&it.e1);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
+            tmp.push(format!("0x{}", hex::encode(x)));
+            tmp.push(format!("0x{}", hex::encode(y)));
 
             let (x, y) = point_to_uncompress(&it.e2);
-            tmp.push(Token::Bytes(x));
-            tmp.push(Token::Bytes(y));
-            ret.push(Token::Array(tmp))
+            tmp.push(format!("0x{}", hex::encode(x)));
+            tmp.push(format!("0x{}", hex::encode(y)));
+            ret.push(tmp)
         }
         ret
     };
-
-    let data = ethabi::encode(&[
-        Token::Bytes(verifier_params),
-        Token::Array(deck),
-        Token::Array(alice_shuffle_deck),
-        Token::Bytes(proof),
-    ]);
-    format!("0x{}", hex::encode(data))
+    let ret = ShuffleProofReturn {
+        verifier_params: format!("0x{}", hex::encode(verifier_params)),
+        outputs: alice_shuffle_deck,
+        proof: format!("0x{}", hex::encode(proof)),
+    };
+    serde_wasm_bindgen::to_value(&ret).unwrap()
 }
 
 #[wasm_bindgen]
