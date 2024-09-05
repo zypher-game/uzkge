@@ -1,5 +1,5 @@
-use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ec::{AffineRepr, CurveGroup};
+use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{
     ops::Mul,

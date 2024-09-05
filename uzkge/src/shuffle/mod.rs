@@ -3,7 +3,6 @@ mod permutation;
 mod remark;
 mod trace;
 
-
 pub use babyjubjub::BabyJubjubShuffle;
 pub use permutation::Permutation;
 pub use remark::Remark;

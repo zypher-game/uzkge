@@ -96,119 +96,121 @@ abstract contract PlonkVerifier {
     uint256 internal constant CM_Q6_Y_LOC = 0x200 + 0xac0;
     uint256 internal constant CM_Q7_X_LOC = 0x200 + 0xae0;
     uint256 internal constant CM_Q7_Y_LOC = 0x200 + 0xb00;
-    uint256 internal constant CM_S0_X_LOC = 0x200 + 0xb20;
-    uint256 internal constant CM_S0_Y_LOC = 0x200 + 0xb40;
-    uint256 internal constant CM_S1_X_LOC = 0x200 + 0xb60;
-    uint256 internal constant CM_S1_Y_LOC = 0x200 + 0xb80;
-    uint256 internal constant CM_S2_X_LOC = 0x200 + 0xba0;
-    uint256 internal constant CM_S2_Y_LOC = 0x200 + 0xbc0;
-    uint256 internal constant CM_S3_X_LOC = 0x200 + 0xbe0;
-    uint256 internal constant CM_S3_Y_LOC = 0x200 + 0xc00;
-    uint256 internal constant CM_S4_X_LOC = 0x200 + 0xc20;
-    uint256 internal constant CM_S4_Y_LOC = 0x200 + 0xc40;
-    uint256 internal constant CM_QB_X_LOC = 0x200 + 0xc60;
-    uint256 internal constant CM_QB_Y_LOC = 0x200 + 0xc80;
-    uint256 internal constant CM_PRK_0_X_LOC = 0x200 + 0xca0;
-    uint256 internal constant CM_PRK_0_Y_LOC = 0x200 + 0xcc0;
-    uint256 internal constant CM_PRK_1_X_LOC = 0x200 + 0xce0;
-    uint256 internal constant CM_PRK_1_Y_LOC = 0x200 + 0xd00;
-    uint256 internal constant CM_PRK_2_X_LOC = 0x200 + 0xd20;
-    uint256 internal constant CM_PRK_2_Y_LOC = 0x200 + 0xd40;
-    uint256 internal constant CM_PRK_3_X_LOC = 0x200 + 0xd60;
-    uint256 internal constant CM_PRK_3_Y_LOC = 0x200 + 0xd80;
-    uint256 internal constant CM_Q_ECC_X_LOC = 0x200 + 0xda0;
-    uint256 internal constant CM_Q_ECC_Y_LOC = 0x200 + 0xdc0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_0_X_LOC = 0x200 + 0xde0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_0_Y_LOC = 0x200 + 0xe00;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_1_X_LOC = 0x200 + 0xe20;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_1_Y_LOC = 0x200 + 0xe40;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_2_X_LOC = 0x200 + 0xe60;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_2_Y_LOC = 0x200 + 0xe80;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_3_X_LOC = 0x200 + 0xea0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_3_Y_LOC = 0x200 + 0xec0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_4_X_LOC = 0x200 + 0xee0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_4_Y_LOC = 0x200 + 0xf00;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_5_X_LOC = 0x200 + 0xf20;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_5_Y_LOC = 0x200 + 0xf40;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_6_X_LOC = 0x200 + 0xf60;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_6_Y_LOC = 0x200 + 0xf80;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_7_X_LOC = 0x200 + 0xfa0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_7_Y_LOC = 0x200 + 0xfc0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_8_X_LOC = 0x200 + 0xfe0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_8_Y_LOC = 0x200 + 0x1000;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_9_X_LOC = 0x200 + 0x1020;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_9_Y_LOC = 0x200 + 0x1040;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_10_X_LOC = 0x200 + 0x1060;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_10_Y_LOC = 0x200 + 0x1080;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_11_X_LOC = 0x200 + 0x10a0;
-    uint256 internal constant CM_SHUFFLE_GENERATOR_11_Y_LOC = 0x200 + 0x10c0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_0_X_LOC = 0x200 + 0x10e0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_0_Y_LOC = 0x200 + 0x1100;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_1_X_LOC = 0x200 + 0x1120;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_1_Y_LOC = 0x200 + 0x1140;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_2_X_LOC = 0x200 + 0x1160;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_2_Y_LOC = 0x200 + 0x1180;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_3_X_LOC = 0x200 + 0x11a0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_3_Y_LOC = 0x200 + 0x11c0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_4_X_LOC = 0x200 + 0x11e0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_4_Y_LOC = 0x200 + 0x1200;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_5_X_LOC = 0x200 + 0x1220;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_5_Y_LOC = 0x200 + 0x1240;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_6_X_LOC = 0x200 + 0x1260;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_6_Y_LOC = 0x200 + 0x1280;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_7_X_LOC = 0x200 + 0x12a0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_7_Y_LOC = 0x200 + 0x12c0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_8_X_LOC = 0x200 + 0x12e0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_8_Y_LOC = 0x200 + 0x1300;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_9_X_LOC = 0x200 + 0x1320;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_9_Y_LOC = 0x200 + 0x1340;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_10_X_LOC = 0x200 + 0x1360;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_10_Y_LOC = 0x200 + 0x1380;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_11_X_LOC = 0x200 + 0x13a0;
-    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_11_Y_LOC = 0x200 + 0x13c0;
-    uint256 internal constant ANEMOI_GENERATOR_LOC = 0x200 + 0x13e0;
-    uint256 internal constant ANEMOI_GENERATOR_INV_LOC = 0x200 + 0x1400;
-    uint256 internal constant K_0_LOC = 0x200 + 0x1420;
-    uint256 internal constant K_1_LOC = 0x200 + 0x1440;
-    uint256 internal constant K_2_LOC = 0x200 + 0x1460;
-    uint256 internal constant K_3_LOC = 0x200 + 0x1480;
-    uint256 internal constant K_4_LOC = 0x200 + 0x14a0;
-    uint256 internal constant EDWARDS_A_LOC = 0x200 + 0x14c0;
-    uint256 internal constant ROOT_LOC = 0x200 + 0x14e0;
-    uint256 internal constant CS_SIZE_LOC = 0x200 + 0x1500;
+    uint256 internal constant CM_Q8_X_LOC = 0x200 + 0xb20;
+    uint256 internal constant CM_Q8_Y_LOC = 0x200 + 0xb40;
+    uint256 internal constant CM_S0_X_LOC = 0x200 + 0xb60;
+    uint256 internal constant CM_S0_Y_LOC = 0x200 + 0xb80;
+    uint256 internal constant CM_S1_X_LOC = 0x200 + 0xba0;
+    uint256 internal constant CM_S1_Y_LOC = 0x200 + 0xbc0;
+    uint256 internal constant CM_S2_X_LOC = 0x200 + 0xbe0;
+    uint256 internal constant CM_S2_Y_LOC = 0x200 + 0xc00;
+    uint256 internal constant CM_S3_X_LOC = 0x200 + 0xc20;
+    uint256 internal constant CM_S3_Y_LOC = 0x200 + 0xc40;
+    uint256 internal constant CM_S4_X_LOC = 0x200 + 0xc60;
+    uint256 internal constant CM_S4_Y_LOC = 0x200 + 0xc80;
+    uint256 internal constant CM_QB_X_LOC = 0x200 + 0xca0;
+    uint256 internal constant CM_QB_Y_LOC = 0x200 + 0xcc0;
+    uint256 internal constant CM_PRK_0_X_LOC = 0x200 + 0xce0;
+    uint256 internal constant CM_PRK_0_Y_LOC = 0x200 + 0xd00;
+    uint256 internal constant CM_PRK_1_X_LOC = 0x200 + 0xd20;
+    uint256 internal constant CM_PRK_1_Y_LOC = 0x200 + 0xd40;
+    uint256 internal constant CM_PRK_2_X_LOC = 0x200 + 0xd60;
+    uint256 internal constant CM_PRK_2_Y_LOC = 0x200 + 0xd80;
+    uint256 internal constant CM_PRK_3_X_LOC = 0x200 + 0xda0;
+    uint256 internal constant CM_PRK_3_Y_LOC = 0x200 + 0xdc0;
+    uint256 internal constant CM_Q_ECC_X_LOC = 0x200 + 0xde0;
+    uint256 internal constant CM_Q_ECC_Y_LOC = 0x200 + 0xe00;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_0_X_LOC = 0x200 + 0xe20;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_0_Y_LOC = 0x200 + 0xe40;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_1_X_LOC = 0x200 + 0xe60;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_1_Y_LOC = 0x200 + 0xe80;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_2_X_LOC = 0x200 + 0xea0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_2_Y_LOC = 0x200 + 0xec0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_3_X_LOC = 0x200 + 0xee0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_3_Y_LOC = 0x200 + 0xf00;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_4_X_LOC = 0x200 + 0xf20;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_4_Y_LOC = 0x200 + 0xf40;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_5_X_LOC = 0x200 + 0xf60;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_5_Y_LOC = 0x200 + 0xf80;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_6_X_LOC = 0x200 + 0xfa0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_6_Y_LOC = 0x200 + 0xfc0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_7_X_LOC = 0x200 + 0xfe0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_7_Y_LOC = 0x200 + 0x1000;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_8_X_LOC = 0x200 + 0x1020;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_8_Y_LOC = 0x200 + 0x1040;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_9_X_LOC = 0x200 + 0x1060;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_9_Y_LOC = 0x200 + 0x1080;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_10_X_LOC = 0x200 + 0x10a0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_10_Y_LOC = 0x200 + 0x10c0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_11_X_LOC = 0x200 + 0x10e0;
+    uint256 internal constant CM_SHUFFLE_GENERATOR_11_Y_LOC = 0x200 + 0x1100;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_0_X_LOC = 0x200 + 0x1120;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_0_Y_LOC = 0x200 + 0x1140;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_1_X_LOC = 0x200 + 0x1160;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_1_Y_LOC = 0x200 + 0x1180;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_2_X_LOC = 0x200 + 0x11a0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_2_Y_LOC = 0x200 + 0x11c0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_3_X_LOC = 0x200 + 0x11e0;   
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_3_Y_LOC = 0x200 + 0x1200;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_4_X_LOC = 0x200 + 0x1220;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_4_Y_LOC = 0x200 + 0x1240;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_5_X_LOC = 0x200 + 0x1260;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_5_Y_LOC = 0x200 + 0x1280;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_6_X_LOC = 0x200 + 0x12a0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_6_Y_LOC = 0x200 + 0x12c0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_7_X_LOC = 0x200 + 0x12e0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_7_Y_LOC = 0x200 + 0x1300;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_8_X_LOC = 0x200 + 0x1320;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_8_Y_LOC = 0x200 + 0x1340;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_9_X_LOC = 0x200 + 0x1360;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_9_Y_LOC = 0x200 + 0x1380;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_10_X_LOC = 0x200 + 0x13a0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_10_Y_LOC = 0x200 + 0x13c0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_11_X_LOC = 0x200 + 0x13e0;
+    uint256 internal constant CM_SHUFFLE_PUBLIC_KEY_11_Y_LOC = 0x200 + 0x1400;
+    uint256 internal constant ANEMOI_GENERATOR_LOC = 0x200 + 0x1420;
+    uint256 internal constant ANEMOI_GENERATOR_INV_LOC = 0x200 + 0x1440;
+    uint256 internal constant K_0_LOC = 0x200 + 0x1460;
+    uint256 internal constant K_1_LOC = 0x200 + 0x1480;
+    uint256 internal constant K_2_LOC = 0x200 + 0x14a0;
+    uint256 internal constant K_3_LOC = 0x200 + 0x14c0;
+    uint256 internal constant K_4_LOC = 0x200 + 0x14e0;
+    uint256 internal constant EDWARDS_A_LOC = 0x200 + 0x1500;
+    uint256 internal constant ROOT_LOC = 0x200 + 0x1520;
+    uint256 internal constant CS_SIZE_LOC = 0x200 + 0x1540;
 
     // The intermediary variable memory locations.
-    uint256 internal constant Z_H_EVAL_ZETA_LOC = 0x200 + 0x1520;
-    uint256 internal constant FIRST_LAGRANGE_EVAL_ZETA_LOC = 0x200 + 0x1540;
-    uint256 internal constant PI_EVAL_ZETA_LOC = 0x200 + 0x1560;
-    uint256 internal constant W3_W0_LOC = 0x200 + 0x1580;
-    uint256 internal constant W2_W1_LOC = 0x200 + 0x15a0;
-    uint256 internal constant W3_2W0_LOC = 0x200 + 0x15c0;
-    uint256 internal constant W2_2W1_LOC = 0x200 + 0x15e0;
-    uint256 internal constant R_EVAL_ZETA_LOC = 0x200 + 0x1600;
-    uint256 internal constant R_COMMITMENT_X_LOC = 0x200 + 0x1620;
-    uint256 internal constant R_COMMITMENT_Y_LOC = 0x200 + 0x1640;
-    uint256 internal constant COMMITMENT_X_LOC = 0x200 + 0x1660;
-    uint256 internal constant COMMITMENT_Y_LOC = 0x200 + 0x1680;
-    uint256 internal constant VALUE_LOC = 0x200 + 0x16a0;
-    uint256 internal constant BATCH_COMMITMENT_X_LOC = 0x200 + 0x16c0;
-    uint256 internal constant BATCH_COMMITMENT_Y_LOC = 0x200 + 0x16e0;
-    uint256 internal constant BATCH_VALUE_LOC = 0x200 + 0x1700;
-    uint256 internal constant SUCCESS_LOC = 0x200 + 0x1720;
-    uint256 internal constant SEL_00_LOC = 0x200 + 0x1740;
-    uint256 internal constant SEL_01_LOC = 0x200 + 0x1760;
-    uint256 internal constant SEL_10_LOC = 0x200 + 0x1780;
-    uint256 internal constant SEL_11_LOC = 0x200 + 0x17a0;
+    uint256 internal constant Z_H_EVAL_ZETA_LOC = 0x200 + 0x1560;
+    uint256 internal constant FIRST_LAGRANGE_EVAL_ZETA_LOC = 0x200 + 0x1580;
+    uint256 internal constant PI_EVAL_ZETA_LOC = 0x200 + 0x15a0;
+    uint256 internal constant W3_W0_LOC = 0x200 + 0x15c0;
+    uint256 internal constant W2_W1_LOC = 0x200 + 0x15e0;
+    uint256 internal constant W3_2W0_LOC = 0x200 + 0x1600;
+    uint256 internal constant W2_2W1_LOC = 0x200 + 0x1620;
+    uint256 internal constant R_EVAL_ZETA_LOC = 0x200 + 0x1640;
+    uint256 internal constant R_COMMITMENT_X_LOC = 0x200 + 0x1660;
+    uint256 internal constant R_COMMITMENT_Y_LOC = 0x200 + 0x1680;
+    uint256 internal constant COMMITMENT_X_LOC = 0x200 + 0x16a0;
+    uint256 internal constant COMMITMENT_Y_LOC = 0x200 + 0x16c0;
+    uint256 internal constant VALUE_LOC = 0x200 + 0x16e0;
+    uint256 internal constant BATCH_COMMITMENT_X_LOC = 0x200 + 0x1700;
+    uint256 internal constant BATCH_COMMITMENT_Y_LOC = 0x200 + 0x1720;
+    uint256 internal constant BATCH_VALUE_LOC = 0x200 + 0x1740;
+    uint256 internal constant SUCCESS_LOC = 0x200 + 0x1760;
+    uint256 internal constant SEL_00_LOC = 0x200 + 0x1780;
+    uint256 internal constant SEL_01_LOC = 0x200 + 0x17a0;
+    uint256 internal constant SEL_10_LOC = 0x200 + 0x17c0;
+    uint256 internal constant SEL_11_LOC = 0x200 + 0x17e0;
 
     // We reserve 5 slots for external input TRANSCRIPT,
     // so the length of the external input TRANSCRIPT cannot exceed 5.
-    uint256 internal constant EXTERNAL_TRANSCRIPT_LENGTH_LOC = 0x200 + 0x17c0;
+    uint256 internal constant EXTERNAL_TRANSCRIPT_LENGTH_LOC = 0x200 + 0x1800;
 
     // The first slot represents the length of pulic inputs，
     // the next slot for the length of pulic inputs represents the public constrain variables indices(power format)，
     // the following slot for the length of pulic inputs represents the constrain lagrange base by public constrain variables.
     // and the following slot for the length of pulic inputs represents the constrain lagrange base by public inputs.
-    uint256 internal constant PI_POLY_RELATED_LOC = 0x200 + 0x1860;
+    uint256 internal constant PI_POLY_RELATED_LOC = 0x200 + 0x18a0;
 
     bytes4 internal constant sig1 = 0x7609c020;
     bytes4 internal constant sig2 = 0x4da2dd2d;
@@ -413,28 +415,31 @@ abstract contract PlonkVerifier {
                 mstore(add(ptr, 0x220), mload(CM_Q7_X_LOC))
                 mstore(add(ptr, 0x240), mload(CM_Q7_Y_LOC))
 
-                mstore(add(ptr, 0x260), mload(CM_S0_X_LOC))
-                mstore(add(ptr, 0x280), mload(CM_S0_Y_LOC))
+                mstore(add(ptr, 0x260), mload(CM_Q8_X_LOC))
+                mstore(add(ptr, 0x280), mload(CM_Q8_Y_LOC))
 
-                mstore(add(ptr, 0x2a0), mload(CM_S1_X_LOC))
-                mstore(add(ptr, 0x2c0), mload(CM_S1_Y_LOC))
+                mstore(add(ptr, 0x2a0), mload(CM_S0_X_LOC))
+                mstore(add(ptr, 0x2c0), mload(CM_S0_Y_LOC))
 
-                mstore(add(ptr, 0x2e0), mload(CM_S2_X_LOC))
-                mstore(add(ptr, 0x300), mload(CM_S2_Y_LOC))
+                mstore(add(ptr, 0x2e0), mload(CM_S1_X_LOC))
+                mstore(add(ptr, 0x300), mload(CM_S1_Y_LOC))
 
-                mstore(add(ptr, 0x320), mload(CM_S3_X_LOC))
-                mstore(add(ptr, 0x340), mload(CM_S3_Y_LOC))
+                mstore(add(ptr, 0x320), mload(CM_S2_X_LOC))
+                mstore(add(ptr, 0x340), mload(CM_S2_Y_LOC))
 
-                mstore(add(ptr, 0x360), mload(CM_S4_X_LOC))
-                mstore(add(ptr, 0x380), mload(CM_S4_Y_LOC))
+                mstore(add(ptr, 0x360), mload(CM_S3_X_LOC))
+                mstore(add(ptr, 0x380), mload(CM_S3_Y_LOC))
 
-                mstore(add(ptr, 0x3a0), mload(ROOT_LOC))
+                mstore(add(ptr, 0x3a0), mload(CM_S4_X_LOC))
+                mstore(add(ptr, 0x3c0), mload(CM_S4_Y_LOC))
 
-                mstore(add(ptr, 0x3c0), mload(K_0_LOC))
-                mstore(add(ptr, 0x3e0), mload(K_1_LOC))
-                mstore(add(ptr, 0x400), mload(K_2_LOC))
-                mstore(add(ptr, 0x420), mload(K_3_LOC))
-                mstore(add(ptr, 0x440), mload(K_4_LOC))
+                mstore(add(ptr, 0x3e0), mload(ROOT_LOC))
+
+                mstore(add(ptr, 0x400), mload(K_0_LOC))
+                mstore(add(ptr, 0x420), mload(K_1_LOC))
+                mstore(add(ptr, 0x440), mload(K_2_LOC))
+                mstore(add(ptr, 0x460), mload(K_3_LOC))
+                mstore(add(ptr, 0x480), mload(K_4_LOC))
 
                 let pi_length := mload(PI_POLY_RELATED_LOC)
                 let pi_ptr := add(PI_POLY_RELATED_LOC, 0x20)
@@ -443,10 +448,10 @@ abstract contract PlonkVerifier {
                 } lt(i, pi_length) {
                     i := add(i, 1)
                 } {
-                    mstore(add(add(ptr, 0x460), mul(i, 0x20)), mload(add(pi_ptr, mul(i, 0x20))))
+                    mstore(add(add(ptr, 0x4a0), mul(i, 0x20)), mload(add(pi_ptr, mul(i, 0x20))))
                 }
 
-                ptr := add(add(ptr, 0x460), mul(pi_length, 0x20))
+                ptr := add(add(ptr, 0x4a0), mul(pi_length, 0x20))
 
                 mstore(ptr, mload(CM_W0_X_LOC))
                 mstore(add(ptr, 0x20), mload(CM_W0_Y_LOC))
@@ -478,7 +483,7 @@ abstract contract PlonkVerifier {
                 let beta := mod(
                     keccak256(
                         mload(0x40),
-                        add(add(mul(external_transcript_length, 0x20), mul(pi_length, 0x20)), 0x660)
+                        add(add(mul(external_transcript_length, 0x20), mul(pi_length, 0x20)), 0x6a0)
                     ),
                     r
                 )
@@ -666,8 +671,7 @@ abstract contract PlonkVerifier {
                         mstore(ALPHA_POW_16_LOC, alpha_pow_16)
                     }
                 }
-            }
-
+            }       
             // 2. compute Z_h(\zeta) and L_1(\zeta).
             {
                 let zeta := mload(ZETA_LOC)
@@ -1110,7 +1114,12 @@ abstract contract PlonkVerifier {
                     r_commitment_x := mload(mload(0x40))
                     r_commitment_y := mload(add(mload(0x40), 0x20))
 
-                    scalarMul(mload(CM_Q7_X_LOC), mload(CM_Q7_Y_LOC), sub(r, wo))
+                    scalarMul(mload(CM_Q7_X_LOC), mload(CM_Q7_Y_LOC), mulmod(mulmod(w0w1, w2w3, r), wo, r))
+                    pointAddInMemory(r_commitment_x, r_commitment_y)
+                    r_commitment_x := mload(mload(0x40))
+                    r_commitment_y := mload(add(mload(0x40), 0x20))
+
+                    scalarMul(mload(CM_Q8_X_LOC), mload(CM_Q8_Y_LOC), sub(r, wo))
                     pointAddInMemory(r_commitment_x, r_commitment_y)
                     r_commitment_x := mload(mload(0x40))
                     r_commitment_y := mload(add(mload(0x40), 0x20))

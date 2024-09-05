@@ -15,7 +15,10 @@ use uzkge::{
 
 use crate::{
     build_cs::build_cs,
-    gen_params::{GROTH16_PK_52, VERIFIER_SPECIFIC_PARAMS_52, VERIFIER_SPECIFIC_PARAMS_54, VERIFIER_SPECIFIC_PARAMS_48},
+    gen_params::{
+        GROTH16_PK_52, VERIFIER_SPECIFIC_PARAMS_48, VERIFIER_SPECIFIC_PARAMS_52,
+        VERIFIER_SPECIFIC_PARAMS_54,
+    },
     MaskedCard,
 };
 
