@@ -1,7 +1,13 @@
 {
-  "name": "uzkge",
+  "name": "uzkge-contracts",
   "version": "0.0.1",
   "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zypher-game/uzkge.git"
+  },
+  "homepage": "https://zypher.network",
+  "author": "Zypher <dev@zypher.network>",
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
