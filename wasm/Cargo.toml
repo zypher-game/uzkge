@@ -1,0 +1,31 @@
+[package]
+name = "wasm"
+description = "WASM SDK for encrypt and shuffle cards"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+categories.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+ 
+[dependencies]
+zshuffle.workspace = true
+zmatchmaking.workspace = true
+uzkge = { workspace = true, features = ["shuffle"] }
+
+ark-ec.workspace = true
+ark-ff.workspace = true
+ark-bn254.workspace = true
+ark-serialize.workspace = true
+ark-ed-on-bn254.workspace = true
+bincode.workspace = true
+hex.workspace = true 
+wasm-bindgen.workspace = true
+serde-wasm-bindgen.workspace = true
+rand_chacha = { workspace = true }
+getrandom = { version = "0.2", features = ["js"] }
+serde.workspace = true
