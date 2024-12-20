@@ -1,4 +1,3 @@
-mod card_maps;
 mod utils;
 
 mod poker;
@@ -8,7 +7,6 @@ pub use poker::*;
 use ark_ed_on_bn254::{EdwardsAffine, EdwardsProjective, Fq, Fr};
 use ark_ff::{BigInteger, One, PrimeField};
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Mutex};
 use uzkge::{
     chaum_pedersen::dl::ChaumPedersenDLProof,
@@ -25,14 +23,15 @@ use zshuffle::{
     reveal::*,
     reveal_with_snark::RevealCircuit,
     Groth16, MaskedCard as Masked, ProvingKey, SNARK,
+    card_maps::CARD_MAPS,
+    sdk::{Keypair,MaskedCard,MaskedCardWithProof,RevealedCardWithProof,RevealedCardWithSnarkProof,ShuffledCardsWithProof}
 };
 
-use card_maps::CARD_MAPS;
-use utils::{
-    default_prng, error_to_jsvalue, hex_to_point, hex_to_scalar, point_to_hex, point_to_uncompress,
+pub use utils::{
+    default_prng, hex_to_point, hex_to_scalar, point_to_hex, point_to_uncompress,
     scalar_to_hex, shuffle_proof_from_hex, shuffle_proof_to_hex, uncompress_to_point,
 };
-
+use utils::error_to_jsvalue;
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -52,49 +51,49 @@ static GROTH16_PARAMS: Lazy<Mutex<HashMap<usize, ProvingKey<ark_bn254::Bn254>>>>
         Mutex::new(m)
     });
 
-#[derive(Serialize, Deserialize)]
-pub struct Keypair {
-    /// 0xHex (U256)
-    pub sk: String,
-    /// 0xHex (U256)
-    pub pk: String,
-    /// public key uncompress x, y
-    pub pkxy: (String, String),
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct Keypair {
+//     /// 0xHex (U256)
+//     pub sk: String,
+//     /// 0xHex (U256)
+//     pub pk: String,
+//     /// public key uncompress x, y
+//     pub pkxy: (String, String),
+// }
 
-/// e2.0, e2.1, e1.0, e1.1
-#[derive(Serialize, Deserialize, Clone)]
-pub struct MaskedCard(pub String, pub String, pub String, pub String);
+// /// e2.0, e2.1, e1.0, e1.1
+// #[derive(Serialize, Deserialize, Clone)]
+// pub struct MaskedCard(pub String, pub String, pub String, pub String);
 
-#[derive(Serialize, Deserialize)]
-pub struct MaskedCardWithProof {
-    /// MaskedCard
-    pub card: MaskedCard,
-    /// hex string
-    pub proof: String,
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct MaskedCardWithProof {
+//     /// MaskedCard
+//     pub card: MaskedCard,
+//     /// hex string
+//     pub proof: String,
+// }
 
-#[derive(Serialize, Deserialize)]
-pub struct RevealedCardWithProof {
-    /// MaskedCard
-    pub card: (String, String),
-    /// hex string
-    pub proof: String,
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct RevealedCardWithProof {
+//     /// MaskedCard
+//     pub card: (String, String),
+//     /// hex string
+//     pub proof: String,
+// }
 
-#[derive(Serialize, Deserialize)]
-pub struct RevealedCardWithSnarkProof {
-    pub card: (String, String),
-    pub snark_proof: Vec<String>,
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct RevealedCardWithSnarkProof {
+//     pub card: (String, String),
+//     pub snark_proof: Vec<String>,
+// }
 
-#[derive(Serialize, Deserialize)]
-pub struct ShuffledCardsWithProof {
-    /// MaskedCard
-    pub cards: Vec<MaskedCard>,
-    /// hex string
-    pub proof: String,
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct ShuffledCardsWithProof {
+//     /// MaskedCard
+//     pub cards: Vec<MaskedCard>,
+//     /// hex string
+//     pub proof: String,
+// }
 
 /// uncompress public key to x, y
 #[wasm_bindgen]

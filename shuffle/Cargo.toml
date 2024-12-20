@@ -30,13 +30,16 @@ ark-r1cs-std.workspace = true
 ark-relations.workspace = true
 ark-snark.workspace = true
 bincode.workspace = true
+hex.workspace = true
+once_cell.workspace = true
+rand_core = { workspace = true, features = ["getrandom"] }
 rand_chacha.workspace = true
 rayon = { workspace = true, optional = true}
 serde.workspace = true
 structopt =  { workspace = true, optional = true}
+thiserror.workspace = true
 
 [dev-dependencies]
-hex.workspace = true
 
 [features]
 default = ["std", "parallel"]
