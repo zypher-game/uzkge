@@ -6,6 +6,7 @@ extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 use web_sys::console::log_1;
 use zshuffle_wasm::*;
+use zshuffle::sdk::{Keypair,MaskedCardWithProof,ShuffledCardsWithProof,MaskedCard};
 
 const CARD_NUM: i32 = 20;
 
@@ -22,7 +23,7 @@ fn pass() {
     let key3: Keypair = serde_wasm_bindgen::from_value(key3).unwrap();
     let key4: Keypair = serde_wasm_bindgen::from_value(key4).unwrap();
 
-    let joint = [key1.public, key2.public, key3.public, key4.public];
+    let joint = [key1.pk, key2.pk, key3.pk, key4.pk];
     let joint_values = serde_wasm_bindgen::to_value(&joint).unwrap();
     let joint_pk = aggregate_keys(joint_values).unwrap();
 

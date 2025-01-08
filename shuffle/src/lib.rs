@@ -16,6 +16,12 @@ pub mod build_cs;
 /// Module for generate prover & verifier params.
 pub mod gen_params;
 
+pub mod error;
+
+pub mod utils;
+pub mod sdk;
+pub mod card_maps;
+
 #[cfg(test)]
 mod tests;
 
