@@ -55,7 +55,7 @@ tera = "1.19"
 thiserror = "1.0"
 
 # wasm
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.3", features = ["js"] }
 serde-wasm-bindgen = "0.4"
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
